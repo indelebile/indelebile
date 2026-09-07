@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Justice Journal</title>
+<style>
+:root{--bg:#faf9f7;--fg:#1a1a1a;--dim:#6b6b6b;--line:#e2e0dc;--card:#fff;
+      --accent:#8b1e1e;--ok:#1f6b3a;--bad:#a5342c;--code:#f2f0ec}
+@media(prefers-color-scheme:dark){:root{--bg:#141311;--fg:#eae8e4;--dim:#918d86;
+  --line:#2c2a27;--card:#1c1b19;--accent:#d97070;--ok:#6dbb8a;--bad:#e08b83;--code:#232120}}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);margin:0;padding:2rem 1rem 4rem;
+  font:16px/1.6 Georgia,'Songti SC','Noto Serif CJK SC',serif}
+main{max-width:44rem;margin:0 auto}
+h1{font-size:1.7rem;margin:0 0 .2rem;letter-spacing:-.01em}
+h2{font-size:.95rem;margin:2.5rem 0 .8rem;font-weight:normal;color:var(--dim);
+  text-transform:uppercase;letter-spacing:.08em;font-family:ui-monospace,monospace}
+.mono,header,footer,.muted,#preview,#count,#bytes,#problems,.pill{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.lede{color:var(--dim);font-size:.85rem;margin:0 0 1.8rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1.2rem 1.3rem}
+button{font:inherit;font-family:ui-monospace,monospace;font-size:.82rem;cursor:pointer;
+  background:var(--fg);color:var(--bg);border:0;border-radius:6px;padding:.55rem 1.1rem}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:none;color:var(--dim);border:1px solid var(--line)}
+button.ghost:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
+textarea,input{width:100%;font:inherit;background:var(--bg);color:var(--fg);
+  border:1px solid var(--line);border-radius:6px;padding:.7rem .85rem}
+textarea{min-height:9rem;resize:vertical}
+input{font-family:ui-monospace,monospace;font-size:.85rem}
+label{display:block;font-family:ui-monospace,monospace;font-size:.72rem;color:var(--dim);
+  text-transform:uppercase;letter-spacing:.06em;margin:1rem 0 .35rem}
+.row{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.muted{color:var(--dim)}
+.pill{font-size:.72rem;color:var(--dim);border:1px solid var(--line);
+  border-radius:99px;padding:.15rem .6rem}
+#count,#bytes,#problems{font-size:.75rem;color:var(--dim)}
+#problems{color:var(--bad)}
+#preview{font-size:.68rem;color:var(--dim);background:var(--code);border-radius:6px;
+  padding:.7rem .8rem;word-break:break-all;max-height:7rem;overflow:auto;margin:.8rem 0 0}
+#status{font-family:ui-monospace,monospace;font-size:.78rem;margin-top:1rem;
+  padding:.6rem .8rem;border-radius:6px;background:var(--code);word-break:break-all}
+#status a{color:inherit}
+#feed article{background:var(--card);border:1px solid var(--line);border-radius:8px;
+  padding:1rem 1.2rem;margin-bottom:.9rem}
+#feed header{display:flex;gap:.7rem;align-items:baseline;flex-wrap:wrap;
+  font-size:.72rem;color:var(--dim);margin-bottom:.5rem}
+#feed .who{color:var(--fg)}#feed .seq{color:var(--accent)}
+#feed a{color:var(--dim)}
+#feed p{margin:0;white-space:pre-wrap;word-break:break-word}
+#feed footer{margin-top:.7rem;display:flex;gap:.35rem;flex-wrap:wrap}
+.tag{font-size:.68rem;color:var(--dim);border:1px solid var(--line);
+  border-radius:99px;padding:.1rem .55rem;font-family:ui-monospace,monospace}
+.note{font-size:.75rem;color:var(--dim);margin-top:1.4rem;border-top:1px solid var(--line);
+  padding-top:1rem;font-family:ui-monospace,monospace;line-height:1.7}
+</style>
+</head>
+<body>
+<main>
+  <h1>Justice Journal</h1>
+  <p class="lede">
+    Your words go into Ethereum calldata and are minted as an ethscription
+    <strong>you own</strong>. Not IPFS. Nothing to renew, nothing to unpin,
+    no one who can quietly delete it.
+  </p>
+
+  <div class="card">
+    <div class="row between">
+      <div class="row">
+        <span class="pill" id="chain">—</span>
+        <span class="pill">fee <span id="fee">—</span> ETH</span>
+        <span class="pill">gate <span id="gateReq">—</span> $JUSTICE</span>
+      </div>
+      <button id="connect">Connect wallet</button>
+    </div>
+
+    <div id="session" hidden>
+      <div class="row between" style="margin-top:1rem">
+        <div class="row">
+          <span class="mono muted" id="who"></span>
+          <span class="mono" id="gate">—</span>
+          <span class="muted" style="font-size:.72rem" id="gateNote"></span>
+        </div>
+        <button class="ghost" id="faucet" hidden>Get test $JUSTICE</button>
+      </div>
+
+      <label for="body">Entry <span class="muted">— up to <span id="max">500</span> characters</span></label>
+      <textarea id="body" placeholder="Write what you want kept."></textarea>
+      <div class="row between" style="margin-top:.4rem">
+        <span id="count">0 / 500</span>
+        <span id="bytes"></span>
+      </div>
+
+      <label for="tags">Tags <span class="muted">— comma separated, lowercase</span></label>
+      <input id="tags" placeholder="assange, press-freedom">
+
+      <div class="row between" style="margin-top:1.2rem">
+        <span class="muted mono" style="font-size:.72rem">entry #<span id="seq">0</span> from this wallet</span>
+        <button id="send" disabled>Write to chain</button>
+      </div>
+      <div id="problems"></div>
+      <pre id="preview"></pre>
+      <div id="status" hidden></div>
+    </div>
+  </div>
+
+  <div class="row between"><h2>The archive — <span id="feedCount">0</span> entries</h2>
+    <button class="ghost" id="reload" style="align-self:center">Reload</button></div>
+  <div id="feed"><p class="muted">Loading…</p></div>
+
+  <p class="note">
+    This page loads no libraries. Every byte it sends is built in
+    <code>web/abi.js</code> from the canonical form in
+    <code>src/canonical.mjs</code> — the same file the indexer reads, so the
+    page and the archive cannot disagree about what an entry is.<br><br>
+    The fee is spent even if the indexer rejects your entry, so the button
+    stays disabled until it passes every rule that can be checked here.<br><br>
+    On mainnet, send through a private RPC. Ethscriptions enforce global
+    content uniqueness, and a public mempool exposes your bytes before
+    inclusion.
+  </p>
+</main>
+
+<script src="config.js"></script>
+<script src="abi.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

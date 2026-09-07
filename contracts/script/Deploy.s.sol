@@ -1,0 +1,65 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import {Script, console} from "forge-std/Script.sol";
+import {JusticeJournal, IERC20, IUniswapV2Router} from "../src/JusticeJournal.sol";
+import {TestJustice} from "../src/testnet/TestJustice.sol";
+import {TestRouter, ITestJustice} from "../src/testnet/TestRouter.sol";
+
+/// Deploys JusticeJournal, plus testnet stand-ins for $JUSTICE and the DEX
+/// router when real addresses are not supplied.
+///
+///   forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC --broadcast
+///
+/// Environment:
+///   TREASURY     required — where swept fees land
+///   JUSTICE      optional — real token; a TestJustice is deployed if unset
+///   ROUTER       optional — real router; a TestRouter is deployed if unset
+///   MIN_FEE      optional — wei, default 0.001 ether
+///   MIN_BALANCE  optional — wei, default 100,000e18
+contract Deploy is Script {
+    function run() external {
+        address treasury = vm.envAddress("TREASURY");
+        address justice = vm.envOr("JUSTICE", address(0));
+        address router = vm.envOr("ROUTER", address(0));
+        uint256 minFee = vm.envOr("MIN_FEE", uint256(0.001 ether));
+        uint256 minBalance = vm.envOr("MIN_BALANCE", uint256(100_000 ether));
+
+        bool needsStubs = justice == address(0) || router == address(0);
+        // The stand-ins have an open faucet and a fixed-rate swap. On
+        // mainnet that would hand anyone an unlimited supply and drain the
+        // fees, so refuse rather than rely on the operator noticing.
+        require(!(needsStubs && block.chainid == 1), "refusing to deploy testnet stubs to mainnet");
+        require(treasury != address(0), "TREASURY not set");
+
+        vm.startBroadcast();
+
+        if (justice == address(0)) {
+            justice = address(new TestJustice());
+            console.log("TestJustice   ", justice);
+        }
+        if (router == address(0)) {
+            router = address(new TestRouter(ITestJustice(justice)));
+            console.log("TestRouter    ", router);
+        }
+
+        JusticeJournal jj = new JusticeJournal(
+            IERC20(justice), IUniswapV2Router(router), treasury, minFee, minBalance
+        );
+        console.log("JusticeJournal", address(jj));
+
+        vm.stopBroadcast();
+
+        console.log("");
+        console.log("--- paste into src/config.mjs ---");
+        console.log("journalContract: '%s',", vm.toString(address(jj)));
+        console.log("treasury:        '%s',", vm.toString(treasury));
+        console.log("justiceToken:    '%s',", vm.toString(justice));
+        console.log("minFeeWei:       %sn,", vm.toString(minFee));
+        console.log("genesisBlock:    %s,", vm.toString(block.number));
+        console.log("");
+        console.log("--- paste into web/app.js ---");
+        console.log("JOURNAL: '%s',", vm.toString(address(jj)));
+        console.log("JUSTICE: '%s',", vm.toString(justice));
+    }
+}

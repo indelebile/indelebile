@@ -55,4 +55,9 @@ rather than a request per block.
 | `src/gas.mjs` | combines forge execution gas with EIP-7623 calldata cost |
 | `contracts/src/JusticeJournal.sol` | fee, holding gate, ESIP-2 mint, batched sweep |
 | `src/compose.mjs` | builds a transaction to send by hand |
+| `src/canonical.mjs` | the canonical entry form — **loaded by both the indexer and the page**, so they cannot drift |
 | `src/render.mjs` | self-contained HTML viewer |
+| `web/index.html` | the write page: compose, validate locally, send |
+| `web/abi.js` | hand-rolled ABI encoding; the page loads no libraries |
+| `web/serve.mjs` | dev server rooted at the project so the page can share `src/canonical.mjs` |
+| `contracts/script/Deploy.s.sol` | deploys the journal plus testnet stand-ins |

@@ -2,29 +2,11 @@
 // nowhere else, so encode/decode are exact inverses by construction.
 
 import { sha256, toHex, hexToString, stringToHex } from 'viem';
-import { PROTOCOL, VERSION, DATA_URI_PREFIX, PARAMS } from './config.mjs';
+import { PARAMS } from './config.mjs';
+import { DATA_URI_PREFIX, canonicalJson, codePointLength } from './canonical.mjs';
 
-// Fixed key order. Two authors writing the same entry must produce
-// byte-identical calldata, and a verifier must be able to re-derive the
-// bytes from the decoded object. JSON.stringify over an array of keys
-// gives us that without a canonical-JSON dependency.
-const KEY_ORDER = ['p', 'v', 'author', 'seq', 'ts', 'tags', 'body'];
-
-export function buildEntry({ author, seq, ts, tags = [], body }) {
-  return {
-    p: PROTOCOL,
-    v: VERSION,
-    author: author.toLowerCase(),
-    seq,
-    ts,
-    tags: tags.map((t) => t.toLowerCase()),
-    body,
-  };
-}
-
-export function canonicalJson(entry) {
-  return JSON.stringify(entry, KEY_ORDER);
-}
+// The canonical form lives in canonical.mjs, which the browser loads too.
+export { buildEntry, canonicalJson, codePointLength, DATA_URI_PREFIX } from './canonical.mjs';
 
 export function encode(entry) {
   const uri = DATA_URI_PREFIX + canonicalJson(entry);
@@ -70,10 +52,6 @@ export function contentHash(uri) {
 
 export function byteLength(uri) {
   return new TextEncoder().encode(uri).length;
-}
-
-export function codePointLength(s) {
-  return [...s].length;
 }
 
 // EIP-7623 floor pricing. A data-carrying transaction with no execution

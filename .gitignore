@@ -1,2 +1,4 @@
 node_modules/
 out/
+out/index.json
+out/journal.html

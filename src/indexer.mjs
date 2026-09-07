@@ -7,8 +7,7 @@
 // An ordinary RPC is enough. The holding gate moved into the contract, so
 // nothing here reads historical state.
 
-import { createPublicClient, http, parseAbiItem, decodeEventLog } from 'viem';
-import { mainnet } from 'viem/chains';
+import { createPublicClient, http, parseAbiItem } from 'viem';
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { PARAMS } from './config.mjs';
 import { scan } from './scan.mjs';
@@ -24,7 +23,9 @@ if (/^0x0+$/.test(PARAMS.journalContract)) {
   process.exit(1);
 }
 
-const client = createPublicClient({ chain: mainnet, transport: http(rpc) });
+// No `chain`: the indexer must work against mainnet, Sepolia or a local
+// node without a flag. getLogs and getBlockNumber need no chain metadata.
+const client = createPublicClient({ transport: http(rpc) });
 
 const ESIP2 = parseAbiItem(
   'event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI)');
