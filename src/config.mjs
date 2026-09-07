@@ -7,17 +7,20 @@ export const PROTOCOL = 'justice-journal';
 export const VERSION = 1;
 
 export const PARAMS = {
-  // Fee recipient. Every valid entry is a plain EOA transaction to this
-  // address carrying ETH value. There is no contract.
+  // The JusticeJournal contract. Entries are ESIP-2 logs emitted by this
+  // address and nothing else; a log from anywhere else is not an entry.
+  journalContract: '0x0000000000000000000000000000000000000000', // TODO: after deploy
+
+  // Where swept fees land. The contract holds it immutably, so this is
+  // recorded here for verifiers, not used to decide validity.
   treasury: '0x0000000000000000000000000000000000000000', // TODO: DAO treasury
 
   // Per-entry write fee, in wei. This is the real anti-spam cost.
   minFeeWei: 1_000_000_000_000_000n, // 0.001 ETH
 
-  // Holding gate. Checked against the JUSTICE balance at the end of the
-  // block BEFORE the entry's block. A holding gate is rentable across
-  // blocks by design; it filters non-holders, it does not stop a
-  // determined holder. The fee does that.
+  // Holding gate, enforced inside write(). A holding gate is per wallet
+  // while writing is per entry, so it filters non-holders and nothing
+  // more — minFeeWei is the actual per-entry spam cost.
   justiceToken: '0x0000000000000000000000000000000000000000', // TODO: $JUSTICE
   minJusticeBalance: 100_000n * 10n ** 18n,
 

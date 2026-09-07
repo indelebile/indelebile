@@ -1,11 +1,16 @@
 # Justice Journal (calldata prototype)
 
 Reference implementation for storing AssangeDAO Journal entries directly
-in Ethereum L1 calldata instead of IPFS. See [SPEC.md](SPEC.md).
+in Ethereum L1 calldata instead of IPFS, minted as ethscriptions owned by
+their authors.
+
+- [PRD.md](PRD.md) — requirements, scope, open decisions for the DAO
+- [SPEC.md](SPEC.md) — entry format, validity rules, cost, front-running
 
 ```bash
 npm install
-node --test 'test/*.test.mjs'      # 20 tests, no network needed
+node --test 'test/*.test.mjs'        # 20 tests, no network needed
+cd contracts && forge test           # 14 tests
 
 node src/demo.mjs && node src/render.mjs   # synthetic index + viewer
 open out/journal.html
@@ -22,21 +27,21 @@ node src/compose.mjs \
   --body "March 10, 2024 — I joined my first Julian Assange support rally."
 ```
 
-Set `treasury` and `justiceToken` in `src/config.mjs` first. Send through
-a private RPC (the printed command uses Flashbots Protect) — a public
-mempool exposes the bytes to front-running, see SPEC.md §5.
+Set `journalContract` in `src/config.mjs` to the deployed address first.
+Send through a private RPC (the printed command uses Flashbots Protect) —
+a public mempool exposes the bytes to front-running, see SPEC.md §6.
 
 ## Indexing
 
 ```bash
-node src/indexer.mjs --rpc $ARCHIVE_RPC --from <genesis> --seen ethscriptions.txt
+node src/indexer.mjs --rpc $RPC --from <genesis> --seen ethscriptions.txt
 node src/render.mjs --hidden hidden.json
 ```
 
-Needs an archive-capable RPC: V7 reads a historical `balanceOf`, and a
-default public node keeps only ~128 blocks of state. The indexer exits
-rather than produce an index that would silently differ from everyone
-else's.
+An ordinary RPC is enough — the holding gate lives in the contract, so the
+indexer never reads historical state. It reads ESIP-2 logs from the
+JusticeJournal address, so indexing is one filtered request per range
+rather than a request per block.
 
 ## Layout
 
@@ -47,5 +52,7 @@ else's.
 | `src/rules.mjs` | the validity predicate — this *is* the protocol |
 | `src/scan.mjs` | the scan loop, pure, testable against a fake chain |
 | `src/indexer.mjs` | RPC wiring only |
+| `src/gas.mjs` | combines forge execution gas with EIP-7623 calldata cost |
+| `contracts/src/JusticeJournal.sol` | fee, holding gate, ESIP-2 mint, batched sweep |
 | `src/compose.mjs` | builds a transaction to send by hand |
 | `src/render.mjs` | self-contained HTML viewer |

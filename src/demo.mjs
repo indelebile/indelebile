@@ -7,11 +7,12 @@
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { buildEntry, encode, estimateGas } from './entry.mjs';
+import { encodeFunctionData, parseAbi } from 'viem';
 import { scan } from './scan.mjs';
 import { PARAMS } from './config.mjs';
 
-const TREASURY = '0x2222222222222222222222222222222222222222';
-const P = { ...PARAMS, treasury: TREASURY, genesisBlock: 21_000_000 };
+const JOURNAL = '0x1000000000000000000000000000000000000001';
+const P = { ...PARAMS, journalContract: JOURNAL, genesisBlock: 21_000_000 };
 
 const SAMPLES = [
   ['0xa11ce00000000000000000000000000000000001', ['iran', 'letters'],
@@ -24,24 +25,17 @@ const SAMPLES = [
    'Second entry. The first one cost me less than a dollar in gas. That is what it costs to put a sentence somewhere no one can quietly delete it.'],
 ];
 
-const blocks = {};
-SAMPLES.forEach(([author, tags, body], i) => {
+const writes = SAMPLES.map(([author, tags, body], i) => {
   const seq = SAMPLES.slice(0, i).filter(([a]) => a === author).length;
-  const { calldata } = encode(buildEntry({
-    author, seq, ts: 1757280000 + i * 86400 * 3, tags, body,
-  }));
-  blocks[P.genesisBlock + i * 7] = [{
-    hash: '0x' + (i + 1).toString(16).padStart(64, '0'),
-    from: author, to: TREASURY, value: P.minFeeWei,
-    input: calldata, transactionIndex: 0,
-  }];
+  const { uri } = encode(buildEntry({ author, seq, ts: 1757280000 + i * 86400 * 3, tags, body }));
+  return {
+    txHash: '0x' + (i + 1).toString(16).padStart(64, '0'),
+    blockNumber: BigInt(P.genesisBlock + i * 7), logIndex: 0,
+    emitter: JOURNAL, author, contentURI: uri, feeWei: P.minFeeWei,
+  };
 });
 
-const chain = {
-  getBlock: async (n) => ({ transactions: blocks[Number(n)] ?? [] }),
-  getReceipt: async () => ({ status: 'success' }),
-  balanceOfAt: async () => P.minJusticeBalance,
-};
+const chain = { getWrites: async () => writes };
 
 const from = P.genesisBlock;
 const to = P.genesisBlock + (SAMPLES.length - 1) * 7;
@@ -51,16 +45,19 @@ mkdirSync(new URL('../out/', import.meta.url), { recursive: true });
 writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
   protocol: 'justice-journal', version: 1, synthetic: true,
   range: { from, to },
-  params: { treasury: TREASURY, minFeeWei: P.minFeeWei.toString(),
+  params: { journalContract: JOURNAL, minFeeWei: P.minFeeWei.toString(),
             minJusticeBalance: P.minJusticeBalance.toString(),
             bodyMaxChars: P.bodyMaxChars },
   entries, rejected,
 }, null, 2));
 
 console.log(`synthetic index: ${entries.length} entries\n`);
-console.log('per-entry gas (EIP-7623 floor):');
+const abi = parseAbi(['function write(string contentURI) payable']);
+console.log('per-entry gas, contract route (write(string), EIP-7623 floor):');
 for (const e of entries) {
-  const g = estimateGas(encode(buildEntry(e)).calldata);
+  const uri = encode(buildEntry(e)).uri;
+  const g = estimateGas(encodeFunctionData({ abi, functionName: 'write', args: [uri] }));
+  const gas = Math.max(g.floor, g.standard + 26_000); // + measured execution
   const cn = /[一-鿿]/.test(e.body) ? ' [zh]' : '';
-  console.log(`  ${String([...e.body].length).padStart(3)} chars${cn.padEnd(5)} ${String(g.gas).padStart(7)} gas   @5gwei ${(g.gas * 5e-9).toFixed(6)} ETH`);
+  console.log(`  ${String([...e.body].length).padStart(3)} chars${cn.padEnd(5)} ${String(gas).padStart(7)} gas   @5gwei ${(gas * 5e-9).toFixed(6)} ETH`);
 }

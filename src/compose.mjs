@@ -1,20 +1,17 @@
 #!/usr/bin/env node
-// Builds the calldata for one entry and prints everything needed to send
-// it by hand. It does not hold keys, sign, or broadcast — you paste the
-// output into your own wallet or `cast send`.
+// Builds the transaction for one entry and prints everything needed to
+// send it by hand. It does not hold keys, sign, or broadcast — you paste
+// the output into your own wallet or `cast send`.
 //
 //   node src/compose.mjs --author 0x.. --seq 0 --body "..." --tags a,b
 
+import { encodeFunctionData, parseAbi, formatEther } from 'viem';
 import { buildEntry, encode, estimateGas, byteLength, codePointLength } from './entry.mjs';
 import { validate } from './rules.mjs';
 import { PARAMS } from './config.mjs';
-import { formatEther } from 'viem';
 
 const argv = process.argv.slice(2);
-const arg = (k, d) => {
-  const i = argv.indexOf('--' + k);
-  return i === -1 ? d : argv[i + 1];
-};
+const arg = (k, d) => { const i = argv.indexOf('--' + k); return i === -1 ? d : argv[i + 1]; };
 
 const author = arg('author');
 const body = arg('body');
@@ -30,45 +27,53 @@ const entry = buildEntry({
   tags: (arg('tags', '') || '').split(',').filter(Boolean),
   body,
 });
+const { uri } = encode(entry);
 
-const { uri, calldata } = encode(entry);
-const gas = estimateGas(calldata);
+const abi = parseAbi(['function write(string contentURI) payable']);
+const calldata = encodeFunctionData({ abi, functionName: 'write', args: [uri] });
+const g = estimateGas(calldata);
 
-// Dry-run the entry against every rule we can check without the chain.
+// Dry-run every rule that does not need chain state. Cheaper to fail here
+// than to burn the fee on an entry the indexer will reject.
 const dry = validate(
-  { hash: '0x', blockNumber: PARAMS.genesisBlock, txIndex: 0, from: author,
-    to: PARAMS.treasury, value: PARAMS.minFeeWei, input: calldata, status: 'success' },
-  { justiceBalance: PARAMS.minJusticeBalance, authorState: { maxSeq: null, recentBlocks: [] },
-    seenContent: new Set() },
+  { txHash: '0x', blockNumber: PARAMS.genesisBlock, logIndex: 0,
+    emitter: PARAMS.journalContract, author, contentURI: uri, feeWei: PARAMS.minFeeWei },
+  { authorState: { maxSeq: null, recentBlocks: [] }, seenContent: new Set() },
 );
-const offchain = dry.failed.filter((r) => !['V1', 'V7'].includes(r)); // need chain state
+const local = dry.failed.filter((r) => r !== 'V1'); // V1 needs the deployed address
 
 console.log(`
 body        ${codePointLength(entry.body)} chars / ${byteLength(entry.body)} bytes
 data URI    ${byteLength(uri)} bytes
-gas         ${gas.gas.toLocaleString()}  (floor ${gas.floor.toLocaleString()}, standard ${gas.standard.toLocaleString()})
+calldata    ${(calldata.length - 2) / 2} bytes
 fee         ${formatEther(PARAMS.minFeeWei)} ETH
-offchain    ${offchain.length ? 'FAILS ' + offchain.join(',') : 'all local rules pass'}
+local rules ${local.length ? 'FAILS ' + local.join(',') : 'all pass'}
+`);
 
-cost at each gas price (gas only, excludes the ${formatEther(PARAMS.minFeeWei)} ETH fee):`);
-for (const gwei of [0.5, 1, 3, 5, 10, 20]) {
-  const eth = (BigInt(gas.gas) * BigInt(Math.round(gwei * 1e9))).toString();
-  console.log(`  ${String(gwei).padStart(5)} gwei   ${formatEther(BigInt(eth)).slice(0, 10)} ETH`);
+if (local.length) {
+  console.error('Fix the entry before sending — the fee is spent either way.\n');
+  process.exit(1);
+}
+
+console.log('estimated gas cost (the fee is on top):');
+for (const gwei of [0.5, 1, 3, 5, 10]) {
+  // The contract's execution rides under the EIP-7623 floor on longer
+  // entries, so this is an upper bound built from the floor alone.
+  const gas = Math.max(g.floor, g.standard + 26_000);
+  console.log(`  ${String(gwei).padStart(5)} gwei   ${formatEther(BigInt(gas) * BigInt(gwei * 1e9)).slice(0, 10)} ETH  (~${gas.toLocaleString()} gas)`);
 }
 
 console.log(`
 content
 ${uri}
 
-calldata (paste into the wallet's hex data field)
-${calldata}
-
-or send it yourself:
-  cast send ${PARAMS.treasury} \\
+send it yourself:
+  cast send ${PARAMS.journalContract} \\
     --value ${PARAMS.minFeeWei} \\
     --data ${calldata} \\
     --rpc-url https://rpc.flashbots.net/fast
 
-Use a private RPC (Flashbots Protect above) — see SPEC.md §5 on
-front-running. A public mempool exposes these bytes before inclusion.
+Use a private RPC (Flashbots Protect above). A public mempool exposes these
+bytes, and Ethscriptions enforce global content uniqueness — see SPEC.md on
+front-running.
 `);

@@ -6,99 +6,125 @@ import { PARAMS } from '../src/config.mjs';
 
 const A = '0xaaaa000000000000000000000000000000000001';
 const B = '0xbbbb000000000000000000000000000000000002';
-const TREASURY = '0x2222222222222222222222222222222222222222';
-const OTHER = '0x3333333333333333333333333333333333333333';
-const P = { ...PARAMS, treasury: TREASURY, genesisBlock: 1000 };
+const JOURNAL = '0x1000000000000000000000000000000000000001';
+const IMPOSTOR = '0x9000000000000000000000000000000000000009';
+const P = { ...PARAMS, journalContract: JOURNAL, genesisBlock: 1000 };
 
-// A fake chain: blocks[n] = [tx, ...]. Balances are per-address constants.
-function fakeChain(blocks, balances, failedHashes = new Set()) {
+let n = 0;
+// One ESIP-2 write log, as the indexer normalizes it.
+function write(author, seq, body, over = {}) {
+  const { uri } = encode(buildEntry({ author, seq, ts: 1757280000, tags: [], body }));
   return {
-    getBlock: async (n) => ({ transactions: blocks[Number(n)] ?? [] }),
-    getReceipt: async (h) => ({ status: failedHashes.has(h) ? 'reverted' : 'success' }),
-    balanceOfAt: async (addr) => balances[addr.toLowerCase()] ?? 0n,
+    txHash: '0x' + String(++n).padStart(64, '0'),
+    blockNumber: 1000n, logIndex: 0, emitter: JOURNAL,
+    author, contentURI: uri, feeWei: P.minFeeWei, ...over,
   };
 }
-let nonce = 0;
-function mkTx(author, seq, body, over = {}) {
-  const { calldata } = encode(buildEntry({ author, seq, ts: 1757280000, tags: [], body }));
-  return { hash: '0x' + String(++nonce).padStart(64, '0'), from: author, to: TREASURY,
-           value: P.minFeeWei, input: calldata, transactionIndex: 0, ...over };
-}
+const chainOf = (writes) => ({ getWrites: async () => writes });
 
-test('accepts valid entries and ignores unrelated traffic', async () => {
-  const t1 = mkTx(A, 0, 'first');
-  const noise = { hash: '0xnoise', from: B, to: OTHER, value: 0n, input: '0x', transactionIndex: 1 };
-  const chain = fakeChain({ 1000: [t1, noise] }, { [A]: P.minJusticeBalance });
-  const r = await scan(chain, { from: 1000, to: 1000, params: P });
+test('accepts a well-formed write', async () => {
+  const w = write(A, 0, 'first');
+  const r = await scan(chainOf([w]), { from: 1000, to: 1000, params: P });
   assert.equal(r.entries.length, 1);
-  assert.equal(r.entries[0].id, t1.hash);
-  assert.equal(r.rejected.length, 0);
+  assert.equal(r.entries[0].id, w.txHash);
+  assert.equal(r.entries[0].author, A);
 });
 
-test('rejects a reverted transaction', async () => {
-  const t = mkTx(A, 0, 'reverted');
-  const chain = fakeChain({ 1000: [t] }, { [A]: P.minJusticeBalance }, new Set([t.hash]));
-  const r = await scan(chain, { from: 1000, to: 1000, params: P });
-  assert.deepEqual(r.rejected[0].failed, ['V3']);
+test('V1 rejects an ESIP-2 log from a look-alike contract', async () => {
+  // Anyone can emit the ESIP-2 event. Only our contract's logs are entries.
+  const r = await scan(chainOf([write(A, 0, 'forged', { emitter: IMPOSTOR })]),
+    { from: 1000, to: 1000, params: P });
+  assert.equal(r.entries.length, 0);
+  assert.ok(r.rejected[0].failed.includes('V1'));
 });
 
-test('author state carries across blocks: seq must keep rising', async () => {
-  const chain = fakeChain(
-    { 1000: [mkTx(A, 0, 'one')], 1001: [mkTx(A, 0, 'two')], 1002: [mkTx(A, 1, 'three')] },
-    { [A]: P.minJusticeBalance });
-  const r = await scan(chain, { from: 1000, to: 1002, params: P });
+test('V2 rejects an underpaid write', async () => {
+  const r = await scan(chainOf([write(A, 0, 'cheap', { feeWei: P.minFeeWei - 1n })]),
+    { from: 1000, to: 1000, params: P });
+  assert.ok(r.rejected[0].failed.includes('V2'));
+});
+
+test('V6 rejects a body whose author field is not the initialOwner', async () => {
+  // Content copied from another author, re-emitted under the copier's name.
+  const stolen = write(A, 0, 'my testimony', { author: B });
+  const r = await scan(chainOf([stolen]), { from: 1000, to: 1000, params: P });
+  assert.ok(r.rejected[0].failed.includes('V6'));
+});
+
+test('V4 rejects non-canonical key order', async () => {
+  const uri = 'data:application/json;charset=utf-8,' +
+    `{"body":"x","p":"justice-journal","v":1,"author":"${A}","seq":0,"ts":1,"tags":[]}`;
+  const r = await scan(chainOf([write(A, 0, 'x', { contentURI: uri })]),
+    { from: 1000, to: 1000, params: P });
+  assert.ok(r.rejected[0].failed.includes('V4'));
+});
+
+test('V8 requires a strictly increasing seq across blocks', async () => {
+  const r = await scan(chainOf([
+    write(A, 0, 'one', { blockNumber: 1000n }),
+    write(A, 0, 'two', { blockNumber: 1001n }),
+    write(A, 1, 'three', { blockNumber: 1002n }),
+  ]), { from: 1000, to: 1002, params: P });
   assert.deepEqual(r.entries.map((e) => e.body), ['one', 'three']);
   assert.deepEqual(r.rejected[0].failed, ['V8']);
 });
 
-test('rate limit counts only accepted entries and spans blocks', async () => {
-  const blocks = {};
-  for (let i = 0; i < 5; i++) blocks[1000 + i] = [mkTx(A, i, 'entry ' + i)];
-  const chain = fakeChain(blocks, { [A]: P.minJusticeBalance });
-  const r = await scan(chain, { from: 1000, to: 1004, params: P });
+test('V9 rate-limits per author, counting accepted entries only', async () => {
+  const ws = [];
+  for (let i = 0; i < 5; i++) ws.push(write(A, i, 'entry ' + i, { blockNumber: BigInt(1000 + i) }));
+  const r = await scan(chainOf(ws), { from: 1000, to: 1004, params: P });
   assert.equal(r.entries.length, P.maxEntriesPerAuthorPerWindow);
-  assert.equal(r.rejected.length, 2);
   assert.ok(r.rejected.every((x) => x.failed.includes('V9')));
 });
 
-test('rate limit is per author, not global', async () => {
-  const blocks = {};
-  for (let i = 0; i < 3; i++) blocks[1000 + i] = [mkTx(A, i, 'a' + i), mkTx(B, i, 'b' + i, { transactionIndex: 1 })];
-  const chain = fakeChain(blocks, { [A]: P.minJusticeBalance, [B]: P.minJusticeBalance });
-  const r = await scan(chain, { from: 1000, to: 1002, params: P });
+test('V9 is per author, not global', async () => {
+  const ws = [];
+  for (let i = 0; i < 3; i++) {
+    ws.push(write(A, i, 'a' + i, { blockNumber: BigInt(1000 + i) }));
+    ws.push(write(B, i, 'b' + i, { blockNumber: BigInt(1000 + i), logIndex: 1 }));
+  }
+  const r = await scan(chainOf(ws), { from: 1000, to: 1002, params: P });
   assert.equal(r.entries.length, 6);
 });
 
-test('front-runner in an earlier block does not steal the entry', async () => {
-  // Attacker replays A's exact bytes from their own address one block early.
-  const real = mkTx(A, 0, 'my testimony');
-  const stolen = { ...real, hash: '0xff'.padEnd(66, '0'), from: B };
-  const chain = fakeChain({ 1000: [stolen], 1001: [real] },
-    { [A]: P.minJusticeBalance, [B]: P.minJusticeBalance });
-  const r = await scan(chain, { from: 1000, to: 1001, params: P });
-  assert.equal(r.entries.length, 1);
-  assert.equal(r.entries[0].author, A);          // the real author owns it
-  assert.ok(r.rejected[0].failed.includes('V6')); // the copy is not an entry
+test('V10 counts code points, so Chinese gets the same allowance', async () => {
+  const ok = await scan(chainOf([write(A, 0, '记'.repeat(500))]), { from: 1000, to: 1000, params: P });
+  assert.equal(ok.entries.length, 1);
+  const over = await scan(chainOf([write(A, 0, '记'.repeat(501))]), { from: 1000, to: 1000, params: P });
+  assert.ok(over.rejected[0].failed.includes('V10'));
 });
 
-test('output is deterministic across runs', async () => {
-  const blocks = { 1000: [mkTx(A, 0, 'x'), mkTx(B, 0, 'y', { transactionIndex: 1 })] };
-  const chain = fakeChain(blocks, { [A]: P.minJusticeBalance, [B]: P.minJusticeBalance });
-  const a = await scan(chain, { from: 1000, to: 1000, params: P });
-  const b = await scan(chain, { from: 1000, to: 1000, params: P });
+test('V12 rejects content already inscribed elsewhere on L1', async () => {
+  const w = write(A, 0, 'already inscribed');
+  const first = await scan(chainOf([w]), { from: 1000, to: 1000, params: P });
+  const again = await scan(chainOf([w]), {
+    from: 1000, to: 1000, params: P, seenContent: new Set([first.entries[0].contentHash]),
+  });
+  assert.equal(again.entries.length, 0);
+  assert.ok(again.rejected[0].failed.includes('V12'));
+});
+
+test('a griefed author recovers by bumping seq', async () => {
+  const first = await scan(chainOf([write(A, 0, 'testimony')]), { from: 1000, to: 1000, params: P });
+  const retry = await scan(chainOf([write(A, 1, 'testimony')]), {
+    from: 1000, to: 1000, params: P, seenContent: new Set([first.entries[0].contentHash]),
+  });
+  assert.equal(retry.entries.length, 1);
+});
+
+test('V13 rejects writes before the genesis block', async () => {
+  const r = await scan(chainOf([write(A, 0, 'early', { blockNumber: 999n })]),
+    { from: 999, to: 1000, params: P });
+  assert.ok(r.rejected[0].failed.includes('V13'));
+});
+
+test('output is ordered by chain position and is deterministic', async () => {
+  const ws = [
+    write(B, 0, 'second', { blockNumber: 1001n }),
+    write(A, 0, 'first', { blockNumber: 1000n, logIndex: 3 }),
+  ];
+  const a = await scan(chainOf(ws), { from: 1000, to: 1001, params: P });
+  const b = await scan(chainOf(ws), { from: 1000, to: 1001, params: P });
+  assert.deepEqual(a.entries.map((e) => e.body), ['first', 'second']);
   assert.equal(JSON.stringify(a), JSON.stringify(b));
-});
-
-test('pre-seeded global content set pre-empts an entry (V12)', async () => {
-  // The same body was already inscribed on L1 outside the treasury flow,
-  // so the ethscription is not ours to mint.
-  const t = mkTx(A, 0, 'already inscribed');
-  const { entries, rejected } = await scan(fakeChain({ 1000: [t] }, { [A]: P.minJusticeBalance }),
-    { from: 1000, to: 1000, params: P });
-  const ch = entries[0].contentHash;
-
-  const r = await scan(fakeChain({ 1000: [t] }, { [A]: P.minJusticeBalance }),
-    { from: 1000, to: 1000, params: P, seenContent: new Set([ch]) });
-  assert.equal(r.entries.length, 0);
-  assert.ok(r.rejected[0].failed.includes('V12'));
 });

@@ -1,9 +1,15 @@
 # Justice Journal — calldata specification (draft v1)
 
-An entry is a plain Ethereum transaction. There is no contract, no IPFS,
-and no privileged operator. The content lives in L1 calldata; the rules
-below decide which transactions count as entries. Anyone can re-run the
+An entry is a call to `JusticeJournal.write(string)`. The content lives in
+that transaction's calldata and is minted as an ethscription **owned by its
+author**. There is no IPFS, no storage, and no privileged operator. The
+rules below decide which calls count as entries; anyone can re-run the
 reference indexer and must get a byte-identical result.
+
+> Superseded: an earlier draft of this document had entries sent directly
+> to the treasury with no contract. That is wrong. Under ESIP-1 the
+> transaction recipient becomes the ethscription's owner, so that design
+> made the DAO the owner of every author's entry. See §2.
 
 ---
 
@@ -32,9 +38,35 @@ forever". Say so in the proposal rather than letting someone else say it.
 
 ---
 
-## 2. Entry format
+## 2. Why there is a contract
 
-The calldata is the UTF-8 bytes of an Ethscriptions data URI:
+Under **ESIP-1**, `tx.to` becomes the ethscription's initial owner. Any
+contract-free design that routes the fee by requiring `tx.to == treasury`
+therefore hands the DAO ownership of every entry — fatal for a marketplace
+layer and indefensible on its own terms.
+
+**ESIP-2** lets a contract name the `initialOwner` in an event. That is the
+only construction that collects a fee *and* leaves the author owning their
+words. `JusticeJournal.sol` is ~110 lines: no storage, no owner, no
+upgradeability, all parameters immutable.
+
+It enforces only what must be atomic with the write — `msg.value >= minFee`
+and `balanceOf(sender) >= 100,000 $JUSTICE`. Everything else stays in the
+indexer where it costs no gas. Moving the gate on-chain has a useful side
+effect: **the indexer no longer needs an archive node**, because it never
+reads historical state.
+
+Fees accumulate in the contract and are converted by a permissionless
+batched `sweepAndBuy(minOut, deadline)`, with `sweepEth()` as the escape
+hatch. Swapping per entry would add >100k gas to every write, push $2
+trades through a thin pool, and couple writing an entry to DEX liquidity —
+a failed swap would revert the entry.
+
+---
+
+## 3. Entry format
+
+The `contentURI` argument is an Ethscriptions data URI:
 
 ```
 data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x…","seq":0,"ts":1757280000,"tags":["assange"],"body":"…"}
@@ -59,7 +91,7 @@ front-running resistance, and it is worth it — see §5.
 
 ---
 
-## 3. Validity rules
+## 4. Validity rules
 
 An entry is valid iff every rule passes. All inputs are L1 state or
 derived from earlier applications of these same rules, so the index is
@@ -67,46 +99,46 @@ reproducible by anyone.
 
 | # | rule |
 |---|---|
-| V1 | `tx.to` is the DAO treasury |
-| V2 | `tx.value ≥ minFeeWei` — **this is the write fee** |
-| V3 | the transaction succeeded |
-| V4 | calldata decodes to a canonical entry (§2) |
+| V1 | the ESIP-2 log was emitted by the canonical JusticeJournal contract |
+| V2 | `fee >= minFeeWei` |
+| V4 | `contentURI` decodes to a canonical entry (§3) |
 | V5 | `p == "justice-journal"`, `v == 1`, `ts` is a non-negative integer |
-| V6 | `author == tx.from` |
-| V7 | `balanceOf($JUSTICE, tx.from)` at end of block `N-1` ≥ 100,000 |
+| V6 | `entry.author` equals the ESIP-2 `initialOwner` |
 | V8 | `seq` exceeds the author's highest accepted `seq` |
 | V9 | author is under the rate limit for the trailing window |
 | V10 | body is 1–500 code points |
 | V11 | tags well-formed |
-| V12 | content is not already inscribed (§5) |
+| V12 | content is not already inscribed (§6) |
 | V13 | block ≥ genesis block |
 
-### V2 is the point of this document
+Two rules from the pre-contract draft are gone, both now enforced
+atomically by `write()`:
 
-The objection to a contract-free design is "you can't collect the fee".
-You can. An ethscription-creating transaction is an ordinary EOA
-transaction and **can carry ETH value**. Requiring `tx.to == treasury` and
-`tx.value ≥ fee` gives a per-entry, indexer-enforced, independently
-verifiable fee with no contract at all.
+- *transaction succeeded* — a reverted write emits no logs, so it cannot
+  reach the indexer at all.
+- *holding gate* — checked in `write()`. This is what removes the archive
+  node requirement.
 
-The cost: the fee is denominated in ETH, so there is no $JUSTICE sink or
-buy pressure. If the DAO requires a $JUSTICE-denominated fee, that needs
-the ESIP-2 contract variant instead. **This is a genuine either/or and the
-proposal should put it to a vote rather than pick quietly.**
+**V1 matters more than it looks.** Anyone can emit the ESIP-2 event from
+their own contract. Only logs from the canonical address are entries.
 
-### V7 and V9 together
+### The fee is the only per-entry cost
 
 The holding gate is per *wallet*; writing is per *entry*. One 100k bag can
-write ten thousand entries. A holding gate alone is not an anti-spam
-mechanism, and it is rentable across blocks by anyone willing to borrow.
+write ten thousand entries, and the gate is rentable across blocks by
+anyone willing to borrow. So the gate filters non-holders and nothing more.
 
-So: **V2 is the real spam cost**, V7 filters non-holders, and V9 caps
-burst abuse. Removing V2 in favour of "we'll monetise the secondary
-market" removes the only per-entry cost in the system.
+**V2 is the real spam cost** and V9 caps burst abuse. Replacing the fee
+with "we'll monetise the secondary market" removes the only per-entry cost
+in the system — see PRD §8.
+
+The fee is denominated in ETH and converted to $JUSTICE by the batched
+sweep, so the $JUSTICE buy pressure is preserved without putting a DEX in
+the write path.
 
 ---
 
-## 4. Cost
+## 5. Cost
 
 EIP-7623 (Pectra) floor pricing governs a data-only transaction:
 
@@ -114,14 +146,22 @@ EIP-7623 (Pectra) floor pricing governs a data-only transaction:
 gas = 21,000 + 10 × (zero_bytes + 4 × nonzero_bytes)
 ```
 
-Measured from the reference implementation (`node src/demo.mjs`):
+Execution measured by `forge test`, calldata priced by EIP-7623, recombined
+by `node src/gas.mjs`:
 
-| entry | gas | @1 gwei | @5 gwei |
+| entry | contract route | direct calldata | premium |
 |---|---|---|---|
-| 113 chars English | 32,800 | 0.000033 ETH | 0.000164 ETH |
-| 179 chars English | 35,320 | 0.000035 ETH | 0.000177 ETH |
-| 82 chars Chinese | 36,120 | 0.000036 ETH | 0.000181 ETH |
-| original design (contract + SSTORE + IPFS hash) | ~90–110k | — | — plus annual pinning |
+| 113-char English | 51,463 gas | 32,040 gas | +19,423 |
+| 500-char Chinese | 88,420 gas | 87,520 gas | **+900** |
+
+The contract premium collapses on longer entries: a data-heavy transaction
+pays the floor for its bytes, and the contract's execution rides underneath
+that floor for free. Authors pay almost nothing for the contract on exactly
+the entries the Journal wants to encourage.
+
+At 5 gwei that is ~$0.26 for a short English entry and ~$0.44 for a
+full-length Chinese one. The original design — contract write plus SSTORE
+plus IPFS hash — is 90–110k gas *plus* recurring pinning.
 
 Chinese runs ~2.2× the gas per character (3-byte UTF-8). Even so, a full
 500-character Chinese entry stays well under $2 at 5 gwei.
@@ -134,7 +174,7 @@ it must be open source, reproducible, and run by more than one party.
 
 ---
 
-## 5. Front-running
+## 6. Front-running
 
 Ethscriptions enforce global content uniqueness. An attacker watching the
 mempool can copy your bytes and inscribe them first.
@@ -146,7 +186,7 @@ attacker gains nothing.
 **V6 does not stop the grief.** Their inscription still consumed the
 content globally, so your later transaction creates a valid *entry* but
 not a valid *ethscription* — meaning no NFT, nothing transferable. Three
-layers of defence, in order:
+layers of defence, in order of effectiveness:
 
 1. **Submit through a private mempool** (Flashbots Protect). The bytes are
    not public before inclusion. This is the actual fix; the write tool
@@ -161,9 +201,12 @@ layers of defence, in order:
 
 ---
 
-## 6. Governance and moderation
+## 7. Governance and moderation
 
-- **Parameters** live in `src/config.mjs`. Changing one changes the index,
+- **Contract parameters** are immutable and set at deployment. Changing
+  one means deploying a new contract and a governance vote to move
+  `journalContract`; the old index stays valid for its own range.
+- **Indexer parameters** live in `src/config.mjs`. Changing one changes the index,
   so every change is a governance action with an effective-from block —
   never a silent edit.
 - **Moderation is a display overlay.** `hidden.json` lists entry ids the
@@ -173,12 +216,12 @@ layers of defence, in order:
 - **Plan for the worst entry.** Someone will inscribe something illegal.
   On IPFS you could unpin; here you cannot. The answer has to be that the
   chain is the raw layer and the DAO's index is a curated view, plus V2
-  and V7 raising the cost of abuse. Have this answer ready before the
+  and the holding gate raising the cost of abuse. Have this answer ready before the
   proposal goes up — it is the strongest objection to the whole approach.
 
 ---
 
-## 7. What is deliberately not here
+## 8. What is deliberately not here
 
 - **NFT / marketplace layer.** Entries are ethscriptions, so they are
   transferable by default. Whether they *should* be is a separate
