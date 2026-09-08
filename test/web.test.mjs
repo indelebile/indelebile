@@ -77,3 +77,17 @@ test('the page requests nothing from an external host', () => {
   assert.deepEqual(loaders.map((m) => m[1]), [],
     'no stylesheet, script, font or image may come from another host');
 });
+
+// Assigning `.className` replaces the whole list, so an element the
+// stylesheet targets by class loses all styling — with no error anywhere.
+// That happened to the status box. Rather than try to spot the unsafe
+// assignments, app.js uses setState()/classList and none are allowed.
+test('app.js never assigns className directly', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const hits = [...app.matchAll(/^.*\.className\s*=.*$/gm)]
+    .map((m) => m[0].trim())
+    .filter((line) => !line.startsWith('//'));
+  assert.deepEqual(hits, [],
+    `use setState() instead — these drop the base class: ${hits.join(' | ')}`);
+  assert.ok(app.includes('function setState'), 'the helper must still exist');
+});

@@ -18,6 +18,15 @@ window.JJ_CONFIG = {
   // wallet — requiring one to read a public record would be absurd.
   READ_RPC: 'http://127.0.0.1:8547',
 
+  // Passed to wallet_addEthereumChain when the wallet does not know this
+  // network yet, so a mismatch is one click to fix rather than a dead end.
+  CHAIN_PARAMS: {
+    chainId: '0x7a69', // 31337
+    chainName: 'Anvil (local)',
+    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    rpcUrls: ['http://127.0.0.1:8547'],
+  },
+
   JOURNAL: '0x68B1D87F95878fE05B998F19b66F4baba5De1aed',
   JUSTICE: '0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1',
 

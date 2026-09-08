@@ -102,9 +102,12 @@ details.bytes[open] summary::before{content:"▾ "}
 pre.preview{margin:.7rem 0 0;padding:.85rem 1rem;background:var(--code);border-radius:7px;
   font:.66rem/1.65 var(--mono);color:var(--ink-2);white-space:pre-wrap;word-break:break-all;
   max-height:9rem;overflow:auto}
-.status{margin-top:1.1rem;padding:.75rem 1rem;border-radius:7px;background:var(--code);
-  font:.74rem/1.6 var(--mono);word-break:break-all}
-.status.bad{color:var(--accent)} .status.ok{color:var(--ink-2)}
+.status{margin:0 0 1.35rem;padding:.8rem 1rem;border-radius:7px;background:var(--code);
+  border-left:2px solid var(--ink-3);font:.75rem/1.7 var(--mono);word-break:break-word}
+.status a{color:inherit}
+.status.bad{color:var(--accent);border-left-color:var(--accent)}
+.status.ok{color:var(--ink-2);border-left-color:var(--ok)}
+#notConnected a{color:var(--accent)}
 
 /* ---------- archive ---------- */
 .archive-head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1.4rem}
@@ -201,6 +204,8 @@ footer .addr{word-break:break-all}
         </div>
       </div>
 
+      <div class="status" id="status" hidden></div>
+
       <div class="field">
         <label for="body">Entry <span class="hint">— up to <span id="max">500</span> characters, any language</span></label>
         <textarea id="body" placeholder="March 10, 2024 — I joined my first rally.&#10;&#10;Write the thing you would want someone to be able to read in twenty years."></textarea>
@@ -226,8 +231,6 @@ footer .addr{word-break:break-all}
         <summary>The exact bytes that will be recorded</summary>
         <pre class="preview" id="preview"></pre>
       </details>
-
-      <div class="status" id="status" hidden></div>
     </div>
   </section>
 

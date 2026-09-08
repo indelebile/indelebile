@@ -11,6 +11,13 @@ const C = window.JJ_CONFIG;
 const { SEL, TOPIC, encodeWriteEntry, encodeBalanceOf, decodeEsip3String, padAddr } = window.JJ_ABI;
 
 const $ = (id) => document.getElementById(id);
+
+// Toggle a state class without touching the element's base class.
+// Assigning `.className` outright drops it, the element loses its styling,
+// and nothing anywhere reports an error — so we never assign it.
+function setState(el, states, active) {
+  for (const s of states) el.classList.toggle(s, s === active);
+}
 const eth = () => window.ethereum;
 
 // Writing needs the wallet. Reading must not: a public archive that
@@ -35,21 +42,79 @@ let nextSeq = 0;
 
 // ---------- wallet ----------
 
+// Wallets fail quietly in several ways — a rejected prompt, a request
+// already queued behind an unopened popup, an unknown network. None of
+// them throws anywhere visible, so every one is caught and named here.
 async function connect() {
-  if (!eth()) return say('No wallet found. Install MetaMask, or open this page in a wallet browser.', true);
-  const [a] = await wallet('eth_requestAccounts');
-  account = a.toLowerCase();
+  const btn = $('connect');
+  if (!eth()) return noWallet();
 
-  const chainId = Number(await wallet('eth_chainId'));
-  if (chainId !== C.CHAIN_ID) {
-    return say(`Wrong network: connected to chain ${chainId}, this deployment is on ${C.CHAIN_ID} (${C.CHAIN_NAME}).`, true);
+  const label = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Check your wallet…';
+  say('Approve the connection in your wallet. If no window opened, click the wallet extension — the request may be waiting there.');
+
+  try {
+    const [a] = await wallet('eth_requestAccounts');
+    account = a.toLowerCase();
+
+    if (Number(await wallet('eth_chainId')) !== C.CHAIN_ID) {
+      const switched = await switchNetwork();
+      if (!switched) return;
+    }
+
+    btn.hidden = true;
+    $('walletInfo').hidden = false;
+    $('notConnected').hidden = true;
+    $('who').textContent = account.slice(0, 6) + '…' + account.slice(-4);
+    $('status').hidden = true;
+    await refresh();
+  } catch (e) {
+    account = null;
+    say(walletError(e), true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
   }
+}
 
-  $('connect').hidden = true;
-  $('walletInfo').hidden = false;
-  $('notConnected').hidden = true;
-  $('who').textContent = account.slice(0, 6) + '…' + account.slice(-4);
-  await refresh();
+/// Offer to switch, and to add the network if the wallet has never seen it.
+async function switchNetwork() {
+  try {
+    await wallet('wallet_switchEthereumChain', [{ chainId: '0x' + C.CHAIN_ID.toString(16) }]);
+    return true;
+  } catch (e) {
+    // 4902: the wallet does not know this chain yet.
+    if (e.code === 4902 && C.CHAIN_PARAMS) {
+      try {
+        await wallet('wallet_addEthereumChain', [C.CHAIN_PARAMS]);
+        return true;
+      } catch (addErr) {
+        say(`This page is on ${C.CHAIN_NAME}. ` + walletError(addErr), true);
+        return false;
+      }
+    }
+    say(`This page is on ${C.CHAIN_NAME} (chain ${C.CHAIN_ID}). ` + walletError(e), true);
+    return false;
+  }
+}
+
+function walletError(e) {
+  const code = e?.code;
+  if (code === 4001) return 'You declined the request in your wallet.';
+  if (code === -32002) return 'Your wallet already has a request open — click the extension icon and approve it there. Wallets do not open a second window while one is pending.';
+  if (code === 4900 || code === 4901) return 'Your wallet is locked or disconnected. Unlock it and try again.';
+  return e?.data?.message || e?.message || 'Your wallet rejected the request.';
+}
+
+function noWallet() {
+  const btn = $('connect');
+  btn.disabled = true;
+  btn.textContent = 'No wallet detected';
+  $('notConnected').innerHTML =
+    'no wallet detected — install <a href="https://metamask.io" target="_blank" rel="noreferrer">MetaMask</a> ' +
+    'or open this page in a wallet browser. You can still draft and read.';
+  say('This page found no wallet extension. Reading the archive works without one; writing does not.', true);
 }
 
 async function refresh() {
@@ -57,7 +122,7 @@ async function refresh() {
   const held = balance / 10n ** 18n;
   const ok = balance >= C.MIN_BALANCE;
   $('gate').textContent = `${held.toLocaleString()} $JUSTICE`;
-  $('gate').className = 'holding ' + (ok ? 'yes' : 'no');
+  setState($('gate'), ['yes', 'no'], ok ? 'yes' : 'no');
   $('gateNote').textContent = ok ? 'gate cleared'
     : `need ${(C.MIN_BALANCE / 10n ** 18n).toLocaleString()}`;
   $('faucet').hidden = !C.FAUCET || ok;
@@ -111,14 +176,14 @@ function update() {
   const uri = toDataUri(entry);
 
   $('count').textContent = `${chars} / ${C.BODY_MAX_CHARS}`;
-  $('count').className = chars > C.BODY_MAX_CHARS ? 'over' : '';
+  setState($('count'), ['over'], chars > C.BODY_MAX_CHARS ? 'over' : null);
   $('bytes').textContent = `${byteLength(uri)} bytes on-chain`;
   $('preview').textContent = uri;
 
   const pct = Math.min(100, (chars / C.BODY_MAX_CHARS) * 100);
   const bar = $('meterbar');
   bar.style.width = pct + '%';
-  bar.className = chars > C.BODY_MAX_CHARS ? 'over' : pct > 85 ? 'warn' : '';
+  setState(bar, ['warn', 'over'], chars > C.BODY_MAX_CHARS ? 'over' : pct > 85 ? 'warn' : null);
 
   const failed = checkLocal(entry, { bodyMaxChars: C.BODY_MAX_CHARS, maxTags: C.MAX_TAGS });
   const explain = {
@@ -246,7 +311,7 @@ const fmtEth = (wei) => (Number(wei) / 1e18).toFixed(4).replace(/0+$/, '').repla
 function say(msg, bad = false, html = false) {
   const el = $('status');
   el[html ? 'innerHTML' : 'textContent'] = msg;
-  el.className = bad ? 'bad' : 'ok';
+  setState(el, ['ok', 'bad'], bad ? 'bad' : 'ok');
   el.hidden = false;
 }
 
@@ -277,4 +342,8 @@ loadFeed().catch(() => { $('feed').innerHTML = '<p class="muted">Could not reach
 if (eth()) {
   eth().on?.('accountsChanged', () => location.reload());
   eth().on?.('chainChanged', () => location.reload());
+} else {
+  // Some wallets inject late. Give them a moment before saying there is none.
+  window.addEventListener('eip6963:announceProvider', () => location.reload(), { once: true });
+  setTimeout(() => { if (!eth()) noWallet(); }, 1200);
 }
