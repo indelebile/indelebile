@@ -224,19 +224,66 @@ async function send() {
   }
   tx.gas = '0x' + (gas * 12n / 10n).toString(16);
 
-  say(`Sending — about ${gas.toLocaleString()} gas plus a ${fmtEth(C.MIN_FEE_WEI)} ETH fee. Confirm in your wallet.`);
+  say(`About ${gas.toLocaleString()} gas plus a ${fmtEth(C.MIN_FEE_WEI)} ETH fee. Confirm in your wallet.`);
   $('send').disabled = true;
   try {
     const hash = await wallet('eth_sendTransaction', [tx]);
-    const link = C.EXPLORER ? `<a href="${C.EXPLORER}/tx/${hash}" target="_blank" rel="noreferrer">${hash}</a>` : hash;
-    say(`Written. ${link}`, false, true);
+    const link = txLink(hash);
+
+    // eth_sendTransaction returns as soon as the transaction is accepted,
+    // not when it is mined. On a chain with real block times that is ten
+    // seconds or more, so reloading the archive here would find nothing
+    // and the entry would look lost.
+    say(`Submitted — waiting for it to be mined. ${link}`, false, true);
+    const receipt = await waitForReceipt(hash);
+
+    if (!receipt) {
+      say(`Still not mined after two minutes. It is probably fine — check ${link} and reload.`, true, true);
+      $('send').disabled = false;
+      return;
+    }
+    if (BigInt(receipt.status) === 0n) {
+      say(`The transaction reverted, so nothing was written and the fee was not taken. ${link}`, true, true);
+      $('send').disabled = false;
+      return;
+    }
+
+    say(`Written in block ${Number(receipt.blockNumber)}. ${link}`, false, true);
     $('body').value = '';
     $('tags').value = '';
-    // Show the entry that was just written, not only the next seq number.
-    await Promise.all([refresh(), loadFeed()]);
+    await refresh();
+    // Log indexing can trail the receipt by a moment on public endpoints.
+    await loadFeedUntil(hash);
   } catch (e) {
-    say(e.message ?? 'Rejected.', true);
+    say(walletError(e), true);
     $('send').disabled = false;
+  }
+}
+
+const txLink = (hash) => C.EXPLORER
+  ? `<a href="${C.EXPLORER}/tx/${hash}" target="_blank" rel="noreferrer">${hash.slice(0, 10)}…${hash.slice(-6)}</a>`
+  : hash;
+
+/// Poll until the transaction is mined. Returns null if it never is.
+async function waitForReceipt(hash, timeoutMs = 120_000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const r = await read('eth_getTransactionReceipt', [hash]).catch(() => null);
+    if (r) return r;
+    const waited = Math.round((Date.now() - started) / 1000);
+    say(`Submitted — waiting for it to be mined (${waited}s). ${txLink(hash)}`, false, true);
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  return null;
+}
+
+/// Reload the archive until the new entry shows up, so a lagging endpoint
+/// does not leave the author staring at a page that omits what they wrote.
+async function loadFeedUntil(hash, tries = 8) {
+  for (let i = 0; i < tries; i++) {
+    await loadFeed();
+    if (document.querySelector(`article.entry[data-tx="${hash}"]`)) return;
+    await new Promise((r) => setTimeout(r, 2500));
   }
 }
 
@@ -280,7 +327,7 @@ function renderEntry(e) {
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
     : `block ${e.block}`;
   const tags = (e.tags ?? []);
-  return `<article class="entry" data-tags="${esc(tags.join(' '))}">
+  return `<article class="entry" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
       <span class="seq">#${esc(e.seq)}</span>
