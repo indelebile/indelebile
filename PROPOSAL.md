@@ -224,46 +224,65 @@ These are genuine either/ors. I have deliberately not picked.
 
 ### A recommendation on rewards
 
-**Drop blanket incentives entirely.** Reward only the weekly or monthly
-entries the community elects, and pay nothing for the act of writing
-itself.
+**Pay nothing for the act of writing. Reward only the entries the
+community elects.** Four things follow, and none of them requires trusting
+that nobody will try.
 
-This removes the arithmetic that makes farming possible rather than trying
-to price around it. Competitive prizes are lottery-shaped and their value
-per entry falls as participation rises, so they are self-limiting in a way
-a per-action reward never is. It also deletes a whole subsystem — referral
-tracking, reward caps, payout logic — from the original budget.
+**1. It removes the arithmetic instead of pricing around it.** A guaranteed
+per-entry reward is farmable the moment it exceeds the cost of writing;
+the only defence is to keep pricing it below, forever, as both sides move.
+§5's rewards happen to be safe today — writing an entry costs about
+**$0.0204** while a 50–100 $JUSTICE share reward is worth **$0.0011–0.0023**
+— but break-even is **893 $JUSTICE per entry**, the referral reward has no
+stated amount, and a tenfold price move drops the threshold to 89. Deleting
+per-action rewards makes the question moot rather than recurring. It also
+removes referral tracking, reward caps and payout logic from the budget.
 
-The numbers say the proposal's rewards are safe *today*: writing an entry
-costs about **$0.0204**, while §5's per-share reward of 50–100 $JUSTICE is
-worth **$0.0011–0.0023**, six to eleven percent of the cost of claiming it.
-But that is arithmetic, not structure. Break-even is **893 $JUSTICE per
-entry**; §5's referral reward has no stated amount, and a tenfold price
-move would drop the threshold to 89, at which point the share reward
-crosses it on its own. Dropping per-action rewards makes the question moot
-instead of recurring.
+**2. Capturing a competitive prize does not pay.** The monthly cap of 10M
+$JUSTICE is **$228.70**. Acquiring 50M $JUSTICE to swing a vote costs
+**$1,418** at a 24% slippage premium, and round-tripping out of an illiquid
+position leaves roughly $500 of pure friction. Spending $500 to win $229 is
+a bad trade before counting the price exposure carried through the voting
+period — a 20% drawdown on that position exceeds the entire prize.
 
-If the DAO keeps any guaranteed reward, it should carry an invariant:
+**3. And that holds regardless of price.** Both the prize and the cost of
+capturing it are denominated in $JUSTICE, so appreciation moves them
+together and the ratio is unchanged. This is exactly what per-action
+rewards do *not* give you: those pay $JUSTICE against a cost denominated in
+ETH gas, which is the one place price movement can open a gap. Dropping
+them closes the only price-sensitive hole in the design.
 
-> **No deterministic per-entry reward may exceed the cost of writing an
-> entry, measured on the day the reward is set.**
+**4. The real variable is turnout, not price.** With a prize `P` and honest
+voting weight `H`, capture becomes profitable once `P > 0.25 × H` — that
+is, when turnout falls below roughly four times the prize. At a 10M cap,
+voting must stay above **40M $JUSTICE**, or 0.24% of supply. Low for an
+active DAO; not automatic for a quiet month, where one participant could
+take the prize for a few hundred dollars.
 
-Two conditions make the competitive-only model actually hold:
+So rather than a fixed monthly cap:
 
-1. **Winners must be chosen by judgment, not by a metric.** If selection
-   follows likes or views, volume becomes useful again and those signals
-   can be manufactured. People recognise padding; counters do not.
-2. **Decide who votes.** Snapshot voting is off-chain and free, so under
-   token weighting a large holder can write one entry a month and vote
-   themselves the prize. That is not spam — it is reward capture, a
-   different failure with a different fix.
+> **Scale the prize to the voting weight that actually turned out, and
+> pay nothing below a quorum.**
 
-**The strongest argument for this is not about spam.** Paying for the act
-of writing changes who shows up: some arrive because they want to write,
-and some because it pays. Paying only for entries the community singles
-out means everyone who writes is there for the first reason. For an
-archive meant to be read in twenty years, that is not a side effect — it
-is the substance.
+That adapts to how alive the DAO is, instead of assuming it.
+
+Two conditions make the model hold in practice:
+
+- **Winners chosen by judgment, not by a metric.** If selection follows
+  likes or views, volume becomes useful again and those signals can be
+  manufactured. People recognise padding; counters do not.
+- **Decide who votes.** Under token weighting, splitting into many
+  addresses gains nothing, so a holding gate adds little; under
+  one-address-one-vote it *is* the sybil cost, and 500,000 $JUSTICE
+  ($11.49) is a far better gate than 100,000 ($2.29). Note that tokens are
+  not consumed — an attacker buys, votes, and sells — so the real cost is
+  round-trip friction, not face value.
+
+**The strongest argument is not about spam.** Paying for the act of writing
+changes who shows up: some arrive because they want to write, and some
+because it pays. Paying only for what the community singles out means
+everyone who writes is there for the first reason. For an archive meant to
+be read in twenty years, that is not a side effect — it is the substance.
 
 
 ### On secondary-market revenue
