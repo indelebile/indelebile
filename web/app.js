@@ -140,12 +140,7 @@ async function callBalance() {
 // The author's seq is not stored on-chain — it lives in the entries
 // themselves, so we read their past ESIP-3 logs and take the highest.
 async function loadNextSeq() {
-  const logs = await read('eth_getLogs', [{
-    address: C.JOURNAL,
-    topics: [TOPIC.esip3, '0x' + padAddr(account)],
-    fromBlock: '0x' + C.GENESIS_BLOCK.toString(16),
-    toBlock: 'latest',
-  }]);
+  const logs = await journalLogs(['0x' + padAddr(account)]);
   let max = -1;
   for (const l of logs) {
     try {
@@ -211,7 +206,7 @@ async function send() {
 
   const tx = {
     from: account,
-    to: C.JOURNAL,
+    to: C.JOURNALS.at(-1).address,
     value: '0x' + C.MIN_FEE_WEI.toString(16),
     data: '0x' + encodeWriteEntry(entryTail(entry)).replace(/^0x/, ''),
   };
@@ -298,11 +293,27 @@ async function faucet() {
 
 // ---------- reading ----------
 
-async function loadFeed() {
+// Reads across every canonical deployment. eth_getLogs takes an array of
+// addresses, so this is one request; the per-contract block ranges are
+// applied afterwards, because a superseded contract can still emit and
+// those emissions are not entries.
+async function journalLogs(extraTopics = []) {
   const logs = await read('eth_getLogs', [{
-    address: C.JOURNAL, topics: [TOPIC.esip3],
-    fromBlock: '0x' + C.GENESIS_BLOCK.toString(16), toBlock: 'latest',
+    address: C.JOURNALS.map((j) => j.address),
+    topics: [TOPIC.esip3, ...extraTopics],
+    fromBlock: '0x' + C.GENESIS_BLOCK.toString(16),
+    toBlock: 'latest',
   }]);
+  return logs.filter((l) => {
+    const n = Number(l.blockNumber);
+    return C.JOURNALS.some((j) =>
+      j.address.toLowerCase() === l.address.toLowerCase() &&
+      n >= j.fromBlock && (j.toBlock == null || n <= j.toBlock));
+  });
+}
+
+async function loadFeed() {
+  const logs = await journalLogs();
   const items = [];
   for (const l of logs.reverse()) {
     try {
@@ -380,9 +391,9 @@ const gateReq = (C.MIN_BALANCE / 10n ** 18n).toLocaleString();
 $('gateReq').textContent = gateReq;
 $('gateReq2').textContent = gateReq;
 $('max').textContent = C.BODY_MAX_CHARS;
-$('contractAddr').innerHTML = C.EXPLORER
-  ? `<a href="${C.EXPLORER}/address/${C.JOURNAL}" target="_blank" rel="noreferrer">${C.JOURNAL}</a>`
-  : C.JOURNAL;
+$('contractAddr').innerHTML = C.JOURNALS.map((j) => C.EXPLORER
+  ? `<a href="${C.EXPLORER}/address/${j.address}" target="_blank" rel="noreferrer">${j.address}</a>`
+  : j.address).join('<br>');
 update();
 loadFeed().catch(() => { $('feed').innerHTML = '<p class="muted">Could not reach the network.</p>'; });
 

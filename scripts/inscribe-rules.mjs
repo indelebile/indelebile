@@ -23,7 +23,7 @@ const arg = (k, d) => { const i = argv.indexOf('--' + k); return i === -1 ? d : 
 
 const text = readFileSync(new URL('../docs/READING-RULES.txt', import.meta.url), 'utf8')
   .trimEnd()
-  .replaceAll('CONTRACT_ADDR', PARAMS.journalContract)
+  .replaceAll('CONTRACT_ADDR', PARAMS.journalContracts.at(-1).address)
   .replaceAll('GENESIS', String(PARAMS.genesisBlock))
   .replaceAll('MINFEE', PARAMS.minFeeWei.toString());
 

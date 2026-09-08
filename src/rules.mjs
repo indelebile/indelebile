@@ -16,7 +16,7 @@ import { decode, contentHash, codePointLength, canonicalJson } from './entry.mjs
 import { DATA_URI_PREFIX } from './config.mjs';
 
 export const RULES = {
-  V1: 'log must come from the canonical JusticeJournal contract',
+  V1: 'log must come from a canonical JusticeJournal contract, within its block range',
   V2: 'fee paid must be at least minFeeWei',
   V4: 'contentURI must be a canonical Journal entry',
   V5: 'protocol tag, version and timestamp must be well-formed',
@@ -40,12 +40,24 @@ export const CONTRACT_ENFORCED = {
  *                     emitter, author, contentURI, feeWei}
  * @param {object} ctx {authorState, seenContent, params}
  */
+/// A log counts only if it came from one of the canonical contracts *and*
+/// fell inside that contract's active range. The range matters: after a
+/// contract is superseded it can still emit, and those emissions are not
+/// entries.
+export function isCanonical(ev, params = PARAMS) {
+  const emitter = (ev.emitter ?? '').toLowerCase();
+  return (params.journalContracts ?? []).some((c) =>
+    c.address.toLowerCase() === emitter &&
+    ev.blockNumber >= c.fromBlock &&
+    (c.toBlock == null || ev.blockNumber <= c.toBlock));
+}
+
 export function validate(ev, ctx) {
   const P = ctx.params ?? PARAMS;
   const failed = [];
 
   if (ev.blockNumber < P.genesisBlock) failed.push('V13');
-  if ((ev.emitter ?? '').toLowerCase() !== P.journalContract.toLowerCase()) failed.push('V1');
+  if (!isCanonical(ev, P)) failed.push('V1');
   if (BigInt(ev.feeWei) < P.minFeeWei) failed.push('V2');
 
   // The contentURI arrives as a string from the log, not as hex calldata.

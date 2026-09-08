@@ -6,9 +6,23 @@ import { TAG_PATTERN } from './canonical.mjs';
 // effective-from block, never a silent edit. See SPEC.md §6.
 
 export const PARAMS = {
-  // The JusticeJournal contract. Entries are ESIP-3 logs emitted by this
-  // address and nothing else; a log from anywhere else is not an entry.
-  journalContract: '0xb196fCfC583F0B3770F05d94B17cfAe70f4edf4E', // Sepolia
+  // The canonical contracts, in deployment order. A log from anywhere else
+  // is not an entry.
+  //
+  // This is a list, not one address, because every parameter in the
+  // contract is immutable: changing the fee, the gate, or the treasury
+  // means deploying again. With a single address the archive would end at
+  // its own first governance decision and every entry written before it
+  // would fall outside the rules. Instead each deployment covers a block
+  // range, and the archive spans all of them — sequence numbers, rate
+  // limits and content uniqueness carry across the boundary, so an author
+  // cannot reset their history by migrating.
+  //
+  // `toBlock: null` means "still current". Set it when superseding.
+  journalContracts: [
+    { address: '0xb196fCfC583F0B3770F05d94B17cfAe70f4edf4E', fromBlock: 11659670, toBlock: null,
+      note: 'Sepolia validation deployment' },
+  ],
 
   // Where swept fees land. The contract holds it immutably, so this is
   // recorded here for verifiers, not used to decide validity.
@@ -35,7 +49,7 @@ export const PARAMS = {
   tagMaxChars: 32,
   tagPattern: TAG_PATTERN,
 
-  // Block before which no entry is valid. Set at launch.
+  // Block before which no entry is valid — the first contract's start.
   genesisBlock: 11659670,
 };
 

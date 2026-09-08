@@ -5,6 +5,13 @@
 //
 //   node scripts/apply-deployment.mjs --network sepolia \
 //     --journal 0x.. --justice 0x.. --treasury 0x.. --genesis 12345678
+//
+// By default this replaces the current deployment, which is what you want
+// while iterating. Pass --supersede to keep the previous one instead: its
+// range is closed at the new genesis and the archive spans both. Use that
+// whenever entries already exist under the old contract — every parameter
+// is immutable, so a fee or treasury change means a new deployment, and
+// without --supersede those entries silently stop being entries.
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -59,13 +66,28 @@ const sub = (s, re, to) => {
   return s.replace(re, to);
 };
 
+const supersede = argv.includes('--supersede');
+
 // --- src/config.mjs (the indexer) ---
 const cfgPath = new URL('../src/config.mjs', import.meta.url);
 let cfg = readFileSync(cfgPath, 'utf8');
-cfg = sub(cfg, line('journalContract', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${journal}', // ${net.name}`);
+
+const prior = supersede
+  ? [...cfg.matchAll(/\{ address: '(0x[0-9a-fA-F]{40})', fromBlock: (\d+), toBlock: (null|\d+),\s*\n\s*note: '([^']*)' \}/g)]
+      .map((m) => ({ address: m[1], fromBlock: Number(m[2]), toBlock: m[3] === 'null' ? null : Number(m[3]), note: m[4] }))
+  : [];
+// Close the outgoing deployment at the block before the new one starts.
+if (prior.length) prior[prior.length - 1].toBlock = Number(genesis) - 1;
+
+const entries = [...prior, { address: journal, fromBlock: Number(genesis), toBlock: null, note: `${net.name} deployment` }];
+const rendered = entries.map((c) =>
+  `    { address: '${c.address}', fromBlock: ${c.fromBlock}, toBlock: ${c.toBlock ?? 'null'},\n` +
+  `      note: '${c.note}' },`).join('\n');
+cfg = sub(cfg, /  journalContracts: \[\n[\s\S]*?\n  \],/, `  journalContracts: [\n${rendered}\n  ],`);
 cfg = sub(cfg, line('treasury', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${treasury}', // ${net.name}`);
 cfg = sub(cfg, line('justiceToken', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${justice}', // ${net.name}`);
-cfg = sub(cfg, line('genesisBlock', '\\d+'), `$1${genesis}`);
+// The archive still begins at the earliest contract, not the newest.
+cfg = sub(cfg, line('genesisBlock', '\\d+'), `$1${entries[0].fromBlock}`);
 writeFileSync(cfgPath, cfg);
 
 // --- web/config.js (the page) ---
@@ -75,9 +97,11 @@ web = sub(web, line('CHAIN_ID', '\\d+'), `$1${net.chainId}`);
 web = sub(web, line('CHAIN_NAME', "'[^']*'"), `$1'${net.name}'`);
 web = sub(web, line('EXPLORER', "'[^']*'"), `$1'${net.explorer}'`);
 web = sub(web, line('READ_RPC', "'[^']*'"), `$1'${net.rpc}'`);
-web = sub(web, line('JOURNAL', "'0x[0-9a-fA-F]{40}'"), `$1'${journal}'`);
+web = sub(web, /  JOURNALS: \[[\s\S]*?\n  \],/,
+  '  JOURNALS: [\n' + entries.map((c) =>
+    `    { address: '${c.address}', fromBlock: ${c.fromBlock}, toBlock: ${c.toBlock ?? 'null'} },`).join('\n') + '\n  ],');
 web = sub(web, line('JUSTICE', "'0x[0-9a-fA-F]{40}'"), `$1'${justice}'`);
-web = sub(web, line('GENESIS_BLOCK', '\\d+'), `$1${genesis}`);
+web = sub(web, line('GENESIS_BLOCK', '\\d+'), `$1${entries[0].fromBlock}`);
 web = sub(web, line('FAUCET', '(?:true|false)'), `$1${net.faucet}`);
 web = sub(web, /CHAIN_PARAMS: \{[\s\S]*?\n  \},/, `CHAIN_PARAMS: {
     chainId: '0x${net.chainId.toString(16)}',
@@ -96,15 +120,16 @@ const webNow = readFileSync(webPath, 'utf8');
 const readWeb = (k) => webNow.match(new RegExp(`^(?!\\s*//)\\s*${k}: '?([^',\\n]*)`, 'm'))?.[1];
 
 const checks = [
-  ['indexer journalContract', PARAMS.journalContract.toLowerCase(), journal.toLowerCase()],
+  ['indexer journalContracts (newest)', PARAMS.journalContracts.at(-1).address.toLowerCase(), journal.toLowerCase()],
+  ['indexer contract count', String(PARAMS.journalContracts.length), String(entries.length)],
   ['indexer justiceToken', PARAMS.justiceToken.toLowerCase(), justice.toLowerCase()],
   ['indexer treasury', PARAMS.treasury.toLowerCase(), treasury.toLowerCase()],
-  ['indexer genesisBlock', String(PARAMS.genesisBlock), String(genesis)],
-  ['page JOURNAL', readWeb('JOURNAL')?.toLowerCase(), journal.toLowerCase()],
+  ['indexer genesisBlock', String(PARAMS.genesisBlock), String(entries[0].fromBlock)],
+  ['page JOURNALS (newest)', (webNow.match(/address: '(0x[0-9a-fA-F]{40})'/g) ?? []).at(-1)?.match(/0x[0-9a-fA-F]{40}/)[0].toLowerCase(), journal.toLowerCase()],
   ['page JUSTICE', readWeb('JUSTICE')?.toLowerCase(), justice.toLowerCase()],
   ['page CHAIN_ID', readWeb('CHAIN_ID'), String(net.chainId)],
   ['page READ_RPC', readWeb('READ_RPC'), net.rpc],
-  ['page GENESIS_BLOCK', readWeb('GENESIS_BLOCK'), String(genesis)],
+  ['page GENESIS_BLOCK', readWeb('GENESIS_BLOCK'), String(entries[0].fromBlock)],
 ];
 const wrong = checks.filter(([, got, want]) => got !== want);
 if (wrong.length) {
@@ -114,7 +139,7 @@ if (wrong.length) {
 }
 
 console.log(`both configs now point at ${net.name} (chain ${net.chainId})
-  journal   ${journal}
+  journal   ${journal}${supersede && entries.length > 1 ? `  (superseding ${entries.length - 1}, archive spans all)` : ''}
   justice   ${justice}
   treasury  ${treasury}
   genesis   ${genesis}

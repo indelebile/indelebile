@@ -41,7 +41,7 @@ const g = estimateGas(calldata);
 // than to burn the fee on an entry the indexer will reject.
 const dry = validate(
   { txHash: '0x', blockNumber: PARAMS.genesisBlock, logIndex: 0,
-    emitter: PARAMS.journalContract, author, contentURI: uri, feeWei: PARAMS.minFeeWei },
+    emitter: PARAMS.journalContracts.at(-1).address, author, contentURI: uri, feeWei: PARAMS.minFeeWei },
   { authorState: { maxSeq: null, recentBlocks: [] }, seenContent: new Set() },
 );
 const local = dry.failed.filter((r) => r !== 'V1'); // V1 needs the deployed address
@@ -72,7 +72,7 @@ content (the contract assembles this; you send only the tail)
 ${uri}
 
 send it yourself:
-  cast send ${PARAMS.journalContract} \\
+  cast send ${PARAMS.journalContracts.at(-1).address} \\
     --value ${PARAMS.minFeeWei} \\
     --data ${calldata} \\
     --rpc-url https://rpc.flashbots.net/fast

@@ -46,12 +46,38 @@ Under a dollar for the whole exercise at present gas. This will not last;
 if the window closes the numbers rise proportionally, and nothing else
 changes.
 
+## The treasury cannot be changed later
+
+Every parameter in the contract is immutable, the treasury included. When
+AssangeDAO provides its multisig, **the contract must be deployed again** —
+there is no setter and there should not be one.
+
+That has a consequence worth stating plainly: a new deployment is a new
+address, and under a single-address rule every entry written before it
+would stop being an entry. The archive would end at its own first
+governance decision.
+
+So the indexer reads a **list** of canonical deployments, each covering a
+block range. Sequence numbers, rate limits and content uniqueness carry
+across the boundary, so an author cannot reset their history by migrating,
+and a retired contract's later emissions are not entries. Superseding is an
+explicit action:
+
+```bash
+node scripts/apply-deployment.mjs --network mainnet --supersede \
+  --journal <new> --justice 0x59d1e836… --treasury <DAO multisig> --genesis <block>
+```
+
+This makes the validation deployment below genuinely useful rather than
+throwaway: entries written under it can be carried into the final archive
+if the DAO wants them, or left out by simply not listing it.
+
 ## Still needed before deploying
 
 | | |
 |---|---|
 | **Address** | The Sepolia wallet holds 0 ETH and 0 $JUSTICE on mainnet. Which address writes the first entry? It needs ≥100,000 $JUSTICE at the block before it writes. |
-| **Treasury** | `0xe54A3CFB…` was a test value. Is that right for mainnet, or the DAO's own treasury? Immutable once deployed. |
+| **Treasury** | For the validation deployment, an address you control. The real one must come from AssangeDAO and should be a multisig — and needs a second deployment, which the list above makes safe. |
 | **minFee** | 0.001 ETH ≈ $2.48. Reasonable, or lower while validating? Immutable. |
 | **minBalance** | 100,000 $JUSTICE ≈ $2.29 is close to no barrier. Keep it as the proposal specifies, or raise it? Immutable. |
 

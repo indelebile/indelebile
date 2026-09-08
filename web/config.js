@@ -23,7 +23,12 @@ window.JJ_CONFIG = {
     blockExplorerUrls: ['https://sepolia.etherscan.io'],
   },
 
-  JOURNAL: '0xb196fCfC583F0B3770F05d94B17cfAe70f4edf4E',
+  // Every canonical deployment, oldest first. A parameter change means a
+  // new contract, and the archive has to span them or it ends at its own
+  // first governance decision.
+  JOURNALS: [
+    { address: '0xb196fCfC583F0B3770F05d94B17cfAe70f4edf4E', fromBlock: 11659670, toBlock: null },
+  ],
   JUSTICE: '0x3F06F46Fd1ff8B0f4ec6F2022568C8F660ee035a',
 
   MIN_FEE_WEI: 1000000000000000n,        // 0.001 ETH

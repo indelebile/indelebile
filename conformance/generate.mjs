@@ -18,7 +18,7 @@ import { PARAMS } from '../src/config.mjs';
 const JOURNAL = '0x1000000000000000000000000000000000000001';
 const A = '0xaaaa000000000000000000000000000000000001';
 const B = '0xbbbb000000000000000000000000000000000002';
-const P = { ...PARAMS, journalContract: JOURNAL, genesisBlock: 1000 };
+const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 1000 };
 
 const uriFor = (over = {}) =>
   toDataUri(buildEntry({ author: A, seq: 0, ts: 1757280000, tags: ['assange'], body: 'hello', ...over }));
@@ -98,7 +98,7 @@ writeFileSync(new URL('vectors.json', import.meta.url), JSON.stringify({
   protocol: 'justice-journal', version: 1,
   note: 'Expected results for any implementation of the Justice Journal rules. See conformance/README.md.',
   params: {
-    journalContract: JOURNAL,
+    journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }],
     minFeeWei: P.minFeeWei.toString(),
     maxEntriesPerAuthorPerWindow: P.maxEntriesPerAuthorPerWindow,
     rateLimitWindowBlocks: P.rateLimitWindowBlocks,

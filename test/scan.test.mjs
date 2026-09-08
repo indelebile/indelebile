@@ -8,7 +8,7 @@ const A = '0xaaaa000000000000000000000000000000000001';
 const B = '0xbbbb000000000000000000000000000000000002';
 const JOURNAL = '0x1000000000000000000000000000000000000001';
 const IMPOSTOR = '0x9000000000000000000000000000000000000009';
-const P = { ...PARAMS, journalContract: JOURNAL, genesisBlock: 1000 };
+const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 1000 };
 
 let n = 0;
 // One ESIP-2 write log, as the indexer normalizes it.
@@ -127,4 +127,48 @@ test('output is ordered by chain position and is deterministic', async () => {
   const b = await scan(chainOf(ws), { from: 1000, to: 1001, params: P });
   assert.deepEqual(a.entries.map((e) => e.body), ['first', 'second']);
   assert.equal(JSON.stringify(a), JSON.stringify(b));
+});
+
+// Every contract parameter is immutable, so changing the fee, the gate or
+// the treasury means deploying again. The archive has to survive that or it
+// ends at its own first governance decision.
+test('the archive spans a superseded deployment', async () => {
+  const OLD = '0x0dd0000000000000000000000000000000000001';
+  const NEW = '0x0dd0000000000000000000000000000000000002';
+  const spanning = {
+    ...P,
+    journalContracts: [
+      { address: OLD, fromBlock: 1000, toBlock: 1500 },
+      { address: NEW, fromBlock: 1501, toBlock: null },
+    ],
+  };
+  const r = await scan(chainOf([
+    write(A, 0, 'written under the old contract', { emitter: OLD, blockNumber: 1200n }),
+    write(A, 1, 'written under the new one', { emitter: NEW, blockNumber: 1600n }),
+    // the old contract can still emit after it is superseded; that is not an entry
+    write(A, 2, 'emitted by the retired contract', { emitter: OLD, blockNumber: 1700n }),
+    // and the new one cannot reach back before it existed
+    write(B, 0, 'from the future contract, too early', { emitter: NEW, blockNumber: 1100n }),
+  ]), { from: 1000, to: 1700, params: spanning });
+
+  assert.deepEqual(r.entries.map((e) => e.body),
+    ['written under the old contract', 'written under the new one']);
+  assert.equal(r.rejected.length, 2);
+  assert.ok(r.rejected.every((x) => x.failed.includes('V1')));
+});
+
+test('sequence numbers carry across a migration', async () => {
+  const OLD = '0x0dd0000000000000000000000000000000000001';
+  const NEW = '0x0dd0000000000000000000000000000000000002';
+  const spanning = { ...P, journalContracts: [
+    { address: OLD, fromBlock: 1000, toBlock: 1500 },
+    { address: NEW, fromBlock: 1501, toBlock: null },
+  ] };
+  // An author cannot reset their history by moving to the new contract.
+  const r = await scan(chainOf([
+    write(A, 5, 'old', { emitter: OLD, blockNumber: 1200n }),
+    write(A, 5, 'reused seq on the new contract', { emitter: NEW, blockNumber: 1600n }),
+  ]), { from: 1000, to: 1700, params: spanning });
+  assert.equal(r.entries.length, 1);
+  assert.ok(r.rejected[0].failed.includes('V8'));
 });

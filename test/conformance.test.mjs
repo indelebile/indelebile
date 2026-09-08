@@ -16,7 +16,7 @@ const suite = JSON.parse(readFileSync(new URL('../conformance/vectors.json', imp
 
 const params = {
   ...PARAMS,
-  journalContract: suite.params.journalContract,
+  journalContracts: suite.params.journalContracts,
   minFeeWei: BigInt(suite.params.minFeeWei),
   maxEntriesPerAuthorPerWindow: suite.params.maxEntriesPerAuthorPerWindow,
   rateLimitWindowBlocks: suite.params.rateLimitWindowBlocks,

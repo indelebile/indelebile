@@ -12,7 +12,7 @@ import { scan } from './scan.mjs';
 import { PARAMS } from './config.mjs';
 
 const JOURNAL = '0x1000000000000000000000000000000000000001';
-const P = { ...PARAMS, journalContract: JOURNAL, genesisBlock: 21_000_000 };
+const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 21_000_000 };
 
 const SAMPLES = [
   ['0xa11ce00000000000000000000000000000000001', ['iran', 'letters'],
@@ -45,7 +45,7 @@ mkdirSync(new URL('../out/', import.meta.url), { recursive: true });
 writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
   protocol: 'justice-journal', version: 1, synthetic: true,
   range: { from, to },
-  params: { journalContract: JOURNAL, minFeeWei: P.minFeeWei.toString(),
+  params: { journalContracts: P.journalContracts, minFeeWei: P.minFeeWei.toString(),
             minJusticeBalance: P.minJusticeBalance.toString(),
             bodyMaxChars: P.bodyMaxChars },
   entries, rejected,

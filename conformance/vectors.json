@@ -3,7 +3,13 @@
   "version": 1,
   "note": "Expected results for any implementation of the Justice Journal rules. See conformance/README.md.",
   "params": {
-    "journalContract": "0x1000000000000000000000000000000000000001",
+    "journalContracts": [
+      {
+        "address": "0x1000000000000000000000000000000000000001",
+        "fromBlock": 0,
+        "toBlock": null
+      }
+    ],
     "minFeeWei": "1000000000000000",
     "maxEntriesPerAuthorPerWindow": 3,
     "rateLimitWindowBlocks": 50400,

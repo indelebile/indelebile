@@ -18,8 +18,8 @@ const arg = (k, d) => { const i = argv.indexOf('--' + k); return i === -1 ? d : 
 
 const rpc = arg('rpc', process.env.ETH_RPC_URL);
 if (!rpc) { console.error('need --rpc <url> or ETH_RPC_URL'); process.exit(1); }
-if (/^0x0+$/.test(PARAMS.journalContract)) {
-  console.error('set journalContract in src/config.mjs to the deployed address first');
+if (!PARAMS.journalContracts?.length || PARAMS.journalContracts.some((c) => /^0x0+$/.test(c.address))) {
+  console.error('set journalContracts in src/config.mjs to the deployed address(es) first');
   process.exit(1);
 }
 
@@ -34,15 +34,30 @@ const WRITTEN = parseAbiItem(
 
 // Both events are emitted by the same call, so they pair by transaction.
 // EntryWritten carries the fee; the ESIP-3 log carries the content.
+// Every canonical deployment is queried over its own active range, and the
+// results are merged. A contract that has been superseded is still read for
+// the blocks in which it was current.
 const chain = {
   async getWrites(from, to) {
     const CHUNK = 9_000n; // stay under common getLogs range caps
     const out = [];
+    for (const c of PARAMS.journalContracts) {
+      const lo0 = BigInt(Math.max(Number(from), c.fromBlock));
+      const hi0 = c.toBlock == null ? to : BigInt(Math.min(Number(to), c.toBlock));
+      if (lo0 > hi0) continue;
+      console.error(`  contract ${c.address}${c.note ? ' — ' + c.note : ''}`);
+      await scanRange(c.address, lo0, hi0, out, CHUNK);
+    }
+    return out;
+  },
+};
+
+async function scanRange(address, from, to, out, CHUNK) {
     for (let lo = from; lo <= to; lo += CHUNK) {
       const hi = lo + CHUNK - 1n > to ? to : lo + CHUNK - 1n;
       const [esip2, written] = await Promise.all([
-        client.getLogs({ address: PARAMS.journalContract, event: ESIP2, fromBlock: lo, toBlock: hi }),
-        client.getLogs({ address: PARAMS.journalContract, event: WRITTEN, fromBlock: lo, toBlock: hi }),
+        client.getLogs({ address, event: ESIP2, fromBlock: lo, toBlock: hi }),
+        client.getLogs({ address, event: WRITTEN, fromBlock: lo, toBlock: hi }),
       ]);
       const feeByTx = new Map(written.map((l) => [l.transactionHash, l.args.fee]));
       for (const l of esip2) {
@@ -56,11 +71,9 @@ const chain = {
           feeWei: feeByTx.get(l.transactionHash) ?? 0n,
         });
       }
-      console.error(`  blocks ${lo}-${hi}: ${esip2.length} writes`);
+      console.error(`    blocks ${lo}-${hi}: ${esip2.length} writes`);
     }
-    return out;
-  },
-};
+}
 
 const from = BigInt(arg('from', String(PARAMS.genesisBlock)));
 const to = arg('to', 'latest') === 'latest' ? await client.getBlockNumber() : BigInt(arg('to'));
@@ -85,7 +98,7 @@ writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
   protocol: 'justice-journal', version: 1,
   range: { from: Number(from), to: Number(to) },
   params: {
-    journalContract: PARAMS.journalContract, treasury: PARAMS.treasury,
+    journalContracts: PARAMS.journalContracts, treasury: PARAMS.treasury,
     justiceToken: PARAMS.justiceToken,
     minFeeWei: PARAMS.minFeeWei.toString(),
     minJusticeBalance: PARAMS.minJusticeBalance.toString(),
