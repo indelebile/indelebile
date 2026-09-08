@@ -13,38 +13,41 @@
      and the courts — and red is kept for errors only, so it never has to
      mean two things at once.
 
-     Body contrast is deliberately held near 13:1 rather than pushed to the
-     maximum. The previous palette ran 16.9:1 in light and 15.2:1 in dark;
-     print sits around 10-12:1, and the difference is what makes a long
-     writing session tiring. Every value below clears WCAG AA 4.5:1. */
-  --paper:#f6f4ef; --sheet:#fdfcf9;
-  --ink:#2b2926;        /* 13.2:1 */
-  --ink-2:#57524a;      /*  7.0:1 */
-  --ink-3:#726c5c;      /*  4.8:1 — small metadata, so it must still clear AA */
-  --rule:#e0dacd; --rule-2:#ebe6dc; --code:#f0ece3;
-  --accent:#234a72;     /* ink blue */
-  --bad:#a03b32; --ok:#2c6b47; --warn:#8a5a1b;
+     Body sits near 13.8:1 — below the 16.9:1 it started at, which glares,
+     but not so far down that the page goes soft. The first attempt at this
+     fixed the body and left --ink-2 at 7:1, which is where most of the
+     page's prose actually lives, so it still read washed out. The
+     secondary tiers matter more than the body here, and both now clear
+     6.5:1 rather than merely clearing AA. */
+  --paper:#f6f4ef; --sheet:#fffefb;
+  --ink:#282624;        /* 13.8:1 */
+  --ink-2:#463f36;      /*  9.4:1 — most of the page's prose lives here */
+  --ink-3:#5d5648;      /*  6.6:1 — small metadata, so it needs more than AA */
+  --rule:#ddd6c8; --rule-2:#e9e3d8; --code:#efebe1;
+  --accent:#1d4269;     /* ink blue */
+  --bad:#8f3128; --ok:#245c3c; --warn:#7a4d14;
   --serif:Georgia,'Iowan Old Style','Songti SC','Noto Serif CJK SC','Source Han Serif SC',serif;
   --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
   --shell:74rem;      /* the page */
   --measure:38rem;    /* the longest a line of prose may get */
 }
 @media(prefers-color-scheme:dark){:root{
-  --paper:#15161a; --sheet:#1c1e23;
-  --ink:#dcd8d0;        /* 12.7:1 */
-  --ink-2:#a8a29a;      /*  7.1:1 */
-  --ink-3:#8b857a;      /*  4.9:1 */
-  --rule:#2e3037; --rule-2:#24262b; --code:#1a1c20;
-  --accent:#8ab0d8;
-  --bad:#e08b80; --ok:#6fbc8e; --warn:#d0a35c;
+  --paper:#15161a; --sheet:#1d1f24;
+  --ink:#e4e0d8;        /* 13.7:1 */
+  --ink-2:#bcb6ac;      /*  9.0:1 */
+  --ink-3:#a09a8e;      /*  6.5:1 */
+  --rule:#33353d; --rule-2:#26282e; --code:#1a1c20;
+  --accent:#9dbfe2;
+  --bad:#e89c92; --ok:#7fc99c; --warn:#d8ab63;
 }}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--paper);color:var(--ink);
-  font:17px/1.7 var(--serif);text-rendering:optimizeLegibility}
+  font:17.5px/1.72 var(--serif);text-rendering:optimizeLegibility}
 .shell{max-width:var(--shell);margin:0 auto;padding:0 2rem}
 @media(max-width:640px){.shell{padding:0 1.15rem}}
 .prose{max-width:var(--measure)}
+.prose p{margin:0 0 1rem;color:var(--ink-2);font-size:.98rem}
 a{color:inherit}
 .mono{font-family:var(--mono)}
 
@@ -61,7 +64,7 @@ h1{margin:0;font-size:clamp(1.9rem,4vw,2.5rem);font-weight:400;letter-spacing:-.
 /* ---------- lede ---------- */
 .lede{border-bottom:1px solid var(--rule-2)}
 .lede .shell{padding-top:2rem;padding-bottom:2rem}
-.lede p{margin:0;max-width:44rem;font-size:1.12rem;color:var(--ink-2)}
+.lede p{margin:0;max-width:44rem;font-size:1.14rem;color:var(--ink)}
 .lede strong{color:var(--ink);font-weight:400;
   box-shadow:inset 0 -.45em 0 rgba(35,74,114,.15)}
 
@@ -72,7 +75,7 @@ section:last-of-type{border-bottom:0}
   flex-wrap:wrap;margin-bottom:1.8rem}
 h2{margin:0;font-size:1.35rem;font-weight:400;letter-spacing:-.01em}
 h2 .n{color:var(--accent);font:400 .72rem/1 var(--mono);vertical-align:.4em;margin-right:.6rem}
-.sub{margin:.35rem 0 0;color:var(--ink-3);font-size:.92rem;max-width:44rem}
+.sub{margin:.35rem 0 0;color:var(--ink-2);font-size:.94rem;max-width:44rem}
 
 /* ---------- the composer ---------- */
 .composer{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;
@@ -167,12 +170,21 @@ article.entry[hidden]{display:none}
 .note h3{margin:0 0 .5rem;font-size:1rem;font-weight:400;line-height:1.4}
 .note h3::before{content:"";display:block;width:1.6rem;height:2px;
   background:var(--accent);margin-bottom:.8rem}
-.note p{margin:0;font-size:.93rem;line-height:1.7;color:var(--ink-2)}
+.note p{margin:0;font-size:.96rem;line-height:1.72;color:var(--ink-2)}
 code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
   border-radius:4px;color:var(--ink-2)}
 
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:.4rem;flex-wrap:wrap;border-bottom:1px solid var(--rule);
+  margin-bottom:2rem}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;
+  color:var(--ink-3);padding:.7rem .95rem;margin-bottom:-1px;font-size:.79rem;letter-spacing:.03em}
+.tabs button:hover{color:var(--ink-2);opacity:1}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.panel[hidden]{display:none}
+
 /* ---------- cost + verify ---------- */
-.split{display:grid;gap:2.6rem 3.5rem}
+.split{display:grid;gap:2.2rem 3.5rem;align-items:start}
 @media(min-width:900px){.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
 table.costs{width:100%;border-collapse:collapse;font-size:.88rem}
 table.costs th,table.costs td{text-align:left;padding:.7rem .6rem;border-bottom:1px solid var(--rule-2)}
@@ -298,71 +310,82 @@ footer .addr{word-break:break-all}
   <section class="shell">
     <div class="head">
       <div>
-        <h2><span class="n">III</span>How this works</h2>
-        <p class="sub">Four things worth knowing before you write.</p>
+        <h2><span class="n">III</span>Before you write</h2>
+        <p class="sub">Three things worth a minute: how it works, what it costs, and how to
+          check any of it for yourself.</p>
       </div>
     </div>
-    <div class="notes">
-      <div class="note">
-        <h3>Your words live in calldata</h3>
-        <p>Not IPFS. An IPFS archive survives only while someone keeps paying to pin
-        it; when the pin lapses, the chain holds a hash and nothing readable. Here the
-        text itself is inside the Ethereum transaction.</p>
-      </div>
-      <div class="note">
-        <h3>You own the entry, not the DAO</h3>
-        <p>The Ethscriptions protocol makes a transaction's recipient the owner, so a
-        naive design would hand every entry to the treasury. This contract uses ESIP-3
-        to name <em>you</em> as the initial owner instead.</p>
-      </div>
-      <div class="note">
-        <h3>No one can take your content first</h3>
-        <p>Ethscriptions are normally unique, so a bot could copy your text from the
-        mempool and inscribe it before you. Entries carry <code>rule=esip6</code>,
-        which opts out of that rule — a copy can never invalidate yours.</p>
-      </div>
-      <div class="note">
-        <h3>Nothing can be deleted, including by us</h3>
-        <p>Governance can vote to collapse an entry in this view, and the page will say
-        so and link to the raw calldata. The chain is the record; this page is only one
-        way of reading it.</p>
-      </div>
-    </div>
-  </section>
 
-  <section class="shell">
-    <div class="split">
-      <div>
-        <div class="head"><div>
-          <h2><span class="n">IV</span>What it costs</h2>
-          <p class="sub">Gas only; the write fee is on top. Calibrated against a real transaction.</p>
-        </div></div>
-        <table class="costs">
-          <tr><th>entry</th><th>gas</th><th>@1 gwei</th><th>@5 gwei</th></tr>
-          <tr><td>113 characters, English</td><td>41,233</td><td>0.000041 ETH</td><td>0.000206 ETH</td></tr>
-          <tr><td>500 characters, Chinese</td><td>83,950</td><td>0.000084 ETH</td><td>0.000420 ETH</td></tr>
-        </table>
-        <p class="sub" style="margin-top:1.2rem">
-          Chinese costs more per character because UTF-8 spends three bytes on each one.
-          The limit counts characters, not bytes, so every language gets the same room.
-        </p>
+    <div class="tabs" role="tablist" aria-label="Background">
+      <button role="tab" id="tab-how" aria-controls="panel-how" aria-selected="true">How this works</button>
+      <button role="tab" id="tab-cost" aria-controls="panel-cost" aria-selected="false">What it costs</button>
+      <button role="tab" id="tab-verify" aria-controls="panel-verify" aria-selected="false">Verify it yourself</button>
+    </div>
+
+    <div class="panel" id="panel-how" role="tabpanel" aria-labelledby="tab-how">
+      <div class="notes">
+        <div class="note">
+          <h3>Your words live in calldata</h3>
+          <p>Not IPFS. An IPFS archive survives only while someone keeps paying to pin
+          it; when the pin lapses, the chain holds a hash and nothing readable. Here the
+          text itself is inside the Ethereum transaction.</p>
+        </div>
+        <div class="note">
+          <h3>You own the entry, not the DAO</h3>
+          <p>The Ethscriptions protocol makes a transaction's recipient the owner, so a
+          naive design would hand every entry to the treasury. This contract uses ESIP-3
+          to name <em>you</em> as the initial owner instead.</p>
+        </div>
+        <div class="note">
+          <h3>No one can take your content first</h3>
+          <p>Ethscriptions are normally unique, so a bot could copy your text from the
+          mempool and inscribe it before you. Entries carry <code>rule=esip6</code>,
+          which opts out of that rule — a copy can never invalidate yours.</p>
+        </div>
+        <div class="note">
+          <h3>Nothing can be deleted, including by us</h3>
+          <p>Governance can vote to collapse an entry in this view, and the page will say
+          so and link to the raw calldata. The chain is the record; this page is only one
+          way of reading it.</p>
+        </div>
       </div>
-      <div>
-        <div class="head"><div>
-          <h2><span class="n">V</span>Verify it yourself</h2>
-          <p class="sub">Re-run the indexer and you must get a byte-identical file.
-            That property is the whole claim — please check it rather than trust it.</p>
-        </div></div>
-        <pre class="cmd"><span class="c"># rebuild this archive from the chain alone,</span>
+    </div>
+
+    <div class="panel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost" hidden>
+      <div class="split">
+        <div>
+          <table class="costs">
+            <tr><th>entry</th><th>gas</th><th>@1 gwei</th><th>@5 gwei</th></tr>
+            <tr><td>113 characters, English</td><td>41,233</td><td>0.000041 ETH</td><td>0.000206 ETH</td></tr>
+            <tr><td>500 characters, Chinese</td><td>83,950</td><td>0.000084 ETH</td><td>0.000420 ETH</td></tr>
+          </table>
+        </div>
+        <div class="prose">
+          <p style="margin-top:0">Gas only; the write fee is on top. These are calibrated
+          against a real transaction rather than estimated.</p>
+          <p style="margin-bottom:0">Chinese costs more per character because UTF-8 spends
+          three bytes on each one. The limit counts <em>characters</em>, not bytes, so every
+          language gets the same room.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify" hidden>
+      <div class="split">
+        <div>
+          <pre class="cmd"><span class="c"># rebuild this archive from the chain alone,</span>
 <span class="c"># then compare your hash with the one above</span>
 git clone &lt;repo&gt; &amp;&amp; cd justicejournal
 npm install
 node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
-        <p class="sub" style="margin-top:1.2rem">
-          This page does not read the chain to show you the archive — it reads the
-          file the indexer produced. Doing otherwise would put a second copy of the
-          rules in the browser, free to drift from the first.
-        </p>
+        </div>
+        <div class="prose">
+          <p style="margin-top:0">Re-run the indexer and you must get a byte-identical
+          file. That property is the whole claim — please check it rather than trust it.</p>
+          <p style="margin-bottom:0">This page does not read the chain to show you the
+          archive; it reads the file the indexer produced. Doing otherwise would put a
+          second copy of the rules in the browser, free to drift from the first.</p>
+        </div>
       </div>
     </div>
   </section>

@@ -385,6 +385,29 @@ $('body').oninput = update;
 $('tags').oninput = update;
 $('reload').onclick = loadFeed;
 
+// Tabs. Three sections of background reading were competing for the same
+// strip at the foot of the page and none of them had room; one at a time
+// gives each the width it needs.
+const tabs = [...document.querySelectorAll('.tabs [role=tab]')];
+function selectTab(tab) {
+  for (const t of tabs) {
+    const on = t === tab;
+    t.setAttribute('aria-selected', String(on));
+    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+  }
+}
+for (const [i, t] of tabs.entries()) {
+  t.onclick = () => selectTab(t);
+  t.onkeydown = (ev) => {
+    const d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+    if (!d) return;
+    ev.preventDefault();
+    const next = tabs[(i + d + tabs.length) % tabs.length];
+    next.focus();
+    selectTab(next);
+  };
+}
+
 $('clearfilter').onclick = () => {
   $('filterbar').hidden = true;
   for (const el of document.querySelectorAll('article.entry')) el.hidden = false;

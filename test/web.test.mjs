@@ -124,14 +124,16 @@ test('the palette is comfortable to read and clears WCAG AA', () => {
     assert.ok(paper, `${mode}: no --paper`);
 
     const body = ratio(read('ink'), paper);
-    assert.ok(body >= 10 && body <= 14,
-      `${mode}: body contrast ${body.toFixed(1)}:1 — aim for 10–14, print territory`);
+    assert.ok(body >= 12 && body <= 14.5,
+      `${mode}: body contrast ${body.toFixed(1)}:1 — aim for 12–14.5`);
 
+    // The secondary tiers carry most of the page's prose, so AA is not
+    // enough for them: at 7:1 the page still read washed out.
     for (const name of ['ink-2', 'ink-3', 'accent', 'bad', 'ok']) {
       const c = read(name);
       if (!c) continue;
       const r = ratio(c, paper);
-      assert.ok(r >= 4.5, `${mode}: --${name} is ${r.toFixed(1)}:1 against paper, below AA 4.5:1`);
+      assert.ok(r >= 6.4, `${mode}: --${name} is ${r.toFixed(1)}:1 against paper — too faint`);
     }
   }
 });
@@ -145,4 +147,25 @@ test('the accent colour is not reused for errors', () => {
     assert.ok(!decl.includes('var(--accent)'),
       `${rule} uses --accent; failure states belong to --bad`);
   }
+});
+
+// Three sections of background reading were sharing one cramped strip.
+// They are tabs now, which means the markup has wiring that can silently
+// come apart: a tab whose panel was renamed just does nothing.
+test('every tab points at a panel that exists, and exactly one starts open', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"[^>]*aria-selected="(true|false)"/g)];
+  assert.ok(tabs.length >= 2, 'expected a tab strip');
+
+  for (const [, panel] of tabs) {
+    assert.ok(html.includes(`id="${panel}"`), `tab points at missing panel: ${panel}`);
+    assert.ok(html.includes(`role="tabpanel" aria-labelledby=`), 'panels need tabpanel roles');
+  }
+  const open = tabs.filter(([, , sel]) => sel === 'true');
+  assert.equal(open.length, 1, 'exactly one tab must start selected');
+
+  // The one that starts selected is the one whose panel is not hidden.
+  const openPanel = open[0][1];
+  const panelTag = html.match(new RegExp(`<div class="panel" id="${openPanel}"[^>]*>`))[0];
+  assert.ok(!panelTag.includes('hidden'), `${openPanel} is selected but hidden`);
 });
