@@ -56,3 +56,24 @@ test('log topic matches the ESIP-3 event signature', () => {
   assert.equal(abi.TOPIC.esip3,
     '0x665fba0baf3dc33e9943340197893ac16f56482c2defb8de60f944987fee451c');
 });
+
+// app.js reaches into the markup by id. A redesign that renames or drops
+// one produces no error anywhere — the page just quietly stops working in
+// that spot. Check the two files still agree.
+test('every element id app.js touches exists in index.html', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const ids = new Set([...app.matchAll(/\$\('([A-Za-z0-9_-]+)'\)/g)].map((m) => m[1]));
+  const missing = [...ids].filter((id) => !html.includes(`id="${id}"`));
+  assert.deepEqual(missing, [], `index.html is missing: ${missing.join(', ')}`);
+  assert.ok(ids.size > 20, 'sanity: the extraction should find many ids');
+});
+
+test('the page requests nothing from an external host', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  // Links out are fine; loading from elsewhere is not.
+  const loaders = [...html.matchAll(/(?:src|href)="(https?:\/\/[^"]+)"/g)]
+    .filter((m) => !/<a\b[^>]*$/.test(html.slice(0, m.index)));
+  assert.deepEqual(loaders.map((m) => m[1]), [],
+    'no stylesheet, script, font or image may come from another host');
+});

@@ -47,6 +47,7 @@ async function connect() {
 
   $('connect').hidden = true;
   $('walletInfo').hidden = false;
+  $('notConnected').hidden = true;
   $('who').textContent = account.slice(0, 6) + '…' + account.slice(-4);
   await refresh();
 }
@@ -56,9 +57,9 @@ async function refresh() {
   const held = balance / 10n ** 18n;
   const ok = balance >= C.MIN_BALANCE;
   $('gate').textContent = `${held.toLocaleString()} $JUSTICE`;
-  $('gate').className = ok ? 'ok' : 'bad';
-  $('gateNote').textContent = ok ? 'holding gate cleared'
-    : `need ${(C.MIN_BALANCE / 10n ** 18n).toLocaleString()} to write`;
+  $('gate').className = 'holding ' + (ok ? 'yes' : 'no');
+  $('gateNote').textContent = ok ? 'gate cleared'
+    : `need ${(C.MIN_BALANCE / 10n ** 18n).toLocaleString()}`;
   $('faucet').hidden = !C.FAUCET || ok;
 
   nextSeq = await loadNextSeq();
@@ -110,9 +111,14 @@ function update() {
   const uri = toDataUri(entry);
 
   $('count').textContent = `${chars} / ${C.BODY_MAX_CHARS}`;
-  $('count').className = chars > C.BODY_MAX_CHARS ? 'bad' : '';
+  $('count').className = chars > C.BODY_MAX_CHARS ? 'over' : '';
   $('bytes').textContent = `${byteLength(uri)} bytes on-chain`;
   $('preview').textContent = uri;
+
+  const pct = Math.min(100, (chars / C.BODY_MAX_CHARS) * 100);
+  const bar = $('meterbar');
+  bar.style.width = pct + '%';
+  bar.className = chars > C.BODY_MAX_CHARS ? 'over' : pct > 85 ? 'warn' : '';
 
   const failed = checkLocal(entry, { bodyMaxChars: C.BODY_MAX_CHARS, maxTags: C.MAX_TAGS });
   const explain = {
@@ -161,7 +167,8 @@ async function send() {
     say(`Written. ${link}`, false, true);
     $('body').value = '';
     $('tags').value = '';
-    await refresh();
+    // Show the entry that was just written, not only the next seq number.
+    await Promise.all([refresh(), loadFeed()]);
   } catch (e) {
     say(e.message ?? 'Rejected.', true);
     $('send').disabled = false;
@@ -196,25 +203,42 @@ async function loadFeed() {
     } catch { /* skip */ }
   }
   $('feed').innerHTML = items.length ? items.map(renderEntry).join('')
-    : '<p class="muted">No entries yet. Write the first one.</p>';
+    : `<div class="empty"><b>The archive is empty.</b>
+       Nothing has been written here yet. Yours would be entry number one.</div>`;
   $('feedCount').textContent = items.length;
+  $('feedNoun').textContent = items.length === 1 ? 'entry' : 'entries';
 }
 
 function renderEntry(e) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const link = C.EXPLORER ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
+  const link = C.EXPLORER
+    ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
     : `block ${e.block}`;
-  return `<article>
-    <header>
+  const tags = (e.tags ?? []);
+  return `<article class="entry" data-tags="${esc(tags.join(' '))}">
+    <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
       <span class="seq">#${esc(e.seq)}</span>
       <time>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</time>
       ${link}
-    </header>
-    <p>${esc(e.body)}</p>
-    <footer>${(e.tags ?? []).map((t) => `<span class="tag">${esc(t)}</span>`).join('')}</footer>
+    </div>
+    <p class="entry-body">${esc(e.body)}</p>
+    ${tags.length ? `<div class="entry-tags">${tags
+      .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
   </article>`;
 }
+
+// Tag filtering, delegated so it survives every re-render of the feed.
+document.addEventListener('click', (ev) => {
+  const t = ev.target.closest('.tag');
+  if (!t) return;
+  const tag = t.dataset.tag;
+  $('ftag').textContent = tag;
+  $('filterbar').hidden = false;
+  for (const el of document.querySelectorAll('article.entry')) {
+    el.hidden = !el.dataset.tags.split(' ').includes(tag);
+  }
+});
 
 // ---------- misc ----------
 
@@ -233,10 +257,20 @@ $('body').oninput = update;
 $('tags').oninput = update;
 $('reload').onclick = loadFeed;
 
+$('clearfilter').onclick = () => {
+  $('filterbar').hidden = true;
+  for (const el of document.querySelectorAll('article.entry')) el.hidden = false;
+};
+
 $('chain').textContent = C.CHAIN_NAME;
 $('fee').textContent = fmtEth(C.MIN_FEE_WEI);
-$('gateReq').textContent = (C.MIN_BALANCE / 10n ** 18n).toLocaleString();
+const gateReq = (C.MIN_BALANCE / 10n ** 18n).toLocaleString();
+$('gateReq').textContent = gateReq;
+$('gateReq2').textContent = gateReq;
 $('max').textContent = C.BODY_MAX_CHARS;
+$('contractAddr').innerHTML = C.EXPLORER
+  ? `<a href="${C.EXPLORER}/address/${C.JOURNAL}" target="_blank" rel="noreferrer">${C.JOURNAL}</a>`
+  : C.JOURNAL;
 update();
 loadFeed().catch(() => { $('feed').innerHTML = '<p class="muted">Could not reach the network.</p>'; });
 
