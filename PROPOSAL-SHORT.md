@@ -116,38 +116,54 @@ I have deliberately not picked these.
 
 | | Decision | Why it matters |
 |---|---|---|
-| **D-1** | Fee level and denomination | Gas alone already deters casual junk — nobody pays to write nonsense. What it does not deter is a *paid* incentive: any deterministic per-entry reward that exceeds the cost of writing turns the Journal into a faucet. §5's rewards are safe today by arithmetic, not by design — see below. |
+| **D-1** | Rewards, and therefore the fee | Gas already deters casual junk — nobody pays to write nonsense. The open question is §5: pay for the act of writing, or only for entries the community elects? See the recommendation below. With no per-action reward, the write fee can be low or zero. |
 | **D-2** | Transferability by default | Tradable entries invite ordinal sniping and flip bait, which works against an archive. Soulbound with author opt-in unlock is one option. |
 | **D-3** | Rate limit | Three entries per author per week is a placeholder. |
 | **D-4** | **The worst entry** | Someone will inscribe something illegal. On IPFS you could unpin; here you cannot. This needs an answer before launch — it is the strongest objection to the whole approach. |
 
-### The fee and the rewards are one decision
+### A recommendation on rewards
 
-Gas is a real barrier to casual junk, and at present it is a sufficient
-one: writing an entry costs about **$0.0204**, while §5's per-share reward
-of 50–100 $JUSTICE is worth **$0.0011–0.0023** — six to eleven percent of
-what it costs to claim it. The whole monthly reward cap of 10M $JUSTICE is
-$228.70. Nobody will farm that.
+**Drop blanket incentives entirely.** Reward only the weekly or monthly
+entries the community elects, and pay nothing for the act of writing
+itself.
 
-But that safety is arithmetic, not structure. The break-even is **893
-$JUSTICE per entry**. §5's referral reward has no stated amount; set it at
-10,000 and it pays eleven times the cost of writing on day one. And if
-$JUSTICE appreciates tenfold the threshold falls to 89, at which point the
-existing share reward crosses it on its own.
+This removes the arithmetic that makes farming possible rather than trying
+to price around it. Competitive prizes are lottery-shaped and their value
+per entry falls as participation rises, so they are self-limiting in a way
+a per-action reward never is. It also deletes a whole subsystem — referral
+tracking, reward caps, payout logic — from the original budget.
 
-So rather than argue about a number, the proposal should carry an
-invariant:
+The numbers say the proposal's rewards are safe *today*: writing an entry
+costs about **$0.0204**, while §5's per-share reward of 50–100 $JUSTICE is
+worth **$0.0011–0.0023**, six to eleven percent of the cost of claiming it.
+But that is arithmetic, not structure. Break-even is **893 $JUSTICE per
+entry**; §5's referral reward has no stated amount, and a tenfold price
+move would drop the threshold to 89, at which point the share reward
+crosses it on its own. Dropping per-action rewards makes the question moot
+instead of recurring.
+
+If the DAO keeps any guaranteed reward, it should carry an invariant:
 
 > **No deterministic per-entry reward may exceed the cost of writing an
 > entry, measured on the day the reward is set.**
 
-Competitive rewards — monthly challenges decided by vote — are exempt:
-they are lottery-shaped and their expected value per entry is far below
-cost. It is the guaranteed, per-action rewards that need the check.
+Two conditions make the competitive-only model actually hold:
 
-With that invariant in place, the write fee can be set low or at zero and
-gas does the work. Without it, no fee is high enough, because the reward
-can always be raised to clear it.
+1. **Winners must be chosen by judgment, not by a metric.** If selection
+   follows likes or views, volume becomes useful again and those signals
+   can be manufactured. People recognise padding; counters do not.
+2. **Decide who votes.** Snapshot voting is off-chain and free, so under
+   token weighting a large holder can write one entry a month and vote
+   themselves the prize. That is not spam — it is reward capture, a
+   different failure with a different fix.
+
+**The strongest argument for this is not about spam.** Paying for the act
+of writing changes who shows up: some arrive because they want to write,
+and some because it pays. Paying only for entries the community singles
+out means everyone who writes is there for the first reason. For an
+archive meant to be read in twenty years, that is not a side effect — it
+is the substance.
+
 
 **On secondary-market revenue: budget it at zero.** Royalties are
 unenforceable on ethscriptions, and secondary markets price ordinal
