@@ -91,7 +91,9 @@ cfg = sub(cfg, line('treasury', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${treasury}',
 cfg = sub(cfg, line('justiceToken', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${justice}', // ${net.name}`);
 // The archive still begins at the earliest contract, not the newest.
 cfg = sub(cfg, line('genesisBlock', '\\d+'), `$1${entries[0].fromBlock}`);
-cfg = sub(cfg, line('protocol', "[A-Za-z_]+|'[^']*'"),
+// Grouped: an ungrouped alternation would escape the anchor and match a
+// quoted string anywhere in the file.
+cfg = sub(cfg, line('protocol', "(?:PROTOCOL|'[^']*')"),
   protocol === 'justice-journal' ? '$1PROTOCOL' : `$1'${protocol}'`);
 writeFileSync(cfgPath, cfg);
 
