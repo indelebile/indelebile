@@ -25,9 +25,11 @@ and mints each entry as an ethscription owned by its author. It removes the
 IPFS line item, removes the storage contract, and cuts the audit surface to
 about 110 lines with no storage, no owner, and no upgradeability.
 
-It is deployed and working on Sepolia today. Three entries — English,
-Chinese, and one at the 500-character limit — were written through it, and
-the archive rebuilds from the chain byte for byte.
+It is deployed and working. Three entries on Sepolia — English, Chinese,
+and one at the 500-character limit — and one on **Ethereum mainnet**, where
+the canonical Ethscriptions indexer confirms the two properties no testnet
+can: the author owns the entry, and the uniqueness opt-out took effect. The
+archive rebuilds from the chain byte for byte.
 
 ---
 
@@ -230,20 +232,41 @@ into market value. A celebrity entry is optionality, never budget.
 
 ---
 
-## 9. What Sepolia could not verify
+## 9. Confirmed on mainnet
 
-**There is no Ethscriptions indexer on Sepolia** — the canonical one runs
-on mainnet only. Our ESIP-3 events are structurally correct and our own
-indexer reads them, but nothing on a testnet can confirm that the protocol
-treats the author as the initial owner, or that `rule=esip6` behaves as
-specified.
+Sepolia cannot verify the two properties the architecture exists for,
+because the canonical Ethscriptions indexer runs on mainnet only. So the
+design was rehearsed on mainnet, under a **separate protocol tag** —
+`justice-journal-test` — precisely so that nothing written while testing
+can ever be read as part of the archive. The production rules reject any
+other tag outright, tested in both directions.
 
-Those two properties are the reason for the architecture, so **the first
-mainnet entry must be cross-checked against `api.ethscriptions.com`**:
-`initial_owner` must be the author rather than the contract, and `esip6`
-must be `true`. If either is wrong, stop.
+**The archive is empty. Not one entry exists. It begins when the DAO says
+it begins.**
 
-One further finding worth recording: entries written through an EIP-7702
+The rehearsal contract is `0x3F06F46Fd1ff8B0f4ec6F2022568C8F660ee035a`,
+deployed in block 25932137 for 0.00021 ETH. One entry was written, and the
+canonical Ethscriptions indexer reports it as **ethscription #16251113**:
+
+| field | value | |
+|---|---|---|
+| `creator` | `0x3f06f46f…` | the contract, as ESIP-3 specifies |
+| `initial_owner` | `0xeb4745c5…` | **the author, not the contract or the treasury** |
+| `current_owner` | `0xeb4745c5…` | |
+| `esip6` | `true` | the uniqueness opt-out took effect |
+| `event_log_index` | 465 | recognised as an event creation, not calldata |
+| `mimetype` | `application/json` | |
+
+That is the whole claim, confirmed by the protocol's own indexer rather
+than by ours: **the author owns their words, and nobody can take their
+content by inscribing it first.** `node scripts/verify-mainnet.mjs --tx
+0xdf4f13fb…` reproduces the check.
+
+Transaction: `0xdf4f13fb1bf84c3c742034d92f08cd13d2580ca07813647353c5d72abd80787e`
+
+### One further finding
+
+Entries written through an EIP-7702
 smart-account wallet still resolve ownership correctly — `msg.sender`
 remains the author's address — but pay roughly 90,000 gas of account
 abstraction overhead on top. That is the wallet's cost, not the Journal's,
