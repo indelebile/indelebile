@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { scan } from '../src/scan.mjs';
 import { buildEntry, encode } from '../src/entry.mjs';
+import { PROTOCOL } from '../src/canonical.mjs';
 import { PARAMS } from '../src/config.mjs';
 
 const A = '0xaaaa000000000000000000000000000000000001';
 const B = '0xbbbb000000000000000000000000000000000002';
 const JOURNAL = '0x1000000000000000000000000000000000000001';
 const IMPOSTOR = '0x9000000000000000000000000000000000000009';
-const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 1000 };
+const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 1000, protocol: PROTOCOL };
 
 let n = 0;
 // One ESIP-2 write log, as the indexer normalizes it.

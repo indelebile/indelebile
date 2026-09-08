@@ -12,13 +12,16 @@
 
 import { writeFileSync } from 'node:fs';
 import { validate } from '../src/rules.mjs';
-import { buildEntry, toDataUri, DATA_URI_PREFIX, canonicalJson } from '../src/canonical.mjs';
+import { buildEntry, toDataUri, DATA_URI_PREFIX, canonicalJson, PROTOCOL } from '../src/canonical.mjs';
 import { PARAMS } from '../src/config.mjs';
 
 const JOURNAL = '0x1000000000000000000000000000000000000001';
 const A = '0xaaaa000000000000000000000000000000000001';
 const B = '0xbbbb000000000000000000000000000000000002';
-const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 1000 };
+// Pinned to the archive's own tag. A rehearsal deployment runs under a
+// different one, and the vectors describe the rules, not one deployment.
+const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }],
+            genesisBlock: 1000, protocol: PROTOCOL };
 
 const uriFor = (over = {}) =>
   toDataUri(buildEntry({ author: A, seq: 0, ts: 1757280000, tags: ['assange'], body: 'hello', ...over }));
@@ -99,6 +102,7 @@ writeFileSync(new URL('vectors.json', import.meta.url), JSON.stringify({
   note: 'Expected results for any implementation of the Justice Journal rules. See conformance/README.md.',
   params: {
     journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }],
+    protocol: P.protocol,
     minFeeWei: P.minFeeWei.toString(),
     maxEntriesPerAuthorPerWindow: P.maxEntriesPerAuthorPerWindow,
     rateLimitWindowBlocks: P.rateLimitWindowBlocks,

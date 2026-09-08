@@ -17,6 +17,7 @@ const suite = JSON.parse(readFileSync(new URL('../conformance/vectors.json', imp
 const params = {
   ...PARAMS,
   journalContracts: suite.params.journalContracts,
+  protocol: suite.params.protocol,
   minFeeWei: BigInt(suite.params.minFeeWei),
   maxEntriesPerAuthorPerWindow: suite.params.maxEntriesPerAuthorPerWindow,
   rateLimitWindowBlocks: suite.params.rateLimitWindowBlocks,
@@ -28,8 +29,12 @@ const params = {
 // The vectors pin the rule logic against fixed parameters. The parameters
 // themselves are equally part of the protocol, so if the deployed config
 // drifts from what the vectors assume, the vectors are certifying a
-// protocol nobody is running. Addresses and the genesis block are
-// deployment-specific and deliberately excluded.
+// protocol nobody is running.
+//
+// Excluded on purpose: addresses and the genesis block, which are
+// deployment-specific; and the protocol tag, because a rehearsal
+// deployment legitimately runs under a different one while the rules it
+// exercises are identical.
 test('deployed parameters still match what the vectors assume', () => {
   const shared = {
     minFeeWei: PARAMS.minFeeWei.toString(),

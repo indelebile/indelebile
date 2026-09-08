@@ -7,12 +7,13 @@
 
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { buildEntry, encode, estimateGas } from './entry.mjs';
+import { PROTOCOL } from './canonical.mjs';
 import { encodeFunctionData, parseAbi } from 'viem';
 import { scan } from './scan.mjs';
 import { PARAMS } from './config.mjs';
 
 const JOURNAL = '0x1000000000000000000000000000000000000001';
-const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 21_000_000 };
+const P = { ...PARAMS, journalContracts: [{ address: JOURNAL, fromBlock: 0, toBlock: null }], genesisBlock: 21_000_000, protocol: PROTOCOL };
 
 const SAMPLES = [
   ['0xa11ce00000000000000000000000000000000001', ['iran', 'letters'],

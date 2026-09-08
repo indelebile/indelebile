@@ -10,6 +10,7 @@
         "toBlock": null
       }
     ],
+    "protocol": "justice-journal",
     "minFeeWei": "1000000000000000",
     "maxEntriesPerAuthorPerWindow": 3,
     "rateLimitWindowBlocks": 50400,
