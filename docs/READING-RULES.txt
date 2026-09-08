@@ -1,0 +1,29 @@
+Justice Journal — how to read this archive, without us.
+
+Entries are ESIP-3 ethscriptions emitted by contract CONTRACT_ADDR on
+Ethereum mainnet, from block GENESIS onward. Each is owned by its author.
+
+To rebuild the archive from Ethereum alone:
+
+1. Collect every log from that address with topic0
+   0x665fba0baf3dc33e9943340197893ac16f56482c2defb8de60f944987fee451c
+   (ethscriptions_protocol_CreateEthscription(address,string)).
+2. topics[1] is the author. The log data holds one ABI-encoded string,
+   the entry's data URI.
+3. A valid entry's URI is exactly:
+   data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal",
+   "v":1,"author":"0x..","seq":N,"ts":N,"tags":[..],"body":".."}
+   Keys in that order, no whitespace, no extra keys. Anything else is not
+   an entry.
+4. Discard an entry unless: author equals topics[1]; the same transaction
+   paid at least MINFEE wei; body is 1 to 500 Unicode code points; tags
+   are at most 5, each matching ^[a-z0-9-]{1,32}$; seq is greater than
+   every seq that author already had accepted.
+5. Order by block number, then log index. That is the archive.
+
+The text lives in the transaction's calldata. It was never stored in
+contract storage and never on IPFS, so nothing has to be paid for or
+pinned to keep it. Ownership afterwards follows ESIP-1.
+
+Anyone applying these rules to the same blocks gets the same file. That
+was the point.
