@@ -41,9 +41,25 @@ contract JusticeJournal {
     uint256 public immutable minFee;
     uint256 public immutable minBalance;
 
+    /// @notice The first 77 bytes of every canonical entry. The entry
+    ///         format fixes the key order as p, v, author, ... so this
+    ///         prefix is a constant — which is the only reason a useful
+    ///         format check is affordable on-chain at all.
+    ///
+    ///         `data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x`
+    bytes32 public constant PREFIX_HASH =
+        keccak256('data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x');
+    uint256 public constant PREFIX_LEN = 77;
+
+    /// @notice Upper bound on one entry. 500 characters of Chinese is
+    ///         1,500 bytes, plus the envelope and up to five tags.
+    uint256 public constant MAX_CONTENT_BYTES = 2048;
+
     error FeeTooLow(uint256 sent, uint256 required);
     error BalanceTooLow(uint256 held, uint256 required);
     error EmptyContent();
+    error NotAJournalEntry();
+    error ContentTooLong(uint256 length, uint256 max);
     error NothingToSweep();
     error TransferFailed();
 
@@ -66,18 +82,28 @@ contract JusticeJournal {
     ///        string. It is never stored — it lives in this transaction's
     ///        calldata, which is the whole point.
     ///
-    /// Anything beyond the fee and the gate is deliberately unchecked here.
-    /// A transaction can satisfy this function and still be rejected by the
-    /// indexer, in which case the fee is spent. The frontend must validate
-    /// locally first (`node src/compose.mjs` does).
+    /// The prefix and length checks are cheap and worth their gas: without
+    /// them `write("hello")` would succeed, take the fee, and mint an
+    /// ethscription under this contract's name that the indexer then
+    /// rejects — the author pays and gets nothing. They do not make the
+    /// content valid. Full canonical validation means parsing JSON in
+    /// Solidity, which is not worth doing; the remaining rules stay in the
+    /// indexer, so a transaction can still satisfy this function and be
+    /// rejected later. The frontend must validate locally first.
     function write(string calldata contentURI) external payable {
         if (msg.value < minFee) revert FeeTooLow(msg.value, minFee);
         uint256 held = justice.balanceOf(msg.sender);
         if (held < minBalance) revert BalanceTooLow(held, minBalance);
-        if (bytes(contentURI).length == 0) revert EmptyContent();
+
+        bytes calldata content = bytes(contentURI);
+        if (content.length == 0) revert EmptyContent();
+        if (content.length > MAX_CONTENT_BYTES) revert ContentTooLong(content.length, MAX_CONTENT_BYTES);
+        if (content.length < PREFIX_LEN || keccak256(content[:PREFIX_LEN]) != PREFIX_HASH) {
+            revert NotAJournalEntry();
+        }
 
         emit ethscriptions_protocol_CreateEthscription(msg.sender, contentURI);
-        emit EntryWritten(msg.sender, keccak256(bytes(contentURI)), msg.value);
+        emit EntryWritten(msg.sender, keccak256(content), msg.value);
     }
 
     /// @notice Swap the accumulated fees into $JUSTICE for the treasury.

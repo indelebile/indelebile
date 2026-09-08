@@ -50,9 +50,25 @@ only construction that collects a fee *and* leaves the author owning their
 words. `JusticeJournal.sol` is ~110 lines: no storage, no owner, no
 upgradeability, all parameters immutable.
 
-It enforces only what must be atomic with the write — `msg.value >= minFee`
-and `balanceOf(sender) >= 100,000 $JUSTICE`. Everything else stays in the
-indexer where it costs no gas. Moving the gate on-chain has a useful side
+It enforces what must be atomic with the write — `msg.value >= minFee` and
+`balanceOf(sender) >= 100,000 $JUSTICE` — plus two cheap structural checks:
+
+- **the canonical prefix.** Because the key order is fixed at `p, v,
+  author, …`, the first 77 bytes of every entry are a constant, so the
+  contract can compare one keccak hash. Without it, `write("hello")` would
+  succeed, take the fee, and mint an ethscription under the contract's name
+  that the indexer then rejects — the author pays and gets nothing. It
+  costs ~650 gas.
+- **a 2,048-byte cap**, which fits 500 characters of Chinese plus the
+  envelope and five tags.
+
+This does *not* make the content valid — full canonical validation means
+parsing JSON in Solidity, which is not worth doing. The remaining rules
+stay in the indexer where they cost no gas, so a transaction can still
+satisfy the contract and be rejected later.
+
+Note that checking `"v":1` in the prefix means a format version bump
+requires a new deployment. That is already true of every other parameter. Moving the gate on-chain has a useful side
 effect: **the indexer no longer needs an archive node**, because it never
 reads historical state.
 
@@ -100,6 +116,7 @@ reproducible by anyone.
 | # | rule |
 |---|---|
 | V1 | the ESIP-2 log was emitted by the canonical JusticeJournal contract |
+| V1b | *(contract)* content begins with the canonical 77-byte prefix and is ≤2,048 bytes |
 | V2 | `fee >= minFeeWei` |
 | V4 | `contentURI` decodes to a canonical entry (§3) |
 | V5 | `p == "justice-journal"`, `v == 1`, `ts` is a non-negative integer |

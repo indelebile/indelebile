@@ -49,6 +49,8 @@ contract JusticeJournalTest is Test {
     uint256 constant GATE = 100_000 ether;
 
     // Byte-for-byte what src/entry.mjs produces.
+    string constant PREFIX =
+        'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x';
     string constant ENTRY_EN =
         'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
 
@@ -102,6 +104,52 @@ contract JusticeJournalTest is Test {
         vm.prank(stranger);
         vm.expectRevert(abi.encodeWithSelector(JusticeJournal.BalanceTooLow.selector, GATE - 1, GATE));
         jj.write{value: FEE}(ENTRY_EN);
+    }
+
+    /// The question this answers: can anyone push arbitrary calldata into
+    /// the Journal? No — the contract will not even mint it.
+    function test_RejectsArbitraryContent() public {
+        string[4] memory junk = [
+            "hello",
+            "data:text/plain;charset=utf-8,just a message",
+            'data:application/json;charset=utf-8,{"p":"some-other-protocol","v":1,"author":"0x',
+            'data:application/json;charset=utf-8,{"v":1,"p":"justice-journal","author":"0x'  // reordered
+        ];
+        for (uint256 i; i < junk.length; i++) {
+            vm.prank(author);
+            vm.expectRevert(JusticeJournal.NotAJournalEntry.selector);
+            jj.write{value: FEE}(junk[i]);
+        }
+    }
+
+    /// A rejected write must not cost the author anything but gas.
+    function test_RejectedWriteKeepsTheFee() public {
+        uint256 before = author.balance;
+        vm.prank(author);
+        vm.expectRevert(JusticeJournal.NotAJournalEntry.selector);
+        jj.write{value: FEE}("hello");
+        assertEq(author.balance, before, "fee must not be taken");
+        assertEq(address(jj).balance, 0);
+    }
+
+    function test_RejectsOversizedContent() public {
+        bytes memory big = new bytes(2049);
+        for (uint256 i; i < 77; i++) big[i] = bytes(PREFIX)[i];
+        vm.prank(author);
+        vm.expectRevert(abi.encodeWithSelector(JusticeJournal.ContentTooLong.selector, 2049, 2048));
+        jj.write{value: FEE}(string(big));
+    }
+
+    /// 500 characters of Chinese must still fit under the cap.
+    function test_MaxLengthChineseEntryFits() public {
+        bytes memory body = new bytes(1500);
+        for (uint256 i; i < 1500; i += 3) { body[i] = 0xe8; body[i+1] = 0xae; body[i+2] = 0xb0; }
+        string memory uri = string.concat(
+            PREFIX, '000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":[],"body":"',
+            string(body), '"}');
+        assertLe(bytes(uri).length, 2048, "a full-length Chinese entry must fit");
+        vm.prank(author);
+        jj.write{value: FEE}(uri);
     }
 
     function test_RejectsEmptyContent() public {
@@ -184,7 +232,7 @@ contract JusticeJournalTest is Test {
         bytes memory body = new bytes(1500);
         for (uint256 i; i < 1500; i += 3) { body[i] = 0xe8; body[i+1] = 0xae; body[i+2] = 0xb0; }
         string memory uri = string.concat(
-            'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":[],"body":"',
+            PREFIX, '000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":[],"body":"',
             string(body), '"}');
         vm.prank(author);
         uint256 g = gasleft();

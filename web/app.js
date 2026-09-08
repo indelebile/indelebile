@@ -46,7 +46,7 @@ async function connect() {
   }
 
   $('connect').hidden = true;
-  $('session').hidden = false;
+  $('walletInfo').hidden = false;
   $('who').textContent = account.slice(0, 6) + '…' + account.slice(-4);
   await refresh();
 }
@@ -121,7 +121,11 @@ function update() {
     V10: chars === 0 ? 'write something first' : `body is over ${C.BODY_MAX_CHARS} characters`,
     V11: `tags must be lowercase letters, digits or hyphens, at most ${C.MAX_TAGS}`,
   };
-  $('problems').textContent = failed.map((f) => explain[f] ?? f).join(' · ');
+  // Drafting needs no wallet — only sending does. Say which is missing
+  // rather than leaving a dead button with no explanation.
+  const notes = failed.map((f) => explain[f] ?? f);
+  if (!account && chars > 0 && !failed.length) notes.push('connect a wallet to send');
+  $('problems').textContent = notes.join(' · ');
   $('send').disabled = failed.length > 0 || !account;
   return { entry, uri, failed };
 }

@@ -76,7 +76,7 @@ label{display:block;font-family:ui-monospace,monospace;font-size:.72rem;color:va
       <button id="connect">Connect wallet</button>
     </div>
 
-    <div id="session" hidden>
+    <div id="walletInfo" hidden>
       <div class="row between" style="margin-top:1rem">
         <div class="row">
           <span class="mono muted" id="who"></span>
@@ -85,7 +85,9 @@ label{display:block;font-family:ui-monospace,monospace;font-size:.72rem;color:va
         </div>
         <button class="ghost" id="faucet" hidden>Get test $JUSTICE</button>
       </div>
+    </div>
 
+    <div id="composer">
       <label for="body">Entry <span class="muted">— up to <span id="max">500</span> characters</span></label>
       <textarea id="body" placeholder="Write what you want kept."></textarea>
       <div class="row between" style="margin-top:.4rem">
@@ -115,8 +117,15 @@ label{display:block;font-family:ui-monospace,monospace;font-size:.72rem;color:va
     <code>web/abi.js</code> from the canonical form in
     <code>src/canonical.mjs</code> — the same file the indexer reads, so the
     page and the archive cannot disagree about what an entry is.<br><br>
-    The fee is spent even if the indexer rejects your entry, so the button
-    stays disabled until it passes every rule that can be checked here.<br><br>
+    An entry is not just any calldata. The contract refuses anything that
+    does not begin with the exact canonical prefix, so junk cannot be minted
+    under its name and a malformed write costs you nothing but gas. The
+    indexer then applies the remaining rules — sequence, rate limit, length,
+    tags, uniqueness. Both checks read the format from the same source as
+    this page.<br><br>
+    The fee is still spent on an entry the contract accepts but the indexer
+    rejects, so the button stays disabled until everything checkable here
+    passes.<br><br>
     On mainnet, send through a private RPC. Ethscriptions enforce global
     content uniqueness, and a public mempool exposes your bytes before
     inclusion.

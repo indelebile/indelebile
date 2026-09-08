@@ -51,8 +51,11 @@ treasury (§4).
 ## 3. Functional requirements
 
 ### FR-1 Write an entry
-- Author connects a wallet and composes ≤500 characters (Unicode code
-  points, so Chinese has the same allowance as English), plus ≤5 tags.
+- The composer is visible and usable **without a wallet**. Drafting,
+  character counting, byte counting and local validation all work
+  unconnected; only sending requires a wallet.
+- Author composes ≤500 characters (Unicode code points, so Chinese has the
+  same allowance as English), plus ≤5 tags.
 - Client validates locally against every rule before offering to send.
   **The fee is spent even on an entry the indexer rejects**, so local
   validation is a requirement, not a nicety.
@@ -90,7 +93,8 @@ It enforces **only what must be atomic with the write**:
 |---|---|
 | `msg.value ≥ minFee` | the fee cannot be collected after the fact |
 | `balanceOf(sender) ≥ 100,000 $JUSTICE` | must be true at write time |
-| non-empty content | trivial guard |
+| canonical 77-byte prefix | ~650 gas, and it stops the contract minting junk under its own name — without it a malformed write succeeds and eats the fee |
+| content ≤ 2,048 bytes | bounds the ethscription; fits 500 Chinese characters plus envelope |
 
 Everything else — sequence numbers, rate limits, length limits, tag rules,
 uniqueness — stays in the indexer, where it costs no gas. Two consequences
