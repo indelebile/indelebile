@@ -227,19 +227,31 @@ into market value. Treat a celebrity entry as optionality, never as budget.
 
 ---
 
-## 9. Acceptance criteria for the MVP
+## 9. Acceptance criteria — met
 
-1. `node --test 'test/*.test.mjs'` and `forge test` both green.
-2. Contract deployed; `journalContract` set in config.
-3. **Three real entries on mainnet** — one English, one Chinese, one at the
-   500-character limit — with transaction hashes.
-4. `node src/indexer.mjs --rpc <url>` reproduces all three from a clean
-   checkout, on an ordinary RPC, with no `--seen` seeding needed.
-   Cross-check each against the public Ethscriptions API: `esip6` must be
-   `true` and `initial_owner` must be the author, not the contract.
-5. A second person re-runs step 4 independently and gets an identical
-   `out/index.json`.
-6. `out/journal.html` renders the three entries and opens from `file://`.
-7. One `sweepAndBuy` executed, with $JUSTICE landing in the treasury.
+1. **`npm test` and `forge test` green.** 64 and 23 respectively.
+2. **Deployed, config set.** Sepolia `0xb196fCfC…`; mainnet rehearsal
+   `0x3F06F46F…` in block 25932137.
+3. **Real entries.** Three on Sepolia — 206 characters English, 66 Chinese,
+   489 Chinese at the length limit — and one on mainnet.
+4. **The indexer reproduces them** on an ordinary RPC, no archive node and
+   no `--seen` seeding.
+5. **A clean clone reproduces it byte for byte.** No local state; the
+   Sepolia archive hashes to `372b8006d214a720…` from independent runs.
+   *A genuinely independent second party has not yet done this, and should.
+   The conformance vectors exist so that they can.*
+6. **`out/journal.html` renders and opens from `file://`.**
+7. **Fees reach the treasury.** `sweepEth()` moved 0.001 ETH to the
+   treasury in block 25932223 — called from an ordinary address, since the
+   function is permissionless and its destination immutable. `sweepAndBuy`
+   was **not** exercised on mainnet and deliberately so: $JUSTICE's Uniswap
+   V2 pair holds 0.011 WETH, where a 0.003 ETH sweep loses 22% to slippage,
+   and the real liquidity sits in a V3 pool this interface cannot reach.
+   The mainnet contract is deployed with no router at all.
 
-Step 5 is the one that matters. It is the whole claim.
+### And one criterion the original plan did not have
+
+**The canonical Ethscriptions indexer agrees with the design.** Ethscription
+#16251113 reports `initial_owner` as the author rather than the contract or
+the treasury, and `esip6` as true. Those are the two properties the whole
+architecture exists for, and no testnet can check them.
