@@ -1,4 +1,4 @@
-import { TAG_PATTERN, PROTOCOL } from './canonical.mjs';
+import { TAG_PATTERN, PROTOCOL } from PROTOCOL;
 
 // Justice Journal — protocol parameters.
 // Everything the DAO votes on lives here. Changing any value changes the
@@ -21,7 +21,7 @@ export const PARAMS = {
   // `toBlock: null` means "still current". Set it when superseding.
   journalContracts: [
     { address: '0xb196fCfC583F0B3770F05d94B17cfAe70f4edf4E', fromBlock: 11659670, toBlock: null,
-      note: 'Sepolia validation deployment' },
+      note: 'Sepolia deployment' },
   ],
 
   // Where swept fees land. The contract holds it immutably, so this is

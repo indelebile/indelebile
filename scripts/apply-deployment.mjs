@@ -48,6 +48,9 @@ const journal = arg('journal');
 const justice = arg('justice');
 const treasury = arg('treasury');
 const genesis = arg('genesis');
+// Must match what the contract was deployed with, or every entry it writes
+// is rejected at V5 and the archive silently stays empty.
+const protocol = arg('protocol', 'justice-journal');
 for (const [k, v] of Object.entries({ journal, justice, treasury, genesis })) {
   if (!v) { console.error(`missing --${k}`); process.exit(1); }
 }
@@ -88,6 +91,8 @@ cfg = sub(cfg, line('treasury', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${treasury}',
 cfg = sub(cfg, line('justiceToken', "'0x[0-9a-fA-F]{40}'[^\\n]*"), `$1'${justice}', // ${net.name}`);
 // The archive still begins at the earliest contract, not the newest.
 cfg = sub(cfg, line('genesisBlock', '\\d+'), `$1${entries[0].fromBlock}`);
+cfg = sub(cfg, line('protocol', "[A-Za-z_]+|'[^']*'"),
+  protocol === 'justice-journal' ? '$1PROTOCOL' : `$1'${protocol}'`);
 writeFileSync(cfgPath, cfg);
 
 // --- web/config.js (the page) ---
@@ -125,6 +130,7 @@ const checks = [
   ['indexer justiceToken', PARAMS.justiceToken.toLowerCase(), justice.toLowerCase()],
   ['indexer treasury', PARAMS.treasury.toLowerCase(), treasury.toLowerCase()],
   ['indexer genesisBlock', String(PARAMS.genesisBlock), String(entries[0].fromBlock)],
+  ['indexer protocol', PARAMS.protocol, protocol],
   ['page JOURNALS (newest)', (webNow.match(/address: '(0x[0-9a-fA-F]{40})'/g) ?? []).at(-1)?.match(/0x[0-9a-fA-F]{40}/)[0].toLowerCase(), journal.toLowerCase()],
   ['page JUSTICE', readWeb('JUSTICE')?.toLowerCase(), justice.toLowerCase()],
   ['page CHAIN_ID', readWeb('CHAIN_ID'), String(net.chainId)],
@@ -143,6 +149,7 @@ console.log(`both configs now point at ${net.name} (chain ${net.chainId})
   justice   ${justice}
   treasury  ${treasury}
   genesis   ${genesis}
+  protocol  ${protocol}${protocol === 'justice-journal' ? '' : '   ← rehearsal; these entries are not the archive'}
   rpc       ${net.rpc}
 
 next:  npm test  &&  npm run web`);
