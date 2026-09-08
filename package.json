@@ -12,7 +12,8 @@
     "index": "node src/indexer.mjs",
     "render": "node src/render.mjs",
     "demo": "node src/demo.mjs && node src/render.mjs",
-    "gas": "node src/gas.mjs"
+    "gas": "node src/gas.mjs",
+    "watch": "node src/indexer.mjs --watch"
   },
   "keywords": [],
   "author": "",

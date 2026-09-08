@@ -3,6 +3,14 @@
 // src/rules.mjs; this file only wires up RPC and writes the output.
 //
 //   node src/indexer.mjs --rpc <url> [--from <block>] [--to latest] [--seen file]
+//   node src/indexer.mjs --rpc <url> --watch [seconds]
+//
+// Watch mode keeps the archive current without re-reading the chain from
+// genesis every time. Only the *fetch* is incremental: the accumulated
+// writes are re-derived in full on every tick, because scan() is a pure
+// function of that list, so a watched build and a from-scratch build cannot
+// disagree. Getting that backwards — carrying derived state forward — is
+// how an incremental indexer drifts from the rules it claims to implement.
 //
 // An ordinary RPC is enough. The holding gate moved into the contract, so
 // nothing here reads historical state.
@@ -96,36 +104,88 @@ const seenContent = new Set(
 );
 if (seedPath) console.error(`seeded ${seenContent.size} content hashes`);
 
-console.error(`scanning ${from}..${to}`);
-const { entries, rejected } = await scan(chain, { from, to, seenContent });
-
+const OUT = new URL('../out/index.json', import.meta.url);
 mkdirSync(new URL('../out/', import.meta.url), { recursive: true });
 
-// The hash of the entries alone — not the range, which moves with the head.
-// A reader who re-derives the archive can compare this one number instead of
-// diffing files, which is the whole point of the rules being reproducible.
-const entriesHash = sha256(toHex(JSON.stringify(entries)));
+// Entries within this many blocks of the head are not published. A reorg
+// that drops one would otherwise take it out of an archive that had already
+// shown it, and "permanent" should mean it.
+const CONFIRMATIONS = Number(arg('confirmations', '5'));
 
-writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
-  protocol: PARAMS.protocol, version: 1,
-  builtAtBlock: Number(to),
-  entriesHash,
-  range: { from: Number(from), to: Number(to) },
-  params: {
-    journalContracts: PARAMS.journalContracts, treasury: PARAMS.treasury,
-    justiceToken: PARAMS.justiceToken,
-    minFeeWei: PARAMS.minFeeWei.toString(),
-    minJusticeBalance: PARAMS.minJusticeBalance.toString(),
-    maxEntriesPerAuthorPerWindow: PARAMS.maxEntriesPerAuthorPerWindow,
-    rateLimitWindowBlocks: PARAMS.rateLimitWindowBlocks,
-    bodyMaxChars: PARAMS.bodyMaxChars,
-  },
-  entries, rejected,
-}, null, 2));
-
-console.error(`\naccepted ${entries.length}, rejected ${rejected.length}`);
-console.error(`entries sha256 ${entriesHash}`);
-for (const r of rejected) {
-  console.error(`  ${r.txHash} — ${r.failed.map((f) => `${f}: ${RULES[f]}`).join('; ')}`);
+function publish(entries, rejected, builtAtBlock, scannedFrom) {
+  // The hash of the entries alone — not the range, which moves with the
+  // head. A reader who re-derives the archive compares this one number
+  // instead of diffing files, which is what the rules being reproducible
+  // is for.
+  const entriesHash = sha256(toHex(JSON.stringify(entries)));
+  const body = JSON.stringify({
+    protocol: PARAMS.protocol, version: 1,
+    builtAtBlock, entriesHash,
+    range: { from: scannedFrom, to: builtAtBlock },
+    params: {
+      journalContracts: PARAMS.journalContracts, treasury: PARAMS.treasury,
+      justiceToken: PARAMS.justiceToken,
+      minFeeWei: PARAMS.minFeeWei.toString(),
+      minJusticeBalance: PARAMS.minJusticeBalance.toString(),
+      maxEntriesPerAuthorPerWindow: PARAMS.maxEntriesPerAuthorPerWindow,
+      rateLimitWindowBlocks: PARAMS.rateLimitWindowBlocks,
+      bodyMaxChars: PARAMS.bodyMaxChars,
+    },
+    entries, rejected,
+  }, null, 2);
+  writeFileSync(OUT, body);
+  return entriesHash;
 }
-console.error('wrote out/index.json');
+
+const watching = argv.includes('--watch');
+const every = Number(arg('watch', '30')) || 30;
+
+if (!watching) {
+  console.error(`scanning ${from}..${to}`);
+  const { entries, rejected } = await scan(chain, { from, to, seenContent });
+  const h = publish(entries, rejected, Number(to), Number(from));
+  console.error(`\naccepted ${entries.length}, rejected ${rejected.length}`);
+  console.error(`entries sha256 ${h}`);
+  for (const r of rejected) {
+    console.error(`  ${r.txHash} — ${r.failed.map((f) => `${f}: ${RULES[f]}`).join('; ')}`);
+  }
+  console.error('wrote out/index.json');
+} else {
+  console.error(`watching from ${from}, polling every ${every}s, ${CONFIRMATIONS} confirmations`);
+  const writes = [];
+  const seenLog = new Set();
+  let cursor = from;
+  let lastHash = null;
+
+  for (;;) {
+    try {
+      const head = await client.getBlockNumber();
+      const safe = head - BigInt(CONFIRMATIONS);
+      if (safe >= cursor) {
+        for (const w of await chain.getWrites(cursor, safe)) {
+          const key = `${w.txHash}:${w.logIndex}`;
+          if (seenLog.has(key)) continue;
+          seenLog.add(key);
+          writes.push(w);
+        }
+        cursor = safe + 1n;
+      }
+
+      // Always derive from the whole accumulated list, never incrementally.
+      const { entries, rejected } = await scan(
+        { getWrites: async () => writes },
+        { from, to: safe, seenContent: new Set(seenContent) },
+      );
+      const h = sha256(toHex(JSON.stringify(entries)));
+      if (h !== lastHash) {
+        publish(entries, rejected, Number(safe), Number(from));
+        console.error(`[${new Date().toISOString().slice(11, 19)}] block ${safe} · ` +
+                      `${entries.length} entries, ${rejected.length} rejected · ${h.slice(0, 18)}…`);
+        lastHash = h;
+      }
+    } catch (e) {
+      console.error(`[${new Date().toISOString().slice(11, 19)}] ${e.shortMessage ?? e.message}`);
+    }
+    await new Promise((r) => setTimeout(r, every * 1000));
+  }
+}

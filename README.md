@@ -34,9 +34,17 @@ a public mempool exposes the bytes to front-running, see SPEC.md §6.
 ## Indexing
 
 ```bash
-node src/indexer.mjs --rpc $RPC --from <genesis> --seen ethscriptions.txt
+node src/indexer.mjs --rpc $RPC                 # once
+node src/indexer.mjs --rpc $RPC --watch 30      # keep it current
 node src/render.mjs --hidden hidden.json
 ```
+
+Watch mode fetches incrementally but re-derives the whole archive on every
+tick, because `scan()` is a pure function of the accumulated writes — so a
+long-running build and a from-scratch build cannot disagree, and there is
+no carried-forward state to drift. Entries within five blocks of the head
+are held back: a reorg that dropped one should not remove it from an
+archive that had already shown it.
 
 `--rpc` takes a comma-separated list and falls through it. That is not
 belt-and-braces: rebuilding the archive needs historical `eth_getLogs`, and

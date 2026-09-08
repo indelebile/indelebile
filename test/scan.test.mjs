@@ -204,3 +204,36 @@ test('a production entry is equally invisible to the rehearsal rules', async () 
   assert.equal(r.entries.length, 0);
   assert.ok(r.rejected[0].failed.includes('V5'));
 });
+
+// Watch mode fetches incrementally but re-derives from the whole
+// accumulated list on every tick, precisely so a long-running build and a
+// from-scratch one cannot disagree. Carrying derived state forward instead
+// is how an incremental indexer drifts from the rules it implements.
+test('deriving in slices matches deriving all at once', async () => {
+  const all = [];
+  for (let i = 0; i < 6; i++) all.push(write(A, i, 'entry ' + i, { blockNumber: BigInt(1000 + i * 60_000) }));
+  for (let i = 0; i < 4; i++) all.push(write(B, i, 'other ' + i, { blockNumber: BigInt(1030 + i * 60_000), logIndex: 1 }));
+
+  const whole = await scan(chainOf(all), { from: 1000, to: 400_000, params: P });
+
+  // Same writes, arriving over several ticks, re-derived in full each time.
+  let accumulated = [];
+  let last;
+  for (const chunk of [all.slice(0, 3), all.slice(3, 7), all.slice(7)]) {
+    accumulated = [...accumulated, ...chunk];
+    last = await scan(chainOf(accumulated), { from: 1000, to: 400_000, params: P });
+  }
+
+  assert.deepEqual(last.entries, whole.entries, 'incremental fetch must not change what is derived');
+  assert.deepEqual(last.rejected, whole.rejected);
+});
+
+// Out-of-order arrival is realistic: a fallback endpoint can return a
+// range the previous one already partly served.
+test('derivation does not depend on the order writes were fetched', async () => {
+  const all = [];
+  for (let i = 0; i < 5; i++) all.push(write(A, i, 'e' + i, { blockNumber: BigInt(1000 + i * 60_000) }));
+  const forwards = await scan(chainOf(all), { from: 1000, to: 400_000, params: P });
+  const shuffled = await scan(chainOf([...all].reverse()), { from: 1000, to: 400_000, params: P });
+  assert.deepEqual(shuffled.entries, forwards.entries);
+});
