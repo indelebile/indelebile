@@ -14,18 +14,25 @@ import {TestRouter, ITestJustice} from "../src/testnet/TestRouter.sol";
 /// Environment:
 ///   TREASURY     required — where swept fees land
 ///   JUSTICE      optional — real token; a TestJustice is deployed if unset
-///   ROUTER       optional — real router; a TestRouter is deployed if unset
+///   ROUTER       optional — real router; a TestRouter is deployed if unset.
+///                Pass the zero address deliberately to deploy with no swap
+///                route at all: sweepAndBuy is then dead and sweepEth is the
+///                only way out. That is the right choice when the token's
+///                liquidity is too thin for an automatic swap to be honest.
 ///   MIN_FEE      optional — wei, default 0.001 ether
 ///   MIN_BALANCE  optional — wei, default 100,000e18
 contract Deploy is Script {
     function run() external {
         address treasury = vm.envAddress("TREASURY");
         address justice = vm.envOr("JUSTICE", address(0));
+        // Distinguish "unset" from "deliberately none": envOr cannot, so a
+        // separate flag carries the intent.
+        bool noRouter = vm.envOr("NO_ROUTER", false);
         address router = vm.envOr("ROUTER", address(0));
         uint256 minFee = vm.envOr("MIN_FEE", uint256(0.001 ether));
         uint256 minBalance = vm.envOr("MIN_BALANCE", uint256(100_000 ether));
 
-        bool needsStubs = justice == address(0) || router == address(0);
+        bool needsStubs = justice == address(0) || (router == address(0) && !noRouter);
         // The stand-ins have an open faucet and a fixed-rate swap. On
         // mainnet that would hand anyone an unlimited supply and drain the
         // fees, so refuse rather than rely on the operator noticing.
@@ -38,9 +45,12 @@ contract Deploy is Script {
             justice = address(new TestJustice());
             console.log("TestJustice   ", justice);
         }
-        if (router == address(0)) {
+        if (router == address(0) && !noRouter) {
             router = address(new TestRouter(ITestJustice(justice)));
             console.log("TestRouter    ", router);
+        }
+        if (noRouter) {
+            console.log("router        ", address(0), "- sweepAndBuy disabled, sweepEth only");
         }
 
         JusticeJournal jj = new JusticeJournal(
