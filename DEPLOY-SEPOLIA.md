@@ -3,6 +3,19 @@
 Everything here has been rehearsed against a fork of Sepolia at block
 11,659,572. The only step that needs your private key is the one you run.
 
+## If you want to rehearse locally first
+
+Skip this if you would rather go straight to Sepolia — you need testnet ETH
+either way, and you already have it there.
+
+Anvil pre-funds only its own built-in accounts, so your wallet address has
+zero ETH on the local chain. Fund it (the balance is invented; it is a
+sandbox):
+
+```bash
+cast rpc anvil_setBalance <your address> 0x21e19e0c9bab2400000 --rpc-url http://127.0.0.1:8547
+```
+
 ## Before you start
 
 You need a funded Sepolia account. The deploy costs about **2.27M gas**;
