@@ -98,3 +98,51 @@ test('app.js never assigns className directly', () => {
     `use setState() instead — these drop the base class: ${hits.join(' | ')}`);
   assert.ok(app.includes('function setState'), 'the helper must still exist');
 });
+
+// Body contrast was 16.9:1 in light and 15.2:1 in dark. Print sits around
+// 10–12:1, and the gap is what makes a long writing session tiring. Every
+// pair must also clear WCAG AA, since the metadata is small mono text.
+test('the palette is comfortable to read and clears WCAG AA', () => {
+  const css = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const lum = (h) => {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255)
+      .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const ratio = (a, b) => {
+    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+    return (x + 0.05) / (y + 0.05);
+  };
+  // Two :root blocks: light first, then the dark override.
+  const blocks = css.split(':root{').slice(1);
+  assert.equal(blocks.length, 2, 'expected a light and a dark palette');
+
+  for (const [i, block] of blocks.entries()) {
+    const mode = i === 0 ? 'light' : 'dark';
+    const read = (name) => block.match(new RegExp(`--${name}:(#[0-9a-f]{6})`))?.[1];
+    const paper = read('paper');
+    assert.ok(paper, `${mode}: no --paper`);
+
+    const body = ratio(read('ink'), paper);
+    assert.ok(body >= 10 && body <= 14,
+      `${mode}: body contrast ${body.toFixed(1)}:1 — aim for 10–14, print territory`);
+
+    for (const name of ['ink-2', 'ink-3', 'accent', 'bad', 'ok']) {
+      const c = read(name);
+      if (!c) continue;
+      const r = ratio(c, paper);
+      assert.ok(r >= 4.5, `${mode}: --${name} is ${r.toFixed(1)}:1 against paper, below AA 4.5:1`);
+    }
+  }
+});
+
+// Red meaning both "our brand" and "something is wrong" makes neither
+// legible. The accent carries identity; --bad carries failure.
+test('the accent colour is not reused for errors', () => {
+  const css = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  for (const rule of ['.status.bad', '#count.over', '.holding.no']) {
+    const decl = css.match(new RegExp(`\\${rule}\\{[^}]*\\}`))?.[0] ?? '';
+    assert.ok(!decl.includes('var(--accent)'),
+      `${rule} uses --accent; failure states belong to --bad`);
+  }
+});

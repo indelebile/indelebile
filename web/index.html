@@ -9,18 +9,34 @@
 /* No webfonts, no CDN, no external request of any kind. A page about
    censorship resistance should not need someone else's server to render. */
 :root{
-  --paper:#faf8f4; --sheet:#fff; --ink:#191714; --ink-2:#4a453e; --ink-3:#8a8378;
-  --rule:#e2dcd1; --rule-2:#efeae1; --accent:#8b1e1e;
-  --ok:#1d6b3f; --warn:#9a5a12; --code:#f4f1ea;
+  /* Ink on paper. Deep blue carries the brand — the language of documents
+     and the courts — and red is kept for errors only, so it never has to
+     mean two things at once.
+
+     Body contrast is deliberately held near 13:1 rather than pushed to the
+     maximum. The previous palette ran 16.9:1 in light and 15.2:1 in dark;
+     print sits around 10-12:1, and the difference is what makes a long
+     writing session tiring. Every value below clears WCAG AA 4.5:1. */
+  --paper:#f6f4ef; --sheet:#fdfcf9;
+  --ink:#2b2926;        /* 13.2:1 */
+  --ink-2:#57524a;      /*  7.0:1 */
+  --ink-3:#726c5c;      /*  4.8:1 — small metadata, so it must still clear AA */
+  --rule:#e0dacd; --rule-2:#ebe6dc; --code:#f0ece3;
+  --accent:#234a72;     /* ink blue */
+  --bad:#a03b32; --ok:#2c6b47; --warn:#8a5a1b;
   --serif:Georgia,'Iowan Old Style','Songti SC','Noto Serif CJK SC','Source Han Serif SC',serif;
   --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
   --shell:74rem;      /* the page */
   --measure:38rem;    /* the longest a line of prose may get */
 }
 @media(prefers-color-scheme:dark){:root{
-  --paper:#111110; --sheet:#1a1917; --ink:#eae6df; --ink-2:#b3ada3; --ink-3:#7d766c;
-  --rule:#2f2c27; --rule-2:#232019; --accent:#d97a72;
-  --ok:#63b382; --warn:#d0a35c; --code:#211e1a;
+  --paper:#15161a; --sheet:#1c1e23;
+  --ink:#dcd8d0;        /* 12.7:1 */
+  --ink-2:#a8a29a;      /*  7.1:1 */
+  --ink-3:#8b857a;      /*  4.9:1 */
+  --rule:#2e3037; --rule-2:#24262b; --code:#1a1c20;
+  --accent:#8ab0d8;
+  --bad:#e08b80; --ok:#6fbc8e; --warn:#d0a35c;
 }}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -47,7 +63,7 @@ h1{margin:0;font-size:clamp(1.9rem,4vw,2.5rem);font-weight:400;letter-spacing:-.
 .lede .shell{padding-top:2rem;padding-bottom:2rem}
 .lede p{margin:0;max-width:44rem;font-size:1.12rem;color:var(--ink-2)}
 .lede strong{color:var(--ink);font-weight:400;
-  box-shadow:inset 0 -.45em 0 rgba(139,30,30,.14)}
+  box-shadow:inset 0 -.45em 0 rgba(35,74,114,.15)}
 
 /* ---------- sections ---------- */
 section{padding:3.4rem 0;border-bottom:1px solid var(--rule-2)}
@@ -85,11 +101,11 @@ textarea::placeholder,input::placeholder{color:var(--ink-3);opacity:.55}
   color:var(--ink-3);margin-bottom:.45rem}
 .railval{font:.85rem/1.45 var(--mono);color:var(--ink);word-break:break-all}
 .railnote{font:.72rem/1.5 var(--mono);color:var(--ink-3);margin-top:.25rem}
-.holding.yes{color:var(--ok)} .holding.no{color:var(--accent)}
+.holding.yes{color:var(--ok)} .holding.no{color:var(--bad)}
 .meter{height:3px;background:var(--rule-2);border-radius:3px;overflow:hidden;margin:.55rem 0 .4rem}
 .meter i{display:block;height:100%;width:0;background:var(--ink-3);transition:width .15s,background .15s}
-.meter i.warn{background:var(--warn)} .meter i.over{background:var(--accent)}
-#count.over{color:var(--accent)}
+.meter i.warn{background:var(--warn)} .meter i.over{background:var(--bad)}
+#count.over{color:var(--bad)}
 
 /* ---------- buttons ---------- */
 button{font:.78rem/1 var(--mono);letter-spacing:.04em;cursor:pointer;border-radius:8px;
@@ -106,7 +122,7 @@ button.small{padding:.45rem .8rem;font-size:.7rem}
 .status{margin:1rem 0 0;padding:.75rem .9rem;border-radius:8px;background:var(--sheet);
   border-left:2px solid var(--ink-3);font:.73rem/1.65 var(--mono);word-break:break-word}
 .status a{color:inherit}
-.status.bad{color:var(--accent);border-left-color:var(--accent)}
+.status.bad{color:var(--bad);border-left-color:var(--bad)}
 .status.ok{color:var(--ink-2);border-left-color:var(--ok)}
 #notConnected a{color:var(--accent)}
 
