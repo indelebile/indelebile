@@ -69,3 +69,43 @@ test('content hash is sha256 of the UTF-8 dataURI, as the protocol defines', () 
 test('encode() and toDataUri() produce the same bytes', () => {
   assert.equal(encode(entry).uri, toDataUri(entry));
 });
+
+// --- D-5: the calldata must not be readable as a dataURI ---
+//
+// ESIP-3 allows one ethscription per transaction and gives calldata
+// priority over events. If our calldata parsed as a dataURI it would win
+// over our event and the initial owner would become tx.to — the contract —
+// on every entry. The spec's regex is anchored, so a conforming indexer
+// would never do this; not depending on that is the point of D-5.
+
+import { encodeFunctionData, parseAbi } from 'viem';
+import { entryTail, ENTRY_HEAD, HEAD_LEN } from '../src/canonical.mjs';
+
+const writeAbi = parseAbi(['function writeEntry(string entryTail) payable']);
+const calldataUtf8 = (e) => {
+  const hex = encodeFunctionData({ abi: writeAbi, functionName: 'writeEntry', args: [entryTail(e)] });
+  // The protocol decodes calldata as UTF-8 with null bytes stripped.
+  return new TextDecoder().decode(Buffer.from(hex.slice(2), 'hex')).replace(/\0/g, '');
+};
+
+test('calldata contains no dataURI at all, anchored or not', () => {
+  for (const body of ['plain', '记'.repeat(500), 'quotes " and \\ backslash']) {
+    const utf8 = calldataUtf8(buildEntry({ ...entry, body }));
+    assert.ok(!DATA_URI.test(utf8), 'must not match the anchored spec regex');
+    assert.ok(!utf8.includes('data:'), 'must not contain a dataURI even unanchored');
+  }
+});
+
+test('head plus tail reconstructs the URI exactly', () => {
+  const uri = toDataUri(entry);
+  const head = uri.slice(0, HEAD_LEN);
+  assert.ok(head.startsWith(ENTRY_HEAD));
+  assert.equal(head + entryTail(entry), uri);
+  // The address occupies the 40 characters the contract writes.
+  assert.equal(head.slice(ENTRY_HEAD.length), entry.author.slice(2));
+  assert.equal(head.slice(ENTRY_HEAD.length).length, 40);
+});
+
+test('the tail begins where the contract stops', () => {
+  assert.ok(entryTail(entry).startsWith('","seq":'));
+});

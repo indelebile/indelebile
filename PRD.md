@@ -93,8 +93,8 @@ It enforces **only what must be atomic with the write**:
 |---|---|
 | `msg.value ≥ minFee` | the fee cannot be collected after the fact |
 | `balanceOf(sender) ≥ 100,000 $JUSTICE` | must be true at write time |
-| canonical 77-byte prefix | ~650 gas, and it stops the contract minting junk under its own name — without it a malformed write succeeds and eats the fee |
-| content ≤ 2,048 bytes | bounds the ethscription; fits 500 Chinese characters plus envelope |
+| the header and author are written, not accepted | junk cannot be minted under the contract's name, and `author` cannot disagree with the sender (§7) |
+| assembled content ≤ 2,048 bytes | bounds the ethscription; fits 500 Chinese characters plus envelope |
 
 Everything else — sequence numbers, rate limits, length limits, tag rules,
 uniqueness — stays in the indexer, where it costs no gas. Two consequences
@@ -188,11 +188,14 @@ of the string and our calldata begins with a function selector, so it does
 not match; this was verified against the spec's own regex. But we are
 correct by one anchor.
 
-**Recommended hardening before mainnet (D-5):** have the contract assemble
-the dataURI from a raw body instead of accepting the finished string. The
-calldata then contains no `data:` prefix at all, `author == msg.sender`
-becomes true by construction rather than by rule, and calldata shrinks by
-88 bytes.
+**D-5, done.** The contract assembles the dataURI instead of accepting one.
+`writeEntry(string entryTail)` takes only what follows the author's
+address; the contract writes the header and `_hexAddress(msg.sender)`. The
+calldata then contains no `data:` sequence at all, and `author` equals the
+ESIP-3 initial owner by construction rather than by rule.
+
+Measured both ways: +1,630 gas on a short English entry, −2,351 on a
+full-length Chinese one. Roughly a wash, favourable on long entries.
 
 ## 8. Open decisions for the DAO
 
@@ -204,7 +207,6 @@ rather than have us pick quietly.
 | D-1 | Fee level (`minFee`) | It is the only per-entry spam cost. The holding gate is per *wallet* — one 100k bag can write ten thousand entries — so the gate filters non-holders and nothing more. |
 | D-2 | Transferability | Tradable entries invite ordinal sniping and flip bait, which works against the archive. Options: soulbound with author opt-in unlock; or a 6–12 month transfer lock. |
 | D-3 | Rate limit | 3 entries per author per ~7 days is a placeholder. |
-| D-5 | Contract-assembled URI | See §7. Removes a class of failure rather than relying on an indexer implementation detail. My recommendation is yes, before mainnet. |
 | D-4 | The worst entry | Someone will inscribe something illegal. On IPFS you could unpin; here you cannot. The answer has to be that the chain is the raw layer and the DAO index is a curated view. **Have this answer ready before the proposal goes up — it is the strongest objection to the whole approach.** |
 
 ### On secondary-market revenue

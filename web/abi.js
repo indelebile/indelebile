@@ -6,14 +6,14 @@
 // keccak`), which is what lets us skip a keccak implementation entirely.
 
 const SEL = {
-  write: '0xebaac771',      // write(string)
+  writeEntry: '0x46e00f5e', // writeEntry(string)
   balanceOf: '0x70a08231',  // balanceOf(address)
   faucet: '0xde5f72fd',     // faucet()
 };
 
 const TOPIC = {
-  // ethscriptions_protocol_CreateEthscription(address,string)
-  esip2: '0x665fba0baf3dc33e9943340197893ac16f56482c2defb8de60f944987fee451c',
+  // ethscriptions_protocol_CreateEthscription(address,string) — ESIP-3
+  esip3: '0x665fba0baf3dc33e9943340197893ac16f56482c2defb8de60f944987fee451c',
 };
 
 const hex = (n, bytes = 32) => n.toString(16).padStart(bytes * 2, '0');
@@ -23,12 +23,16 @@ function utf8Hex(s) {
   return [...new TextEncoder().encode(s)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/// encode write(string contentURI): selector + offset + length + padded data
-function encodeWrite(contentURI) {
-  const data = utf8Hex(contentURI);
+/// encode writeEntry(string entryTail): selector + offset + length + padded
+///
+/// Only the tail goes on the wire. The contract writes the dataURI header
+/// and the author's address itself, which is why this calldata contains no
+/// `data:` prefix — see SPEC.md on calldata-versus-event priority.
+function encodeWriteEntry(entryTail) {
+  const data = utf8Hex(entryTail);
   const byteLen = data.length / 2;
   const padded = data.padEnd(Math.ceil(byteLen / 32) * 64, '0');
-  return SEL.write + hex(32n) + hex(BigInt(byteLen)) + padded;
+  return SEL.writeEntry + hex(32n) + hex(BigInt(byteLen)) + padded;
 }
 
 function encodeBalanceOf(addr) {
@@ -36,7 +40,7 @@ function encodeBalanceOf(addr) {
 }
 
 /// Decode the non-indexed `string contentURI` out of an ESIP-3 log's data.
-function decodeEsip2String(dataHex) {
+function decodeEsip3String(dataHex) {
   const d = dataHex.replace(/^0x/, '');
   const offset = Number(BigInt('0x' + d.slice(0, 64))) * 2;
   const len = Number(BigInt('0x' + d.slice(offset, offset + 64)));
@@ -45,4 +49,4 @@ function decodeEsip2String(dataHex) {
   return new TextDecoder().decode(bytes);
 }
 
-window.JJ_ABI = { SEL, TOPIC, encodeWrite, encodeBalanceOf, decodeEsip2String, padAddr, utf8Hex };
+window.JJ_ABI = { SEL, TOPIC, encodeWriteEntry, encodeBalanceOf, decodeEsip3String, padAddr, utf8Hex };

@@ -51,24 +51,18 @@ words. `JusticeJournal.sol` is ~110 lines: no storage, no owner, no
 upgradeability, all parameters immutable.
 
 It enforces what must be atomic with the write — `msg.value >= minFee` and
-`balanceOf(sender) >= 100,000 $JUSTICE` — plus two cheap structural checks:
-
-- **the canonical prefix.** Because the key order is fixed at `p, v,
-  author, …`, the first 77 bytes of every entry are a constant, so the
-  contract can compare one keccak hash. Without it, `write("hello")` would
-  succeed, take the fee, and mint an ethscription under the contract's name
-  that the indexer then rejects — the author pays and gets nothing. It
-  costs ~650 gas.
-- **a 2,048-byte cap**, which fits 500 characters of Chinese plus the
-  envelope and five tags.
+`balanceOf(sender) >= 100,000 $JUSTICE` — and it **writes the protocol
+header and the author's address itself** rather than accepting them (§6b),
+which is what makes junk unmintable and `author` unfalsifiable. It also
+caps the assembled content at 2,048 bytes, which fits 500 characters of
+Chinese plus the envelope and five tags.
 
 This does *not* make the content valid — full canonical validation means
 parsing JSON in Solidity, which is not worth doing. The remaining rules
-stay in the indexer where they cost no gas, so a transaction can still
-satisfy the contract and be rejected later.
+stay in the indexer where they cost no gas.
 
-Note that checking `"v":1` in the prefix means a format version bump
-requires a new deployment. That is already true of every other parameter. Moving the gate on-chain has a useful side
+Because the header carries `"v":1`, a format version bump requires a new
+deployment. That is already true of every other parameter. Moving the gate on-chain has a useful side
 effect: **the indexer no longer needs an archive node**, because it never
 reads historical state.
 
@@ -116,7 +110,7 @@ reproducible by anyone.
 | # | rule |
 |---|---|
 | V1 | the ESIP-3 log was emitted by the canonical JusticeJournal contract |
-| V1b | *(contract)* content begins with the canonical 77-byte prefix and is ≤2,048 bytes |
+| V1b | *(contract)* the header and author are written by the contract, not the caller; assembled content is ≤2,048 bytes |
 | V2 | `fee >= minFeeWei` |
 | V4 | `contentURI` decodes to a canonical entry (§3) |
 | V5 | `p == "justice-journal"`, `v == 1`, `ts` is a non-negative integer |

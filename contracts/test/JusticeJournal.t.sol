@@ -49,10 +49,13 @@ contract JusticeJournalTest is Test {
     uint256 constant GATE = 100_000 ether;
 
     // Byte-for-byte what src/entry.mjs produces.
-    string constant PREFIX =
+    string constant HEAD =
         'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
-    string constant ENTRY_EN =
-        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
+    /// Everything after the author's address — what a caller now supplies.
+    string constant TAIL_EN =
+        '","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
+    string constant EXPECTED_EN =
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x00000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
 
     /// ESIP-3
     event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI);
@@ -69,9 +72,9 @@ contract JusticeJournalTest is Test {
 
     function test_WriteEmitsEsip2WithAuthorAsOwner() public {
         vm.expectEmit(true, false, false, true);
-        emit ethscriptions_protocol_CreateEthscription(author, ENTRY_EN);
+        emit ethscriptions_protocol_CreateEthscription(author, EXPECTED_EN);
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
     }
 
     /// The reason this contract exists: under ESIP-1 a direct send would
@@ -80,7 +83,7 @@ contract JusticeJournalTest is Test {
     function test_TreasuryNeverOwnsTheEntry() public {
         vm.recordLogs();
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
         Vm.Log[] memory logs = vm.getRecordedLogs();
         bytes32 sig = keccak256("ethscriptions_protocol_CreateEthscription(address,string)");
         bool found;
@@ -97,78 +100,89 @@ contract JusticeJournalTest is Test {
     function test_RejectsUnderpaidWrite() public {
         vm.prank(author);
         vm.expectRevert(abi.encodeWithSelector(JusticeJournal.FeeTooLow.selector, FEE - 1, FEE));
-        jj.write{value: FEE - 1}(ENTRY_EN);
+        jj.writeEntry{value: FEE - 1}(TAIL_EN);
     }
 
     function test_RejectsAuthorBelowHoldingGate() public {
         justice.setBalance(stranger, GATE - 1);
         vm.prank(stranger);
         vm.expectRevert(abi.encodeWithSelector(JusticeJournal.BalanceTooLow.selector, GATE - 1, GATE));
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
     }
 
     /// The question this answers: can anyone push arbitrary calldata into
-    /// the Journal? No — the contract will not even mint it.
-    function test_RejectsArbitraryContent() public {
-        string[4] memory junk = [
-            "hello",
-            "data:text/plain;charset=utf-8,just a message",
-            'data:application/json;charset=utf-8;rule=esip6,{"p":"some-other-protocol","v":1,"author":"0x',
-            'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x'  // no rule=esip6
-        ];
-        for (uint256 i; i < junk.length; i++) {
-            vm.prank(author);
-            vm.expectRevert(JusticeJournal.NotAJournalEntry.selector);
-            jj.write{value: FEE}(junk[i]);
+    /// the Journal? The contract writes the protocol header itself, so a
+    /// caller cannot choose it at all — the worst they can do is supply a
+    /// malformed tail, which the indexer rejects.
+    function test_CallerCannotChooseTheHeader() public {
+        vm.recordLogs();
+        vm.prank(author);
+        jj.writeEntry{value: FEE}('","seq":0,"ts":1,"tags":[],"body":"x"}');
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        bytes32 sig = keccak256("ethscriptions_protocol_CreateEthscription(address,string)");
+        for (uint256 i; i < logs.length; i++) {
+            if (logs[i].topics[0] != sig) continue;
+            string memory uri = abi.decode(logs[i].data, (string));
+            assertEq(_slice(bytes(uri), 0, 88), HEAD, "header must be ours");
         }
     }
 
-    /// A rejected write must not cost the author anything but gas.
-    function test_RejectedWriteKeepsTheFee() public {
-        uint256 before = author.balance;
+    /// The author field is written by the contract, so it cannot disagree
+    /// with the ESIP-3 initial owner.
+    function test_AuthorIsAlwaysTheSender() public {
+        vm.recordLogs();
         vm.prank(author);
-        vm.expectRevert(JusticeJournal.NotAJournalEntry.selector);
-        jj.write{value: FEE}("hello");
-        assertEq(author.balance, before, "fee must not be taken");
-        assertEq(address(jj).balance, 0);
+        jj.writeEntry{value: FEE}('","seq":0,"ts":1,"tags":[],"body":"x"}');
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        bytes32 sig = keccak256("ethscriptions_protocol_CreateEthscription(address,string)");
+        for (uint256 i; i < logs.length; i++) {
+            if (logs[i].topics[0] != sig) continue;
+            string memory uri = abi.decode(logs[i].data, (string));
+            // lowercase hex of address(0xA11CE), 40 chars, right after HEAD
+            assertEq(_slice(bytes(uri), 88, 40), "00000000000000000000000000000000000a11ce");
+        }
+    }
+
+    function _slice(bytes memory b, uint256 from, uint256 len) internal pure returns (string memory) {
+        bytes memory out = new bytes(len);
+        for (uint256 i; i < len; i++) out[i] = b[from + i];
+        return string(out);
     }
 
     function test_RejectsOversizedContent() public {
-        bytes memory big = new bytes(2049);
-        for (uint256 i; i < 88; i++) big[i] = bytes(PREFIX)[i];
+        // The cap covers the assembled URI, not just what the caller sends.
+        bytes memory big = new bytes(2048 - 88 - 40 + 1);
         vm.prank(author);
         vm.expectRevert(abi.encodeWithSelector(JusticeJournal.ContentTooLong.selector, 2049, 2048));
-        jj.write{value: FEE}(string(big));
+        jj.writeEntry{value: FEE}(string(big));
     }
 
     /// 500 characters of Chinese must still fit under the cap.
     function test_MaxLengthChineseEntryFits() public {
         bytes memory body = new bytes(1500);
         for (uint256 i; i < 1500; i += 3) { body[i] = 0xe8; body[i+1] = 0xae; body[i+2] = 0xb0; }
-        string memory uri = string.concat(
-            PREFIX, '000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":[],"body":"',
-            string(body), '"}');
-        assertLe(bytes(uri).length, 2048, "a full-length Chinese entry must fit");
+        string memory tail = string.concat('","seq":0,"ts":1757280000,"tags":[],"body":"', string(body), '"}');
+        assertLe(88 + 40 + bytes(tail).length, 2048, "a full-length Chinese entry must fit");
         vm.prank(author);
-        jj.write{value: FEE}(uri);
+        jj.writeEntry{value: FEE}(tail);
     }
 
     function test_RejectsEmptyContent() public {
         vm.prank(author);
         vm.expectRevert(JusticeJournal.EmptyContent.selector);
-        jj.write{value: FEE}("");
+        jj.writeEntry{value: FEE}("");
     }
 
     function test_ContractStoresNothing() public {
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
         // Only the fee accumulates; the content lives in calldata alone.
         assertEq(address(jj).balance, FEE);
     }
 
     function test_SweepAndBuySendsJusticeToTreasury() public {
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
         vm.prank(stranger); // permissionless
         uint256 out = jj.sweepAndBuy(FEE * 1000, block.timestamp + 60);
         assertEq(out, FEE * 1000);
@@ -178,7 +192,7 @@ contract JusticeJournalTest is Test {
 
     function test_SweepCallerCannotRedirectProceeds() public {
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
         vm.prank(stranger);
         jj.sweepAndBuy(0, block.timestamp + 60);
         assertEq(router.delivered(stranger), 0, "caller must not receive anything");
@@ -187,7 +201,7 @@ contract JusticeJournalTest is Test {
 
     function test_SweepHonoursSlippageBound() public {
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
         vm.prank(stranger);
         vm.expectRevert(bytes("slippage"));
         jj.sweepAndBuy(FEE * 1001, block.timestamp + 60);
@@ -197,7 +211,7 @@ contract JusticeJournalTest is Test {
     function test_FailedSwapDoesNotBlockWritesAndEthEscapeWorks() public {
         router.setRevert(true);
         vm.prank(author);
-        jj.write{value: FEE}(ENTRY_EN); // writing is unaffected
+        jj.writeEntry{value: FEE}(TAIL_EN); // writing is unaffected
         vm.prank(stranger);
         vm.expectRevert(bytes("pool"));
         jj.sweepAndBuy(0, block.timestamp + 60);
@@ -224,7 +238,7 @@ contract JusticeJournalTest is Test {
     function test_GasEnglishEntry() public {
         vm.prank(author);
         uint256 g = gasleft();
-        jj.write{value: FEE}(ENTRY_EN);
+        jj.writeEntry{value: FEE}(TAIL_EN);
         console.log("gas: 113-char English entry", g - gasleft() + 21000);
     }
 
@@ -232,12 +246,10 @@ contract JusticeJournalTest is Test {
         // 500 Chinese characters at 3 UTF-8 bytes each, plus the envelope.
         bytes memory body = new bytes(1500);
         for (uint256 i; i < 1500; i += 3) { body[i] = 0xe8; body[i+1] = 0xae; body[i+2] = 0xb0; }
-        string memory uri = string.concat(
-            PREFIX, '000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":[],"body":"',
-            string(body), '"}');
+        string memory tail = string.concat('","seq":0,"ts":1757280000,"tags":[],"body":"', string(body), '"}');
         vm.prank(author);
         uint256 g = gasleft();
-        jj.write{value: FEE}(uri);
+        jj.writeEntry{value: FEE}(tail);
         console.log("gas: 500-char Chinese entry", g - gasleft() + 21000);
     }
 }

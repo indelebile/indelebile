@@ -36,6 +36,16 @@ export function buildEntry({ author, seq, ts, tags = [], body }) {
 
 export const canonicalJson = (entry) => JSON.stringify(entry, KEY_ORDER);
 export const toDataUri = (entry) => DATA_URI_PREFIX + canonicalJson(entry);
+
+// The contract writes everything up to and including the author's address
+// and the caller supplies the rest, so that `author` cannot disagree with
+// the sender and the calldata carries no `data:` prefix of its own.
+export const ENTRY_HEAD = `${DATA_URI_PREFIX}{"p":"${PROTOCOL}","v":${VERSION},"author":"0x`;
+export const HEAD_LEN = ENTRY_HEAD.length + 40; // + the address
+
+// Derived from the full URI rather than re-serialised, so the two can
+// never drift: whatever the indexer hashes is exactly head + tail.
+export const entryTail = (entry) => toDataUri(entry).slice(HEAD_LEN);
 export const codePointLength = (s) => [...s].length;
 export const byteLength = (s) => new TextEncoder().encode(s).length;
 

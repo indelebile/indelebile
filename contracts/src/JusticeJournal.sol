@@ -47,15 +47,12 @@ contract JusticeJournal {
     uint256 public immutable minFee;
     uint256 public immutable minBalance;
 
-    /// @notice The first 88 bytes of every canonical entry. The entry
-    ///         format fixes the key order as p, v, author, ... so this
-    ///         prefix is a constant — which is the only reason a useful
-    ///         format check is affordable on-chain at all.
-    ///
-    ///         `data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x`
-    bytes32 public constant PREFIX_HASH =
-        keccak256('data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x');
-    uint256 public constant PREFIX_LEN = 88;
+    /// @notice Everything up to and including the author's address. The
+    ///         contract writes this itself rather than accepting it, for
+    ///         two reasons — see `writeEntry`.
+    string public constant HEAD =
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
+    uint256 public constant HEAD_LEN = 88;
 
     /// @notice Upper bound on one entry. 500 characters of Chinese is
     ///         1,500 bytes, plus the envelope and up to five tags.
@@ -64,7 +61,6 @@ contract JusticeJournal {
     error FeeTooLow(uint256 sent, uint256 required);
     error BalanceTooLow(uint256 held, uint256 required);
     error EmptyContent();
-    error NotAJournalEntry();
     error ContentTooLong(uint256 length, uint256 max);
     error NothingToSweep();
     error TransferFailed();
@@ -84,32 +80,65 @@ contract JusticeJournal {
     }
 
     /// @notice Write one journal entry.
-    /// @param contentURI the full `data:application/json;charset=utf-8,{...}`
-    ///        string. It is never stored — it lives in this transaction's
-    ///        calldata, which is the whole point.
+    /// @param entryTail everything after the author's address, beginning
+    ///        with the closing quote: `","seq":0,"ts":...,"tags":[],"body":"..."}`
     ///
-    /// The prefix and length checks are cheap and worth their gas: without
-    /// them `write("hello")` would succeed, take the fee, and mint an
-    /// ethscription under this contract's name that the indexer then
-    /// rejects — the author pays and gets nothing. They do not make the
-    /// content valid. Full canonical validation means parsing JSON in
-    /// Solidity, which is not worth doing; the remaining rules stay in the
-    /// indexer, so a transaction can still satisfy this function and be
-    /// rejected later. The frontend must validate locally first.
-    function write(string calldata contentURI) external payable {
+    /// The contract assembles the dataURI rather than accepting a finished
+    /// one. Two things follow, and neither is available to a function that
+    /// takes the whole string:
+    ///
+    /// 1. `author` equals `msg.sender` by construction. The indexer still
+    ///    checks it, but the check can no longer fail.
+    /// 2. The calldata contains no `data:` prefix, so it cannot itself be
+    ///    read as a dataURI. This matters because ESIP-3 allows only one
+    ///    ethscription per transaction and gives calldata priority over
+    ///    events: an indexer that matched a dataURI anywhere in the
+    ///    calldata rather than only at its start would create the
+    ///    ethscription from calldata instead of from our event, and its
+    ///    owner would be `tx.to` — this contract — on every single entry.
+    ///    The published spec anchors its regex, so that would be a
+    ///    non-conforming indexer. Not depending on it is cheap.
+    ///
+    /// What is still not guaranteed: the tail is JSON written by the
+    /// caller, so key order, escaping and field types remain the client's
+    /// responsibility and the indexer's to check. A transaction can satisfy
+    /// this function and still be rejected, spending the fee. The frontend
+    /// must validate locally first.
+    function writeEntry(string calldata entryTail) external payable {
         if (msg.value < minFee) revert FeeTooLow(msg.value, minFee);
         uint256 held = justice.balanceOf(msg.sender);
         if (held < minBalance) revert BalanceTooLow(held, minBalance);
+        if (bytes(entryTail).length == 0) revert EmptyContent();
 
-        bytes calldata content = bytes(contentURI);
-        if (content.length == 0) revert EmptyContent();
-        if (content.length > MAX_CONTENT_BYTES) revert ContentTooLong(content.length, MAX_CONTENT_BYTES);
-        if (content.length < PREFIX_LEN || keccak256(content[:PREFIX_LEN]) != PREFIX_HASH) {
-            revert NotAJournalEntry();
-        }
+        uint256 total = HEAD_LEN + 40 + bytes(entryTail).length;
+        if (total > MAX_CONTENT_BYTES) revert ContentTooLong(total, MAX_CONTENT_BYTES);
+
+        string memory contentURI = string.concat(HEAD, _hexAddress(msg.sender), entryTail);
 
         emit ethscriptions_protocol_CreateEthscription(msg.sender, contentURI);
-        emit EntryWritten(msg.sender, keccak256(content), msg.value);
+        emit EntryWritten(msg.sender, keccak256(bytes(contentURI)), msg.value);
+    }
+
+    /// Lowercase 40-character hex, no `0x`. Must match how the indexer
+    /// lowercases addresses, or `author` would never equal the initial
+    /// owner.
+    ///
+    /// Written in assembly because the obvious Solidity loop bounds-checks
+    /// and read-modify-writes a full word per character: 16,600 gas for
+    /// forty of them, against roughly 900 here. `mstore8` writes one byte,
+    /// and `byte(n, SYM)` indexes the lookup directly on the stack.
+    function _hexAddress(address a) internal pure returns (string memory out) {
+        bytes16 SYM = "0123456789abcdef";
+        out = new string(40);
+        assembly {
+            let ptr := add(out, 32)
+            let v := a
+            for { let i := 40 } gt(i, 0) {} {
+                i := sub(i, 1)
+                mstore8(add(ptr, i), byte(and(v, 0xf), SYM))
+                v := shr(4, v)
+            }
+        }
     }
 
     /// @notice Swap the accumulated fees into $JUSTICE for the treasury.

@@ -4,11 +4,11 @@
 // file the indexer uses (../src/canonical.mjs), so the bytes this page
 // sends and the bytes the indexer expects cannot drift apart.
 
-import { buildEntry, toDataUri, codePointLength, byteLength, checkLocal }
+import { buildEntry, toDataUri, entryTail, codePointLength, byteLength, checkLocal }
   from '../src/canonical.mjs';
 
 const C = window.JJ_CONFIG;
-const { SEL, TOPIC, encodeWrite, encodeBalanceOf, decodeEsip2String, padAddr } = window.JJ_ABI;
+const { SEL, TOPIC, encodeWriteEntry, encodeBalanceOf, decodeEsip3String, padAddr } = window.JJ_ABI;
 
 const $ = (id) => document.getElementById(id);
 const eth = () => window.ethereum;
@@ -76,14 +76,14 @@ async function callBalance() {
 async function loadNextSeq() {
   const logs = await read('eth_getLogs', [{
     address: C.JOURNAL,
-    topics: [TOPIC.esip2, '0x' + padAddr(account)],
+    topics: [TOPIC.esip3, '0x' + padAddr(account)],
     fromBlock: '0x' + C.GENESIS_BLOCK.toString(16),
     toBlock: 'latest',
   }]);
   let max = -1;
   for (const l of logs) {
     try {
-      const uri = decodeEsip2String(l.data);
+      const uri = decodeEsip3String(l.data);
       const e = JSON.parse(uri.slice(uri.indexOf(',') + 1));
       if (Number.isInteger(e.seq) && e.seq > max) max = e.seq;
     } catch { /* not one of ours; the indexer will reject it too */ }
@@ -133,7 +133,7 @@ function update() {
 // ---------- sending ----------
 
 async function send() {
-  const { uri, failed } = update();
+  const { entry, failed } = update();
   // The fee is spent even if the indexer rejects the entry, so never send
   // something we already know is invalid.
   if (failed.length) return say('Entry is not valid yet — fix it before sending.', true);
@@ -142,7 +142,7 @@ async function send() {
     from: account,
     to: C.JOURNAL,
     value: '0x' + C.MIN_FEE_WEI.toString(16),
-    data: '0x' + encodeWrite(uri).replace(/^0x/, ''),
+    data: '0x' + encodeWriteEntry(entryTail(entry)).replace(/^0x/, ''),
   };
 
   let gas;
@@ -181,13 +181,13 @@ async function faucet() {
 
 async function loadFeed() {
   const logs = await read('eth_getLogs', [{
-    address: C.JOURNAL, topics: [TOPIC.esip2],
+    address: C.JOURNAL, topics: [TOPIC.esip3],
     fromBlock: '0x' + C.GENESIS_BLOCK.toString(16), toBlock: 'latest',
   }]);
   const items = [];
   for (const l of logs.reverse()) {
     try {
-      const uri = decodeEsip2String(l.data);
+      const uri = decodeEsip3String(l.data);
       const e = JSON.parse(uri.slice(uri.indexOf(',') + 1));
       const owner = '0x' + l.topics[1].slice(26);
       // Mirrors V6: the body's author must be the ESIP-3 initialOwner.

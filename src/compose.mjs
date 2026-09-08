@@ -7,6 +7,7 @@
 
 import { encodeFunctionData, parseAbi, formatEther } from 'viem';
 import { buildEntry, encode, estimateGas, byteLength, codePointLength } from './entry.mjs';
+import { entryTail, ENTRY_HEAD } from './canonical.mjs';
 import { validate } from './rules.mjs';
 import { PARAMS } from './config.mjs';
 
@@ -29,8 +30,11 @@ const entry = buildEntry({
 });
 const { uri } = encode(entry);
 
-const abi = parseAbi(['function write(string contentURI) payable']);
-const calldata = encodeFunctionData({ abi, functionName: 'write', args: [uri] });
+// The contract writes the header and the author's address itself; we send
+// only what follows. See SPEC.md on why the calldata must not contain a
+// dataURI of its own.
+const abi = parseAbi(['function writeEntry(string entryTail) payable']);
+const calldata = encodeFunctionData({ abi, functionName: 'writeEntry', args: [entryTail(entry)] });
 const g = estimateGas(calldata);
 
 // Dry-run every rule that does not need chain state. Cheaper to fail here
@@ -44,7 +48,7 @@ const local = dry.failed.filter((r) => r !== 'V1'); // V1 needs the deployed add
 
 console.log(`
 body        ${codePointLength(entry.body)} chars / ${byteLength(entry.body)} bytes
-data URI    ${byteLength(uri)} bytes
+data URI    ${byteLength(uri)} bytes (${byteLength(ENTRY_HEAD) + 40} of them written by the contract)
 calldata    ${(calldata.length - 2) / 2} bytes
 fee         ${formatEther(PARAMS.minFeeWei)} ETH
 local rules ${local.length ? 'FAILS ' + local.join(',') : 'all pass'}
@@ -59,12 +63,12 @@ console.log('estimated gas cost (the fee is on top):');
 for (const gwei of [0.5, 1, 3, 5, 10]) {
   // The contract's execution rides under the EIP-7623 floor on longer
   // entries, so this is an upper bound built from the floor alone.
-  const gas = Math.max(g.floor, g.standard + 26_000);
+  const gas = Math.max(g.floor, g.standard + 28_622);
   console.log(`  ${String(gwei).padStart(5)} gwei   ${formatEther(BigInt(gas) * BigInt(gwei * 1e9)).slice(0, 10)} ETH  (~${gas.toLocaleString()} gas)`);
 }
 
 console.log(`
-content
+content (the contract assembles this; you send only the tail)
 ${uri}
 
 send it yourself:
