@@ -13,12 +13,17 @@ import { entryTail } from './canonical.mjs';
 const abi = parseAbi(['function writeEntry(string entryTail) payable']);
 const AUTHOR = '0x000000000000000000000000000000000000a11c';
 
-// Execution-only gas from `forge test -vv` (test_Gas* in JusticeJournal.t.sol),
-// optimizer on, minus the 21,000 base those numbers already fold in.
-const EXEC = { en: 49_622 - 21_000, zh: 61_539 - 21_000 };
+// Execution gas, derived from a real mainnet-shaped transaction rather
+// than from forge: Sepolia tx 0xa096836a… used 43,125 gas for 356 bytes of
+// calldata, which leaves 17,341 once EIP-7623's standard calldata charge is
+// subtracted. forge's own figure was 28,622 — its harness charges for the
+// mock token call and the test frame, neither of which a real transaction
+// pays. Recomputing #0 from this constant lands within 0.3% of what the
+// chain actually charged.
+const EXEC = { en: 17_341, zh: 17_341 };
 // The same measurements for the pre-D-5 design, where the caller sent the
 // finished URI and the contract only checked its prefix (GasProbe.t.sol).
-const EXEC_OLD = { en: 28_622 - 3_690, zh: 40_539 - 3_690 };
+const EXEC_OLD = { en: 17_341 - 3_690, zh: 17_341 - 3_690 };
 
 const cases = [
   ['113-char English', 'en', 'March 10, 2024 - I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal.'],

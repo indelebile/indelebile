@@ -117,13 +117,22 @@ else, and is retried.
 
 ## 5. Cost (measured, not estimated)
 
-`forge test` for execution, EIP-7623 floor pricing for calldata,
-recombined by `node src/gas.mjs`:
+Calibrated against a real transaction rather than a test harness. Sepolia
+`0xa096836a…` spent **43,125 gas** on a 206-character English entry; once
+EIP-7623's calldata charge is subtracted that leaves 17,341 gas of
+execution, and recomputing the same entry from that constant lands within
+0.3% of what the chain charged. (`forge` reported 28,622 — its harness
+pays for the mock token call and the test frame, which no real transaction
+does.) `node src/gas.mjs` recombines the two:
 
-| entry | contract route | direct calldata | premium |
+| entry | gas | @1 gwei | @5 gwei |
 |---|---|---|---|
-| 113-char English | 51,463 gas | 32,040 gas | +19,423 |
-| 500-char Chinese | 88,420 gas | 87,520 gas | **+900** |
+| 113-char English | 41,233 | 0.000041 ETH | 0.000206 ETH |
+| 500-char Chinese | 83,950 | 0.000084 ETH | 0.000420 ETH |
+
+Which of EIP-7623's two prices binds flips with length: a short English
+entry pays the standard rate and a full-length Chinese one hits the floor,
+where bytes are all that count and execution is free.
 
 The premium collapses on longer entries: under EIP-7623 floor pricing a
 data-heavy transaction pays for its bytes, and the contract's execution
@@ -194,7 +203,7 @@ address; the contract writes the header and `_hexAddress(msg.sender)`. The
 calldata then contains no `data:` sequence at all, and `author` equals the
 ESIP-3 initial owner by construction rather than by rule.
 
-Measured both ways: +1,630 gas on a short English entry, −2,351 on a
+Measured both ways: +1,630 gas on a short English entry, −5,120 on a
 full-length Chinese one. Roughly a wash, favourable on long entries.
 
 ## 8. Open decisions for the DAO

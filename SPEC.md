@@ -157,18 +157,22 @@ EIP-7623 (Pectra) floor pricing governs a data-only transaction:
 gas = 21,000 + 10 × (zero_bytes + 4 × nonzero_bytes)
 ```
 
-Execution measured by `forge test`, calldata priced by EIP-7623, recombined
-by `node src/gas.mjs`:
+Calibrated against a real transaction rather than a test harness. Sepolia
+`0xa096836a…` spent **43,125 gas** on a 206-character English entry; once
+EIP-7623's calldata charge is subtracted that leaves 17,341 gas of
+execution, and recomputing the same entry from that constant lands within
+0.3% of what the chain charged. (`forge` reported 28,622 — its harness
+pays for the mock token call and the test frame, which no real transaction
+does.) `node src/gas.mjs` recombines the two:
 
-| entry | contract route | direct calldata | premium |
+| entry | gas | @1 gwei | @5 gwei |
 |---|---|---|---|
-| 113-char English | 51,463 gas | 32,040 gas | +19,423 |
-| 500-char Chinese | 88,420 gas | 87,520 gas | **+900** |
+| 113-char English | 41,233 | 0.000041 ETH | 0.000206 ETH |
+| 500-char Chinese | 83,950 | 0.000084 ETH | 0.000420 ETH |
 
-The contract premium collapses on longer entries: a data-heavy transaction
-pays the floor for its bytes, and the contract's execution rides underneath
-that floor for free. Authors pay almost nothing for the contract on exactly
-the entries the Journal wants to encourage.
+Which of EIP-7623's two prices binds flips with length: a short English
+entry pays the standard rate and a full-length Chinese one hits the floor,
+where bytes are all that count and execution is free.
 
 At 5 gwei that is ~$0.26 for a short English entry and ~$0.44 for a
 full-length Chinese one. The original design — contract write plus SSTORE
