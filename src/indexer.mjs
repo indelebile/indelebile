@@ -7,7 +7,7 @@
 // An ordinary RPC is enough. The holding gate moved into the contract, so
 // nothing here reads historical state.
 
-import { createPublicClient, http, fallback, parseAbiItem } from 'viem';
+import { createPublicClient, http, fallback, parseAbiItem, sha256, toHex } from 'viem';
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { PARAMS } from './config.mjs';
 import { scan } from './scan.mjs';
@@ -100,8 +100,16 @@ console.error(`scanning ${from}..${to}`);
 const { entries, rejected } = await scan(chain, { from, to, seenContent });
 
 mkdirSync(new URL('../out/', import.meta.url), { recursive: true });
+
+// The hash of the entries alone — not the range, which moves with the head.
+// A reader who re-derives the archive can compare this one number instead of
+// diffing files, which is the whole point of the rules being reproducible.
+const entriesHash = sha256(toHex(JSON.stringify(entries)));
+
 writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
-  protocol: 'justice-journal', version: 1,
+  protocol: PARAMS.protocol, version: 1,
+  builtAtBlock: Number(to),
+  entriesHash,
   range: { from: Number(from), to: Number(to) },
   params: {
     journalContracts: PARAMS.journalContracts, treasury: PARAMS.treasury,
@@ -116,6 +124,7 @@ writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
 }, null, 2));
 
 console.error(`\naccepted ${entries.length}, rejected ${rejected.length}`);
+console.error(`entries sha256 ${entriesHash}`);
 for (const r of rejected) {
   console.error(`  ${r.txHash} — ${r.failed.map((f) => `${f}: ${RULES[f]}`).join('; ')}`);
 }

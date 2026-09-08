@@ -14,6 +14,9 @@ const ROOT = new URL('..', import.meta.url).pathname;
 const PORT = Number(process.argv[2] ?? 8080);
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript',
                 '.json': 'application/json', '.css': 'text/css' };
+// The page fetches ../out/index.json, so out/ has to be reachable — it is
+// under ROOT already, but say so, because it is not obvious that a build
+// artefact is part of what gets served.
 
 createServer(async (req, res) => {
   let p = decodeURIComponent(req.url.split('?')[0]);

@@ -270,7 +270,8 @@ footer .addr{word-break:break-all}
     <div class="head">
       <div>
         <h2><span class="n">II</span>The archive</h2>
-        <p class="sub">Every accepted entry, read straight from the chain.</p>
+        <p class="sub">Every accepted entry, as the open indexer derived it from the chain
+          — <span id="asOf">—</span>. <span class="mono" style="font-size:.78em" id="archiveHash"></span></p>
       </div>
       <button class="ghost small" id="reload">Reload</button>
     </div>
@@ -336,11 +337,16 @@ footer .addr{word-break:break-all}
           <p class="sub">Re-run the indexer and you must get a byte-identical file.
             That property is the whole claim — please check it rather than trust it.</p>
         </div></div>
-        <pre class="cmd"><span class="c"># rebuild this archive from the chain alone</span>
+        <pre class="cmd"><span class="c"># rebuild this archive from the chain alone,</span>
+<span class="c"># then compare your hash with the one above</span>
 git clone &lt;repo&gt; &amp;&amp; cd justicejournal
 npm install
-node src/indexer.mjs --rpc &lt;any rpc&gt;
-node src/render.mjs</pre>
+node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
+        <p class="sub" style="margin-top:1.2rem">
+          This page does not read the chain to show you the archive — it reads the
+          file the indexer produced. Doing otherwise would put a second copy of the
+          rules in the browser, free to drift from the first.
+        </p>
       </div>
     </div>
   </section>

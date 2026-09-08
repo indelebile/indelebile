@@ -8,7 +8,7 @@ import { buildEntry, toDataUri, entryTail, codePointLength, byteLength, checkLoc
   from '../src/canonical.mjs';
 
 const C = window.JJ_CONFIG;
-const { SEL, TOPIC, encodeWriteEntry, encodeBalanceOf, decodeEsip3String, padAddr } = window.JJ_ABI;
+const { SEL, encodeWriteEntry, encodeBalanceOf } = window.JJ_ABI;
 
 const $ = (id) => document.getElementById(id);
 
@@ -38,15 +38,15 @@ async function callRpc(url, method, params) {
   return j.result;
 }
 
-/// Tries each endpoint in turn. Free public nodes increasingly refuse the
-/// historical eth_getLogs the archive is rebuilt from — one demands a token,
-/// another caps the range at ten blocks — and they change policy without
-/// notice, so falling through a list is the difference between the archive
-/// being readable and not.
+/// The few chain reads that remain — a balance, a gas estimate, a receipt —
+/// are about the transaction being written, so they go through the wallet
+/// that is about to sign it. Only when no wallet is present do they fall
+/// through the configured endpoints. Reading the archive needs neither.
 async function read(method, params = []) {
+  if (eth() && account) return wallet(method, params);
+
   const list = C.READ_RPCS ?? (C.READ_RPC ? [C.READ_RPC] : []);
   if (!list.length) return wallet(method, params);
-
   const ordered = workingRpc ? [workingRpc, ...list.filter((u) => u !== workingRpc)] : list;
   let last;
   for (const url of ordered) {
@@ -159,19 +159,13 @@ async function callBalance() {
   return BigInt(r);
 }
 
-// The author's seq is not stored on-chain — it lives in the entries
-// themselves, so we read their past ESIP-3 logs and take the highest.
+// Sequence numbers are not stored on-chain — they live in the entries, so
+// the archive is the place to read them from, same as everything else.
 async function loadNextSeq() {
-  const logs = await journalLogs(['0x' + padAddr(account)]);
-  let max = -1;
-  for (const l of logs) {
-    try {
-      const uri = decodeEsip3String(l.data);
-      const e = JSON.parse(uri.slice(uri.indexOf(',') + 1));
-      if (Number.isInteger(e.seq) && e.seq > max) max = e.seq;
-    } catch { /* not one of ours; the indexer will reject it too */ }
-  }
-  return max + 1;
+  const idx = archive ?? await loadArchive().catch(() => null);
+  if (!idx) return 0;
+  const mine = idx.entries.filter((e) => e.author?.toLowerCase() === account);
+  return mine.length ? Math.max(...mine.map((e) => e.seq)) + 1 : 0;
 }
 
 // ---------- composing ----------
@@ -265,12 +259,14 @@ async function send() {
       return;
     }
 
-    say(`Written in block ${Number(receipt.blockNumber)}. ${link}`, false, true);
     $('body').value = '';
     $('tags').value = '';
-    await refresh();
-    // Log indexing can trail the receipt by a moment on public endpoints.
-    await loadFeedUntil(hash);
+    // The archive below is the indexer's output, so a new entry appears
+    // once the indexer next runs. Saying so beats silently omitting it.
+    say(`Written in block ${Number(receipt.blockNumber)}. ${link}<br>` +
+        'It will appear in the archive when the indexer next runs.', false, true);
+    nextSeq += 1;
+    $('seq').textContent = nextSeq;
   } catch (e) {
     say(walletError(e), true);
     $('send').disabled = false;
@@ -294,16 +290,6 @@ async function waitForReceipt(hash, timeoutMs = 120_000) {
   return null;
 }
 
-/// Reload the archive until the new entry shows up, so a lagging endpoint
-/// does not leave the author staring at a page that omits what they wrote.
-async function loadFeedUntil(hash, tries = 8) {
-  for (let i = 0; i < tries; i++) {
-    await loadFeed();
-    if (document.querySelector(`article.entry[data-tx="${hash}"]`)) return;
-    await new Promise((r) => setTimeout(r, 2500));
-  }
-}
-
 async function faucet() {
   say('Claiming test tokens…');
   try {
@@ -315,43 +301,38 @@ async function faucet() {
 
 // ---------- reading ----------
 
-// Reads across every canonical deployment. eth_getLogs takes an array of
-// addresses, so this is one request; the per-contract block ranges are
-// applied afterwards, because a superseded contract can still emit and
-// those emissions are not entries.
-async function journalLogs(extraTopics = []) {
-  const logs = await read('eth_getLogs', [{
-    address: C.JOURNALS.map((j) => j.address),
-    topics: [TOPIC.esip3, ...extraTopics],
-    fromBlock: '0x' + C.GENESIS_BLOCK.toString(16),
-    toBlock: 'latest',
-  }]);
-  return logs.filter((l) => {
-    const n = Number(l.blockNumber);
-    return C.JOURNALS.some((j) =>
-      j.address.toLowerCase() === l.address.toLowerCase() &&
-      n >= j.fromBlock && (j.toBlock == null || n <= j.toBlock));
-  });
+// The archive comes from the indexer's output, not from the chain directly.
+//
+// The indexer is the thing that applies the rules; a page that queried
+// eth_getLogs and filtered them itself would be a second implementation of
+// those rules, free to drift from the first. It also made every reader
+// depend on an endpoint willing to serve historical logs, which most free
+// ones no longer are — the same shape of failure as an IPFS pin lapsing.
+//
+// Nothing is given up by reading a derived file: it is derived by rules
+// anyone can re-run, and `entriesHash` is printed below so a reader can
+// compare their own build against this one instead of trusting it.
+let archive = null;
+
+async function loadArchive() {
+  const res = await fetch('../out/index.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`no index.json (HTTP ${res.status}) — run the indexer`);
+  archive = await res.json();
+  return archive;
 }
 
 async function loadFeed() {
-  const logs = await journalLogs();
-  const items = [];
-  for (const l of logs.reverse()) {
-    try {
-      const uri = decodeEsip3String(l.data);
-      const e = JSON.parse(uri.slice(uri.indexOf(',') + 1));
-      const owner = '0x' + l.topics[1].slice(26);
-      // Mirrors V6: the body's author must be the ESIP-3 initialOwner.
-      if (e.author?.toLowerCase() !== owner.toLowerCase()) continue;
-      items.push({ ...e, tx: l.transactionHash, block: Number(l.blockNumber) });
-    } catch { /* skip */ }
-  }
+  const idx = await loadArchive();
+  const items = idx.entries
+    .map((e) => ({ ...e, tx: e.id }))
+    .sort((a, b) => b.block - a.block || b.logIndex - a.logIndex);
   $('feed').innerHTML = items.length ? items.map(renderEntry).join('')
     : `<div class="empty"><b>The archive is empty.</b>
        Nothing has been written here yet. Yours would be entry number one.</div>`;
   $('feedCount').textContent = items.length;
   $('feedNoun').textContent = items.length === 1 ? 'entry' : 'entries';
+  $('asOf').textContent = `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
+  $('archiveHash').textContent = idx.entriesHash ?? '';
 }
 
 function renderEntry(e) {
