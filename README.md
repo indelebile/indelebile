@@ -39,7 +39,7 @@ node src/render.mjs --hidden hidden.json
 ```
 
 An ordinary RPC is enough — the holding gate lives in the contract, so the
-indexer never reads historical state. It reads ESIP-2 logs from the
+indexer never reads historical state. It reads ESIP-3 logs from the
 JusticeJournal address, so indexing is one filtered request per range
 rather than a request per block.
 
@@ -53,7 +53,7 @@ rather than a request per block.
 | `src/scan.mjs` | the scan loop, pure, testable against a fake chain |
 | `src/indexer.mjs` | RPC wiring only |
 | `src/gas.mjs` | combines forge execution gas with EIP-7623 calldata cost |
-| `contracts/src/JusticeJournal.sol` | fee, holding gate, ESIP-2 mint, batched sweep |
+| `contracts/src/JusticeJournal.sol` | fee, holding gate, ESIP-3 mint, batched sweep |
 | `src/compose.mjs` | builds a transaction to send by hand |
 | `src/canonical.mjs` | the canonical entry form — **loaded by both the indexer and the page**, so they cannot drift |
 | `src/render.mjs` | self-contained HTML viewer |

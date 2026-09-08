@@ -45,7 +45,7 @@ contract-free design that routes the fee by requiring `tx.to == treasury`
 therefore hands the DAO ownership of every entry — fatal for a marketplace
 layer and indefensible on its own terms.
 
-**ESIP-2** lets a contract name the `initialOwner` in an event. That is the
+**ESIP-3** lets a contract name the `initialOwner` in an event. That is the
 only construction that collects a fee *and* leaves the author owning their
 words. `JusticeJournal.sol` is ~110 lines: no storage, no owner, no
 upgradeability, all parameters immutable.
@@ -115,12 +115,12 @@ reproducible by anyone.
 
 | # | rule |
 |---|---|
-| V1 | the ESIP-2 log was emitted by the canonical JusticeJournal contract |
+| V1 | the ESIP-3 log was emitted by the canonical JusticeJournal contract |
 | V1b | *(contract)* content begins with the canonical 77-byte prefix and is ≤2,048 bytes |
 | V2 | `fee >= minFeeWei` |
 | V4 | `contentURI` decodes to a canonical entry (§3) |
 | V5 | `p == "justice-journal"`, `v == 1`, `ts` is a non-negative integer |
-| V6 | `entry.author` equals the ESIP-2 `initialOwner` |
+| V6 | `entry.author` equals the ESIP-3 `initialOwner` |
 | V8 | `seq` exceeds the author's highest accepted `seq` |
 | V9 | author is under the rate limit for the trailing window |
 | V10 | body is 1–500 code points |
@@ -136,7 +136,7 @@ atomically by `write()`:
 - *holding gate* — checked in `write()`. This is what removes the archive
   node requirement.
 
-**V1 matters more than it looks.** Anyone can emit the ESIP-2 event from
+**V1 matters more than it looks.** Anyone can emit the ESIP-3 event from
 their own contract. Only logs from the canonical address are entries.
 
 ### The fee is the only per-entry cost
@@ -191,32 +191,62 @@ it must be open source, reproducible, and run by more than one party.
 
 ---
 
-## 6. Front-running
+## 6. Front-running — solved by ESIP-6
 
-Ethscriptions enforce global content uniqueness. An attacker watching the
-mempool can copy your bytes and inscribe them first.
+Ethscriptions enforce global content uniqueness by default: only the first
+ethscription with a given sha256 is valid. That made front-running a real
+threat — an attacker watching the mempool could inscribe our bytes first,
+and the author would pay the fee for an entry that mints no ethscription.
 
-**V6 stops the theft.** The copy carries your address in `author` but
-their address in `tx.from`, so it is not a valid Journal entry and the
-attacker gains nothing.
+**ESIP-6 removes the problem, and it was written for exactly this case.**
+Adding `rule=esip6` as a dataURI parameter opts an ethscription out of the
+uniqueness rule, and the spec states that content marked this way can never
+itself be invalidated as a duplicate. ESIP-6's rationale names our
+situation directly: a contract that has already taken a user's money cannot
+revert if the creation fails, so contracts *should* set this parameter
+whenever creation failure would mean loss of funds.
 
-**V6 does not stop the grief.** Their inscription still consumed the
-content globally, so your later transaction creates a valid *entry* but
-not a valid *ethscription* — meaning no NFT, nothing transferable. Three
-layers of defence, in order of effectiveness:
+Every entry therefore carries it:
 
-1. **Submit through a private mempool** (Flashbots Protect). The bytes are
-   not public before inclusion. This is the actual fix; the write tool
-   defaults to it.
-2. **Bump `seq` and retry.** Different bytes, different hash, valid again.
-   Griefing costs the attacker gas every round and never pays.
-3. **Seed the indexer's uniqueness set from the canonical Ethscriptions
-   index**, not just from treasury traffic. Without seeding, V12 is
-   strictly weaker than the protocol's own uniqueness rule and the index
-   will claim entries whose ethscriptions belong to someone else.
-   `--seen <file>` exists for this; the indexer warns when it is missing.
+```
+data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal",...
+```
 
----
+Our own uniqueness does not weaken. The body carries `author` and `seq`, so
+two distinct entries can never share bytes: different authors differ in
+`author`, and the same author cannot reuse a `seq` (V8).
+
+What this retires, all of which earlier drafts of this document required:
+
+- seeding the indexer from a canonical Ethscriptions content set (`--seen`)
+- bumping `seq` to recover from a griefed entry
+- submitting through a private mempool as a *protocol* requirement
+
+A private RPC is still worth using for privacy — it keeps your text out of
+the public mempool before inclusion — but it is no longer load-bearing.
+
+## 6b. One transaction, one ethscription
+
+ESIP-3 keeps the rule that each Ethereum transaction produces at most one
+ethscription, and **calldata takes priority over events**. If our
+transaction's calldata were itself a valid dataURI, it would win over our
+event and the initial owner would become `tx.to` — the contract — which is
+precisely the failure this whole architecture exists to avoid.
+
+The published spec anchors its dataURI regex at the start of the string
+(`\Adata:`), and our calldata begins with a 4-byte function selector, so it
+does not match. Verified directly against the spec's own regex:
+
+```
+spec regex (anchored)   matches our calldata?  false   -> our event wins
+unanchored variant      matches our calldata?  true    -> calldata would win
+```
+
+We are correct under the specification, but only by one anchor. A hardening
+worth considering before mainnet: have the contract build the dataURI from
+a raw body rather than accept the finished string, so the calldata contains
+no `data:` prefix at all. That would also make `author == msg.sender` true
+by construction instead of by rule, and shrink calldata by 88 bytes.
 
 ## 7. Governance and moderation
 

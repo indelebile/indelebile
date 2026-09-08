@@ -6,9 +6,9 @@ import { TAG_PATTERN } from './canonical.mjs';
 // effective-from block, never a silent edit. See SPEC.md §6.
 
 export const PARAMS = {
-  // The JusticeJournal contract. Entries are ESIP-2 logs emitted by this
+  // The JusticeJournal contract. Entries are ESIP-3 logs emitted by this
   // address and nothing else; a log from anywhere else is not an entry.
-  journalContract: '0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6', // local anvil
+  journalContract: '0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82', // local anvil
 
   // Where swept fees land. The contract holds it immutably, so this is
   // recorded here for verifiers, not used to decide validity.
@@ -20,7 +20,7 @@ export const PARAMS = {
   // Holding gate, enforced inside write(). A holding gate is per wallet
   // while writing is per entry, so it filters non-holders and nothing
   // more — minFeeWei is the actual per-entry spam cost.
-  justiceToken: '0x0165878A594ca255338adfa4d48449f69242Eb8F', // local anvil
+  justiceToken: '0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e', // local anvil
   minJusticeBalance: 100_000n * 10n ** 18n,
 
   // Rate limit, enforced by the indexer over a trailing window of blocks.

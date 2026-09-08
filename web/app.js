@@ -72,7 +72,7 @@ async function callBalance() {
 }
 
 // The author's seq is not stored on-chain — it lives in the entries
-// themselves, so we read their past ESIP-2 logs and take the highest.
+// themselves, so we read their past ESIP-3 logs and take the highest.
 async function loadNextSeq() {
   const logs = await read('eth_getLogs', [{
     address: C.JOURNAL,
@@ -190,7 +190,7 @@ async function loadFeed() {
       const uri = decodeEsip2String(l.data);
       const e = JSON.parse(uri.slice(uri.indexOf(',') + 1));
       const owner = '0x' + l.topics[1].slice(26);
-      // Mirrors V6: the body's author must be the ESIP-2 initialOwner.
+      // Mirrors V6: the body's author must be the ESIP-3 initialOwner.
       if (e.author?.toLowerCase() !== owner.toLowerCase()) continue;
       items.push({ ...e, tx: l.transactionHash, block: Number(l.blockNumber) });
     } catch { /* skip */ }

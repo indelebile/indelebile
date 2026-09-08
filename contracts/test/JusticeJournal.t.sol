@@ -50,10 +50,11 @@ contract JusticeJournalTest is Test {
 
     // Byte-for-byte what src/entry.mjs produces.
     string constant PREFIX =
-        'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x';
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
     string constant ENTRY_EN =
-        'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x000000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
 
+    /// ESIP-3
     event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI);
     event EntryWritten(address indexed author, bytes32 indexed contentHash, uint256 fee);
 
@@ -112,8 +113,8 @@ contract JusticeJournalTest is Test {
         string[4] memory junk = [
             "hello",
             "data:text/plain;charset=utf-8,just a message",
-            'data:application/json;charset=utf-8,{"p":"some-other-protocol","v":1,"author":"0x',
-            'data:application/json;charset=utf-8,{"v":1,"p":"justice-journal","author":"0x'  // reordered
+            'data:application/json;charset=utf-8;rule=esip6,{"p":"some-other-protocol","v":1,"author":"0x',
+            'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x'  // no rule=esip6
         ];
         for (uint256 i; i < junk.length; i++) {
             vm.prank(author);
@@ -134,7 +135,7 @@ contract JusticeJournalTest is Test {
 
     function test_RejectsOversizedContent() public {
         bytes memory big = new bytes(2049);
-        for (uint256 i; i < 77; i++) big[i] = bytes(PREFIX)[i];
+        for (uint256 i; i < 88; i++) big[i] = bytes(PREFIX)[i];
         vm.prank(author);
         vm.expectRevert(abi.encodeWithSelector(JusticeJournal.ContentTooLong.selector, 2049, 2048));
         jj.write{value: FEE}(string(big));

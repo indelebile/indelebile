@@ -35,7 +35,7 @@ function encodeBalanceOf(addr) {
   return SEL.balanceOf + padAddr(addr);
 }
 
-/// Decode the non-indexed `string contentURI` out of an ESIP-2 log's data.
+/// Decode the non-indexed `string contentURI` out of an ESIP-3 log's data.
 function decodeEsip2String(dataHex) {
   const d = dataHex.replace(/^0x/, '');
   const offset = Number(BigInt('0x' + d.slice(0, 64))) * 2;

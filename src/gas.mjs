@@ -20,7 +20,7 @@ const cases = [
   ['500-char Chinese', 'zh', '记'.repeat(500)],
 ];
 
-console.log('per-entry cost, contract route (ESIP-2) vs direct calldata (ESIP-1)\n');
+console.log('per-entry cost, contract route (ESIP-3) vs direct calldata (ESIP-1)\n');
 const rows = [];
 for (const [label, key, body] of cases) {
   const { uri } = encode(buildEntry({ author: AUTHOR, seq: 0, ts: 1757280000, tags: [], body }));

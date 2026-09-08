@@ -20,12 +20,12 @@ export const RULES = {
   V2: 'fee paid must be at least minFeeWei',
   V4: 'contentURI must be a canonical Journal entry',
   V5: 'protocol tag, version and timestamp must be well-formed',
-  V6: 'entry.author must equal the ESIP-2 initialOwner',
+  V6: 'entry.author must equal the ESIP-3 initialOwner',
   V8: 'entry.seq must exceed the author\'s highest accepted seq',
   V9: 'author is over the rate limit for the trailing window',
   V10: 'body must be 1-500 code points',
   V11: 'tags must be well-formed',
-  V12: 'content is already inscribed elsewhere',
+  V12: 'content duplicates an earlier accepted entry',
   V13: 'block is before the protocol genesis block',
 };
 
@@ -36,7 +36,7 @@ export const CONTRACT_ENFORCED = {
 };
 
 /**
- * @param {object} ev  a normalized ESIP-2 write: {txHash, blockNumber, logIndex,
+ * @param {object} ev  a normalized ESIP-3 write: {txHash, blockNumber, logIndex,
  *                     emitter, author, contentURI, feeWei}
  * @param {object} ctx {authorState, seenContent, params}
  */

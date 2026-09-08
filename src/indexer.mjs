@@ -33,7 +33,7 @@ const WRITTEN = parseAbiItem(
   'event EntryWritten(address indexed author, bytes32 indexed contentHash, uint256 fee)');
 
 // Both events are emitted by the same call, so they pair by transaction.
-// EntryWritten carries the fee; the ESIP-2 log carries the content.
+// EntryWritten carries the fee; the ESIP-3 log carries the content.
 const chain = {
   async getWrites(from, to) {
     const CHUNK = 9_000n; // stay under common getLogs range caps
@@ -65,14 +65,17 @@ const chain = {
 const from = BigInt(arg('from', String(PARAMS.genesisBlock)));
 const to = arg('to', 'latest') === 'latest' ? await client.getBlockNumber() : BigInt(arg('to'));
 
+// Entries carry `rule=esip6`, so the protocol's global uniqueness rule does
+// not apply to them and there is nothing to seed from a canonical index.
+// V12 now only guards against a duplicate inside our own set, which V6 and
+// V8 already make unreachable. --seen is kept for auditing.
 const seedPath = arg('seen');
 const seenContent = new Set(
   seedPath && existsSync(seedPath)
     ? readFileSync(seedPath, 'utf8').split('\n').map((s) => s.trim()).filter(Boolean)
     : [],
 );
-if (seedPath) console.error(`seeded ${seenContent.size} known content hashes`);
-else console.error('WARNING: no --seen file. V12 checks our own writes only (SPEC.md).');
+if (seedPath) console.error(`seeded ${seenContent.size} content hashes`);
 
 console.error(`scanning ${from}..${to}`);
 const { entries, rejected } = await scan(chain, { from, to, seenContent });

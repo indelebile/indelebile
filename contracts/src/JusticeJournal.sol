@@ -19,14 +19,20 @@ interface IUniswapV2Router {
 /// fee and the holding gate. Sequence numbers, rate limits, length limits
 /// and tag rules stay in the indexer, where they cost no gas. See SPEC.md.
 ///
-/// Why a contract at all, when calldata alone would do: under ESIP-1 the
-/// transaction recipient becomes the ethscription's owner, so a direct
-/// send to the treasury would make the DAO the owner of every author's
-/// entry. ESIP-2 lets a contract name the initial owner, which is the only
-/// way to collect a fee and leave the author owning their own words.
+/// Why a contract at all, when calldata alone would do: the Ethscriptions
+/// protocol makes the creating transaction's recipient the initial owner,
+/// so a direct send to the treasury would make the DAO the owner of every
+/// author's entry. ESIP-3 lets a contract name the initial owner, which is
+/// the only way to collect a fee and leave the author owning their words.
+///
+/// The content carries `rule=esip6`, which opts out of the protocol's
+/// global uniqueness rule. ESIP-6 calls out this exact case: a contract
+/// that has already taken a user's money cannot revert if the creation
+/// fails as a duplicate.
 contract JusticeJournal {
-    /// @notice ESIP-2. The Ethscriptions indexer watches for this exact
-    ///         signature; the name is not ours to change.
+    /// @notice ESIP-3 (Smart Contract Ethscription Creations, live since
+    ///         L1 block 18130000). The Ethscriptions indexer watches for
+    ///         this exact signature; the name is not ours to change.
     event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI);
 
     /// @notice Our own index anchor. Cheaper to filter than the ESIP-2 log
@@ -41,15 +47,15 @@ contract JusticeJournal {
     uint256 public immutable minFee;
     uint256 public immutable minBalance;
 
-    /// @notice The first 77 bytes of every canonical entry. The entry
+    /// @notice The first 88 bytes of every canonical entry. The entry
     ///         format fixes the key order as p, v, author, ... so this
     ///         prefix is a constant — which is the only reason a useful
     ///         format check is affordable on-chain at all.
     ///
-    ///         `data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x`
+    ///         `data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x`
     bytes32 public constant PREFIX_HASH =
-        keccak256('data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x');
-    uint256 public constant PREFIX_LEN = 77;
+        keccak256('data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x');
+    uint256 public constant PREFIX_LEN = 88;
 
     /// @notice Upper bound on one entry. 500 characters of Chinese is
     ///         1,500 bytes, plus the envelope and up to five tags.

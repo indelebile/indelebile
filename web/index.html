@@ -126,9 +126,11 @@ label{display:block;font-family:ui-monospace,monospace;font-size:.72rem;color:va
     The fee is still spent on an entry the contract accepts but the indexer
     rejects, so the button stays disabled until everything checkable here
     passes.<br><br>
-    On mainnet, send through a private RPC. Ethscriptions enforce global
-    content uniqueness, and a public mempool exposes your bytes before
-    inclusion.
+    Entries carry the <code>rule=esip6</code> parameter, which opts out of
+    the Ethscriptions uniqueness rule — so no one can take your content by
+    inscribing it first and leave you with the bill. A private RPC is still
+    worth using if you would rather your words not sit in the public mempool
+    before they are mined.
   </p>
 </main>
 

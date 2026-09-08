@@ -4,7 +4,16 @@
 
 export const PROTOCOL = 'justice-journal';
 export const VERSION = 1;
-export const MIME = 'application/json;charset=utf-8';
+// `rule=esip6` opts out of the protocol's global content-uniqueness rule
+// (ESIP-6). ESIP-6 exists for exactly our case and names it: a contract
+// that has taken a user's money cannot revert if the creation fails as a
+// duplicate. Without it, anyone watching the mempool can inscribe our
+// bytes first, and the author pays the fee for an entry that mints no
+// ethscription. With it, a duplicate can never invalidate us.
+//
+// Our own uniqueness is not weakened: the body carries `author` and `seq`,
+// so two distinct entries can never share bytes.
+export const MIME = 'application/json;charset=utf-8;rule=esip6';
 export const DATA_URI_PREFIX = `data:${MIME},`;
 
 // Fixed key order. Two authors writing the same entry must produce

@@ -1,7 +1,7 @@
 // The scan loop, separated from RPC wiring so it can be run against a fake
 // chain in tests. Deterministic given the same events and range.
 //
-// `chain.getWrites(from, to)` returns every ESIP-2 write log from the
+// `chain.getWrites(from, to)` returns every ESIP-3 write log from the
 // JusticeJournal contract in ascending (blockNumber, logIndex) order.
 // Reading logs rather than scanning blocks is what makes this fast: one
 // filtered request per range instead of a request per block.

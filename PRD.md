@@ -37,7 +37,7 @@ owner. A contract-free design that requires `tx.to == treasury` would make
 **the DAO the owner of every author's entry** — which destroys any future
 marketplace and is indefensible on its own terms.
 
-**ESIP-2** lets a contract name the initial owner. That is the only
+**ESIP-3** lets a contract name the initial owner. That is the only
 construction that collects a fee *and* leaves the author owning their own
 words. Hence: one small contract, content in calldata, author owns the
 entry, no storage writes.
@@ -158,29 +158,41 @@ Chinese one. The original design (contract + SSTORE + IPFS hash) is
 
 ---
 
-## 7. Front-running
+## 7. Front-running — solved by ESIP-6
 
-Ethscriptions enforce global content uniqueness. An attacker watching the
-mempool can copy your bytes and inscribe them first.
+Ethscriptions enforce global content uniqueness by default, which made
+front-running a real threat: an attacker could inscribe our bytes first and
+the author would pay the fee for an entry that mints no ethscription.
 
-- **The theft is blocked.** The content carries `author`; the indexer
-  requires it to equal the ESIP-2 `initialOwner`. A copy is not an entry.
-- **The grief is not.** Their inscription consumed the content globally, so
-  the real author's later transaction yields a valid *entry* but not a
-  valid *ethscription* — no NFT, nothing transferable.
+**ESIP-6 was written for this exact case.** Adding `rule=esip6` as a
+dataURI parameter opts out of the uniqueness rule, and such content can
+never itself be invalidated as a duplicate. The ESIP states that contracts
+*should* set it whenever a failed creation would mean loss of funds — which
+is precisely a contract that has already collected a fee.
 
-Three defences, in order of effectiveness:
+Every entry carries it. Our own uniqueness is unaffected: `author` and
+`seq` are in the body, so two distinct entries cannot share bytes.
 
-1. **Private mempool** (Flashbots Protect). Bytes are not public before
-   inclusion. This is the actual fix; the write tool defaults to it.
-2. **Bump `seq` and resend.** Different bytes, valid again. Griefing costs
-   the attacker gas every round and never pays.
-3. **Seed the indexer's uniqueness set** from the canonical Ethscriptions
-   index (`--seen`), not just from our own writes. Without it, V12 is
-   weaker than the protocol's own rule and the index will claim entries
-   whose ethscriptions belong to someone else.
+This retires three requirements earlier drafts carried: seeding the indexer
+from a canonical content set, bumping `seq` to recover from griefing, and
+treating a private mempool as mandatory. A private RPC remains useful for
+privacy, not for correctness.
 
----
+### The remaining sharp edge
+
+ESIP-3 keeps one ethscription per transaction and gives **calldata priority
+over events**. If our calldata parsed as a dataURI it would win over our
+event and the contract would become the owner — the exact failure this
+architecture exists to prevent. The spec's regex is anchored at the start
+of the string and our calldata begins with a function selector, so it does
+not match; this was verified against the spec's own regex. But we are
+correct by one anchor.
+
+**Recommended hardening before mainnet (D-5):** have the contract assemble
+the dataURI from a raw body instead of accepting the finished string. The
+calldata then contains no `data:` prefix at all, `author == msg.sender`
+becomes true by construction rather than by rule, and calldata shrinks by
+88 bytes.
 
 ## 8. Open decisions for the DAO
 
@@ -192,6 +204,7 @@ rather than have us pick quietly.
 | D-1 | Fee level (`minFee`) | It is the only per-entry spam cost. The holding gate is per *wallet* — one 100k bag can write ten thousand entries — so the gate filters non-holders and nothing more. |
 | D-2 | Transferability | Tradable entries invite ordinal sniping and flip bait, which works against the archive. Options: soulbound with author opt-in unlock; or a 6–12 month transfer lock. |
 | D-3 | Rate limit | 3 entries per author per ~7 days is a placeholder. |
+| D-5 | Contract-assembled URI | See §7. Removes a class of failure rather than relying on an indexer implementation detail. My recommendation is yes, before mainnet. |
 | D-4 | The worst entry | Someone will inscribe something illegal. On IPFS you could unpin; here you cannot. The answer has to be that the chain is the raw layer and the DAO index is a curated view. **Have this answer ready before the proposal goes up — it is the strongest objection to the whole approach.** |
 
 ### On secondary-market revenue
@@ -210,7 +223,9 @@ into market value. Treat a celebrity entry as optionality, never as budget.
 3. **Three real entries on mainnet** — one English, one Chinese, one at the
    500-character limit — with transaction hashes.
 4. `node src/indexer.mjs --rpc <url>` reproduces all three from a clean
-   checkout, on an ordinary RPC.
+   checkout, on an ordinary RPC, with no `--seen` seeding needed.
+   Cross-check each against the public Ethscriptions API: `esip6` must be
+   `true` and `initial_owner` must be the author, not the contract.
 5. A second person re-runs step 4 independently and gets an identical
    `out/index.json`.
 6. `out/journal.html` renders the three entries and opens from `file://`.
