@@ -217,10 +217,38 @@ These are genuine either/ors. I have deliberately not picked.
 
 | | Decision | Why it matters |
 |---|---|---|
-| **D-1** | Fee level and denomination | It is the only *per-entry* cost. The holding gate is per **wallet** — one 100,000 $JUSTICE bag can write ten thousand entries — so the gate filters non-holders and nothing more. |
+| **D-1** | Fee level and denomination | Gas alone already deters casual junk — nobody pays to write nonsense. What it does not deter is a *paid* incentive: any deterministic per-entry reward that exceeds the cost of writing turns the Journal into a faucet. §5's rewards are safe today by arithmetic, not by design — see below. |
 | **D-2** | Transferability by default | Tradable entries invite ordinal sniping and flip bait, which works against an archive. Options: soulbound with author opt-in unlock, or a 6–12 month transfer lock. |
 | **D-3** | Rate limit | Three entries per author per week is a placeholder. |
 | **D-4** | **The worst entry** | Someone will inscribe something illegal. On IPFS you could unpin; here you cannot. The answer has to be that the chain is the raw layer and the DAO's index is a curated view, plus the fee and gate raising the cost of abuse. **This needs an answer before launch — it is the strongest objection to the whole approach.** |
+
+### The fee and the rewards are one decision
+
+Gas is a real barrier to casual junk, and at present it is a sufficient
+one: writing an entry costs about **$0.0204**, while §5's per-share reward
+of 50–100 $JUSTICE is worth **$0.0011–0.0023** — six to eleven percent of
+what it costs to claim it. The whole monthly reward cap of 10M $JUSTICE is
+$228.70. Nobody will farm that.
+
+But that safety is arithmetic, not structure. The break-even is **893
+$JUSTICE per entry**. §5's referral reward has no stated amount; set it at
+10,000 and it pays eleven times the cost of writing on day one. And if
+$JUSTICE appreciates tenfold the threshold falls to 89, at which point the
+existing share reward crosses it on its own.
+
+So rather than argue about a number, the proposal should carry an
+invariant:
+
+> **No deterministic per-entry reward may exceed the cost of writing an
+> entry, measured on the day the reward is set.**
+
+Competitive rewards — monthly challenges decided by vote — are exempt:
+they are lottery-shaped and their expected value per entry is far below
+cost. It is the guaranteed, per-action rewards that need the check.
+
+With that invariant in place, the write fee can be set low or at zero and
+gas does the work. Without it, no fee is high enough, because the reward
+can always be raised to clear it.
 
 ### On secondary-market revenue
 
