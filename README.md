@@ -43,6 +43,27 @@ indexer never reads historical state. It reads ESIP-3 logs from the
 JusticeJournal address, so indexing is one filtered request per range
 rather than a request per block.
 
+## The indexer is the protocol
+
+Ethereum's calldata carries a great deal that is not a Justice Journal
+entry, and nothing on chain marks ours apart. The rules do — which means
+the archive exists only to the extent that anyone can apply those rules and
+get the same answer.
+
+Three things make that checkable rather than asserted:
+
+- **[conformance/vectors.json](conformance/vectors.json)** — inputs paired
+  with the result any correct implementation must produce, covering every
+  rejection rule. Write an indexer in another language, run these, and you
+  can prove you agree. See [conformance/README.md](conformance/README.md).
+- **Reproducibility** — a clean clone with no local state rebuilds
+  `out/index.json` byte for byte from an ordinary RPC.
+- **[docs/READING-RULES.txt](docs/READING-RULES.txt)** — the minimum needed
+  to rebuild the archive from Ethereum alone, meant to be inscribed as an
+  ethscription so the instructions outlive this repository.
+
+MIT licensed, so a second implementation needs nobody's permission.
+
 ## Layout
 
 | file | role |
@@ -55,6 +76,7 @@ rather than a request per block.
 | `src/gas.mjs` | combines forge execution gas with EIP-7623 calldata cost |
 | `contracts/src/JusticeJournal.sol` | fee, holding gate, ESIP-3 mint, batched sweep |
 | `src/compose.mjs` | builds a transaction to send by hand |
+| `conformance/vectors.json` | frozen expected results — the protocol's teeth |
 | `src/canonical.mjs` | the canonical entry form — **loaded by both the indexer and the page**, so they cannot drift |
 | `src/render.mjs` | self-contained HTML viewer |
 | `web/index.html` | the write page: compose, validate locally, send |
