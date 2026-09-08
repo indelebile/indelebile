@@ -9,152 +9,169 @@
 /* No webfonts, no CDN, no external request of any kind. A page about
    censorship resistance should not need someone else's server to render. */
 :root{
-  --paper:#faf8f4; --ink:#191714; --ink-2:#4a453e; --ink-3:#8a8378;
-  --rule:#ded8cd; --rule-2:#efeae1; --card:#fff; --accent:#8b1e1e;
-  --ok:#1d6b3f; --warn:#9a5a12; --code:#f3efe7;
+  --paper:#faf8f4; --sheet:#fff; --ink:#191714; --ink-2:#4a453e; --ink-3:#8a8378;
+  --rule:#e2dcd1; --rule-2:#efeae1; --accent:#8b1e1e;
+  --ok:#1d6b3f; --warn:#9a5a12; --code:#f4f1ea;
   --serif:Georgia,'Iowan Old Style','Songti SC','Noto Serif CJK SC','Source Han Serif SC',serif;
   --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
+  --shell:74rem;      /* the page */
+  --measure:38rem;    /* the longest a line of prose may get */
 }
 @media(prefers-color-scheme:dark){:root{
-  --paper:#12110f; --ink:#eae6df; --ink-2:#b3ada3; --ink-3:#7d766c;
-  --rule:#2e2b26; --rule-2:#221f1b; --card:#1a1815; --accent:#d97a72;
-  --ok:#63b382; --warn:#d0a35c; --code:#201d19;
+  --paper:#111110; --sheet:#1a1917; --ink:#eae6df; --ink-2:#b3ada3; --ink-3:#7d766c;
+  --rule:#2f2c27; --rule-2:#232019; --accent:#d97a72;
+  --ok:#63b382; --warn:#d0a35c; --code:#211e1a;
 }}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.7 var(--serif);
-  text-rendering:optimizeLegibility}
-.wrap{max-width:46rem;margin:0 auto;padding:0 1.25rem}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:17px/1.7 var(--serif);text-rendering:optimizeLegibility}
+.shell{max-width:var(--shell);margin:0 auto;padding:0 2rem}
+@media(max-width:640px){.shell{padding:0 1.15rem}}
+.prose{max-width:var(--measure)}
 a{color:inherit}
+.mono{font-family:var(--mono)}
 
 /* ---------- masthead ---------- */
-.masthead{border-bottom:3px double var(--rule);margin-bottom:2rem}
-.masthead .wrap{padding-top:2.75rem;padding-bottom:1.25rem;text-align:center}
-h1{margin:0;font-size:clamp(2.1rem,6vw,3.1rem);font-weight:400;letter-spacing:-.02em;line-height:1}
-.rule-word{display:flex;align-items:center;gap:1rem;margin:.9rem auto 0;max-width:30rem;
-  color:var(--ink-3);font:400 .68rem/1 var(--mono);letter-spacing:.22em;text-transform:uppercase}
-.rule-word::before,.rule-word::after{content:"";flex:1;height:1px;background:var(--rule)}
-.lede{margin:1.4rem auto 0;max-width:33rem;color:var(--ink-2);font-size:1.02rem}
-.lede em{font-style:normal;color:var(--ink);box-shadow:inset 0 -.42em 0 rgba(139,30,30,.13)}
+.masthead{border-bottom:1px solid var(--rule)}
+.masthead .shell{display:flex;align-items:flex-end;justify-content:space-between;
+  gap:2rem;flex-wrap:wrap;padding-top:2.4rem;padding-bottom:1.4rem}
+h1{margin:0;font-size:clamp(1.9rem,4vw,2.5rem);font-weight:400;letter-spacing:-.02em;line-height:1}
+.tagline{margin:.5rem 0 0;color:var(--ink-3);font:.72rem/1 var(--mono);
+  letter-spacing:.2em;text-transform:uppercase}
+.facts{display:flex;gap:1.6rem;flex-wrap:wrap;font:.73rem/1.5 var(--mono);color:var(--ink-3)}
+.facts b{display:block;color:var(--ink);font-weight:400;font-size:.85rem;letter-spacing:-.01em}
 
-/* ---------- dateline ---------- */
-.dateline{display:flex;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;justify-content:center;
-  padding:.7rem 0;border-bottom:1px solid var(--rule-2);margin-bottom:2.5rem;
-  font:.7rem/1.5 var(--mono);color:var(--ink-3)}
-.dateline b{font-weight:400;color:var(--ink-2)}
-.dateline .sep{color:var(--rule)}
+/* ---------- lede ---------- */
+.lede{border-bottom:1px solid var(--rule-2)}
+.lede .shell{padding-top:2rem;padding-bottom:2rem}
+.lede p{margin:0;max-width:44rem;font-size:1.12rem;color:var(--ink-2)}
+.lede strong{color:var(--ink);font-weight:400;
+  box-shadow:inset 0 -.45em 0 rgba(139,30,30,.14)}
 
 /* ---------- sections ---------- */
-section{margin:0 0 3.25rem}
-h2{margin:0 0 .35rem;font-size:1.28rem;font-weight:400;letter-spacing:-.01em}
-h2 .n{color:var(--accent);font:400 .78rem/1 var(--mono);vertical-align:.35em;margin-right:.55rem}
-.sub{margin:0 0 1.4rem;color:var(--ink-3);font-size:.9rem}
+section{padding:3.4rem 0;border-bottom:1px solid var(--rule-2)}
+section:last-of-type{border-bottom:0}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;
+  flex-wrap:wrap;margin-bottom:1.8rem}
+h2{margin:0;font-size:1.35rem;font-weight:400;letter-spacing:-.01em}
+h2 .n{color:var(--accent);font:400 .72rem/1 var(--mono);vertical-align:.4em;margin-right:.6rem}
+.sub{margin:.35rem 0 0;color:var(--ink-3);font-size:.92rem;max-width:44rem}
 
-/* ---------- panel ---------- */
-.panel{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:1.5rem}
-@media(max-width:520px){.panel{padding:1.1rem}}
+/* ---------- the composer ---------- */
+.composer{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;
+  display:grid;grid-template-columns:1fr;overflow:hidden}
+@media(min-width:900px){.composer{grid-template-columns:minmax(0,1fr) 19rem}}
+.write{padding:1.9rem 2rem}
+@media(max-width:640px){.write{padding:1.25rem}}
+.rail{border-top:1px solid var(--rule-2);padding:1.6rem 1.5rem;background:var(--code)}
+@media(min-width:900px){.rail{border-top:0;border-left:1px solid var(--rule-2)}}
 
-/* ---------- wallet bar ---------- */
-.walletbar{display:flex;justify-content:space-between;align-items:center;gap:1rem;
-  flex-wrap:wrap;padding-bottom:1.2rem;border-bottom:1px solid var(--rule-2);margin-bottom:1.4rem}
-.ident{font:.78rem/1.5 var(--mono);color:var(--ink-3)}
-.ident b{display:block;color:var(--ink);font-weight:400;font-size:.85rem}
-.holding{font:.78rem/1.5 var(--mono)}
-.holding.yes{color:var(--ok)} .holding.no{color:var(--accent)}
-
-/* ---------- form ---------- */
-label{display:block;margin:0 0 .45rem;font:.68rem/1 var(--mono);letter-spacing:.12em;
+label{display:block;margin:0 0 .5rem;font:.68rem/1 var(--mono);letter-spacing:.13em;
   text-transform:uppercase;color:var(--ink-3)}
-label .hint{text-transform:none;letter-spacing:0;color:var(--ink-3);opacity:.8}
-textarea,input[type=text]{width:100%;padding:.85rem 1rem;color:var(--ink);background:var(--paper);
-  border:1px solid var(--rule);border-radius:7px;font:inherit;transition:border-color .12s}
-textarea{min-height:10.5rem;resize:vertical;line-height:1.75}
-textarea:focus,input:focus{outline:none;border-color:var(--accent)}
-textarea::placeholder,input::placeholder{color:var(--ink-3);opacity:.65}
-.field{margin-bottom:1.25rem}
-.meter{height:2px;background:var(--rule-2);border-radius:2px;overflow:hidden;margin:.5rem 0 .35rem}
+label .hint{text-transform:none;letter-spacing:0;opacity:.85}
+textarea,input[type=text]{width:100%;color:var(--ink);background:transparent;
+  border:0;font:inherit;padding:0}
+textarea{min-height:17rem;resize:vertical;font-size:1.09rem;line-height:1.85;display:block}
+textarea:focus,input:focus{outline:none}
+textarea::placeholder,input::placeholder{color:var(--ink-3);opacity:.55}
+.tagrow{margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid var(--rule-2)}
+.tagrow input{font-family:var(--mono);font-size:.88rem}
+
+/* rail bits */
+.railgroup{padding-bottom:1.1rem;margin-bottom:1.1rem;border-bottom:1px solid var(--rule-2)}
+.railgroup:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.railkey{font:.62rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:.45rem}
+.railval{font:.85rem/1.45 var(--mono);color:var(--ink);word-break:break-all}
+.railnote{font:.72rem/1.5 var(--mono);color:var(--ink-3);margin-top:.25rem}
+.holding.yes{color:var(--ok)} .holding.no{color:var(--accent)}
+.meter{height:3px;background:var(--rule-2);border-radius:3px;overflow:hidden;margin:.55rem 0 .4rem}
 .meter i{display:block;height:100%;width:0;background:var(--ink-3);transition:width .15s,background .15s}
 .meter i.warn{background:var(--warn)} .meter i.over{background:var(--accent)}
-.metrics{display:flex;justify-content:space-between;font:.7rem/1.4 var(--mono);color:var(--ink-3)}
-.metrics .over{color:var(--accent)}
+#count.over{color:var(--accent)}
 
 /* ---------- buttons ---------- */
-button{font:.78rem/1 var(--mono);letter-spacing:.04em;cursor:pointer;border-radius:7px;
-  padding:.72rem 1.25rem;border:1px solid transparent;background:var(--ink);color:var(--paper);
+button{font:.78rem/1 var(--mono);letter-spacing:.04em;cursor:pointer;border-radius:8px;
+  padding:.75rem 1.2rem;border:1px solid transparent;background:var(--ink);color:var(--paper);
   transition:opacity .12s}
-button:hover:not(:disabled){opacity:.84}
-button:disabled{opacity:.32;cursor:not-allowed}
+button:hover:not(:disabled){opacity:.85}
+button:disabled{opacity:.3;cursor:not-allowed}
 button.ghost{background:none;color:var(--ink-2);border-color:var(--rule)}
 button.ghost:hover:not(:disabled){color:var(--accent);border-color:var(--accent);opacity:1}
+button.block{width:100%;padding:.85rem 1rem}
 button.small{padding:.45rem .8rem;font-size:.7rem}
 
-/* ---------- submit row ---------- */
-.submit{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;
-  padding-top:1.2rem;border-top:1px solid var(--rule-2)}
-.submit .counter{font:.72rem/1.5 var(--mono);color:var(--ink-3)}
-.problems{margin:.7rem 0 0;font:.74rem/1.6 var(--mono);color:var(--warn);min-height:1.2em}
-details.bytes{margin-top:1rem}
-details.bytes summary{font:.7rem/1 var(--mono);color:var(--ink-3);cursor:pointer;
-  letter-spacing:.06em;text-transform:uppercase;list-style:none}
-details.bytes summary::-webkit-details-marker{display:none}
-details.bytes summary::before{content:"▸ ";color:var(--accent)}
-details.bytes[open] summary::before{content:"▾ "}
-pre.preview{margin:.7rem 0 0;padding:.85rem 1rem;background:var(--code);border-radius:7px;
-  font:.66rem/1.65 var(--mono);color:var(--ink-2);white-space:pre-wrap;word-break:break-all;
-  max-height:9rem;overflow:auto}
-.status{margin:0 0 1.35rem;padding:.8rem 1rem;border-radius:7px;background:var(--code);
-  border-left:2px solid var(--ink-3);font:.75rem/1.7 var(--mono);word-break:break-word}
+.problems{margin:.7rem 0 0;font:.73rem/1.6 var(--mono);color:var(--warn)}
+.status{margin:1rem 0 0;padding:.75rem .9rem;border-radius:8px;background:var(--sheet);
+  border-left:2px solid var(--ink-3);font:.73rem/1.65 var(--mono);word-break:break-word}
 .status a{color:inherit}
 .status.bad{color:var(--accent);border-left-color:var(--accent)}
 .status.ok{color:var(--ink-2);border-left-color:var(--ok)}
 #notConnected a{color:var(--accent)}
 
+details.bytes{margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--rule-2)}
+details.bytes summary{font:.66rem/1 var(--mono);color:var(--ink-3);cursor:pointer;
+  letter-spacing:.13em;text-transform:uppercase;list-style:none}
+details.bytes summary::-webkit-details-marker{display:none}
+details.bytes summary::before{content:"▸ ";color:var(--accent)}
+details.bytes[open] summary::before{content:"▾ "}
+pre.preview{margin:.8rem 0 0;padding:.9rem 1rem;background:var(--code);border-radius:8px;
+  font:.66rem/1.7 var(--mono);color:var(--ink-2);white-space:pre-wrap;word-break:break-all;
+  max-height:9rem;overflow:auto}
+
 /* ---------- archive ---------- */
-.archive-head{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;margin-bottom:1.4rem}
-article.entry{border-top:1px solid var(--rule);padding:1.5rem 0}
+article.entry{display:grid;grid-template-columns:1fr;gap:.65rem;
+  padding:1.9rem 0;border-top:1px solid var(--rule)}
+@media(min-width:860px){article.entry{grid-template-columns:11rem minmax(0,var(--measure));gap:2.5rem}}
 article.entry:last-child{border-bottom:1px solid var(--rule)}
-.entry-meta{display:flex;flex-wrap:wrap;gap:.35rem .9rem;align-items:baseline;
-  font:.7rem/1.5 var(--mono);color:var(--ink-3);margin-bottom:.75rem}
+.entry-meta{font:.71rem/1.85 var(--mono);color:var(--ink-3)}
+.entry-meta span,.entry-meta a{display:inline;margin-right:.7rem}
+@media(min-width:860px){.entry-meta span,.entry-meta a{display:block;margin-right:0}}
 .entry-meta .who{color:var(--ink)}
 .entry-meta .seq{color:var(--accent)}
 .entry-meta a{color:var(--ink-3);text-decoration:none;border-bottom:1px solid var(--rule)}
 .entry-meta a:hover{color:var(--accent)}
-.entry-body{margin:0;font-size:1.05rem;white-space:pre-wrap;word-break:break-word}
-.entry-tags{margin-top:.85rem;display:flex;gap:.35rem;flex-wrap:wrap}
+.entry-body{margin:0;font-size:1.09rem;line-height:1.8;white-space:pre-wrap;word-break:break-word}
+.entry-tags{margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap}
 .tag{font:.68rem/1 var(--mono);color:var(--ink-3);border:1px solid var(--rule);
-  border-radius:99px;padding:.28rem .65rem;background:none;letter-spacing:.02em}
+  border-radius:99px;padding:.3rem .7rem;background:none;letter-spacing:.02em;cursor:pointer}
 .tag:hover{border-color:var(--accent);color:var(--accent)}
-.empty{border:1px dashed var(--rule);border-radius:10px;padding:2.5rem 1.5rem;text-align:center;
-  color:var(--ink-3)}
-.empty b{display:block;color:var(--ink-2);font-weight:400;font-size:1.05rem;margin-bottom:.4rem}
-#filterbar{margin-bottom:1rem;font:.72rem/1 var(--mono);color:var(--ink-3)}
+.empty{border:1px dashed var(--rule);border-radius:12px;padding:3rem 1.5rem;text-align:center;
+  color:var(--ink-3);font-size:.95rem}
+.empty b{display:block;color:var(--ink-2);font-weight:400;font-size:1.1rem;margin-bottom:.5rem}
+#filterbar{margin-bottom:1.2rem;font:.72rem/1 var(--mono);color:var(--ink-3)}
 #filterbar button{background:none;border:0;color:var(--accent);padding:0;font:inherit}
 article.entry[hidden]{display:none}
 
 /* ---------- explainers ---------- */
-.notes{display:grid;gap:1.6rem}
-@media(min-width:640px){.notes{grid-template-columns:1fr 1fr;gap:1.6rem 2.2rem}}
-.note h3{margin:0 0 .4rem;font-size:.98rem;font-weight:400}
-.note h3::before{content:"—";color:var(--accent);margin-right:.5rem}
-.note p{margin:0;font-size:.92rem;color:var(--ink-2)}
-.note code,.inline-code{font:.85em/1 var(--mono);background:var(--code);padding:.12em .35em;
-  border-radius:3px;color:var(--ink-2)}
+.notes{display:grid;gap:2rem 3rem}
+@media(min-width:760px){.notes{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1120px){.notes{grid-template-columns:repeat(4,minmax(0,1fr));gap:2.4rem}}
+.note h3{margin:0 0 .5rem;font-size:1rem;font-weight:400;line-height:1.4}
+.note h3::before{content:"";display:block;width:1.6rem;height:2px;
+  background:var(--accent);margin-bottom:.8rem}
+.note p{margin:0;font-size:.93rem;line-height:1.7;color:var(--ink-2)}
+code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
+  border-radius:4px;color:var(--ink-2)}
 
-/* ---------- verify ---------- */
-.verify pre{margin:0;padding:1.1rem 1.2rem;background:var(--code);border-radius:8px;
-  font:.72rem/1.9 var(--mono);color:var(--ink-2);overflow-x:auto}
-.verify pre .c{color:var(--ink-3)}
-
-/* ---------- costs ---------- */
-table.costs{width:100%;border-collapse:collapse;font-size:.86rem}
-table.costs th,table.costs td{text-align:left;padding:.55rem .5rem;border-bottom:1px solid var(--rule-2)}
-table.costs th{font:.66rem/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
-table.costs td:not(:first-child){font-family:var(--mono);font-size:.8rem;color:var(--ink-2)}
+/* ---------- cost + verify ---------- */
+.split{display:grid;gap:2.6rem 3.5rem}
+@media(min-width:900px){.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+table.costs{width:100%;border-collapse:collapse;font-size:.88rem}
+table.costs th,table.costs td{text-align:left;padding:.7rem .6rem;border-bottom:1px solid var(--rule-2)}
+table.costs th{font:.63rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+table.costs td:not(:first-child){font-family:var(--mono);font-size:.82rem;color:var(--ink-2)}
 table.costs tr:last-child td{border-bottom:0}
+pre.cmd{margin:0;padding:1.2rem 1.3rem;background:var(--code);border-radius:10px;
+  font:.73rem/1.95 var(--mono);color:var(--ink-2);overflow-x:auto}
+pre.cmd .c{color:var(--ink-3)}
 
 /* ---------- footer ---------- */
-footer{border-top:3px double var(--rule);margin-top:4rem}
-footer .wrap{padding:1.75rem 1.25rem 3rem;font:.72rem/1.9 var(--mono);color:var(--ink-3)}
+footer{border-top:1px solid var(--rule);background:var(--code)}
+footer .shell{padding:2rem 2rem 3.5rem;font:.72rem/1.95 var(--mono);color:var(--ink-3)}
+footer .cols{display:grid;gap:1.4rem 3rem}
+@media(min-width:760px){footer .cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 footer a{color:var(--ink-2)}
 footer .addr{word-break:break-all}
 </style>
@@ -162,83 +179,98 @@ footer .addr{word-break:break-all}
 <body>
 
 <header class="masthead">
-  <div class="wrap">
-    <h1>Justice Journal</h1>
-    <div class="rule-word">A permanent record</div>
-    <p class="lede">
-      Write what you want kept. It goes into Ethereum calldata and is minted as an
-      ethscription <em>you own</em> — not a link, not a file on someone's server.
-      There is nothing to renew, nothing to unpin, and no one who can quietly
-      delete it.
-    </p>
+  <div class="shell">
+    <div>
+      <h1>Justice Journal</h1>
+      <p class="tagline">A permanent record</p>
+    </div>
+    <div class="facts">
+      <span><b id="chain">—</b>network</span>
+      <span><b id="fee">—</b>ETH per entry</span>
+      <span><b id="gateReq">—</b>$JUSTICE to write</span>
+      <span><b id="feedCount">0</b><span id="feedNoun">entries</span></span>
+    </div>
   </div>
 </header>
 
-<div class="dateline wrap">
-  <span><b id="chain">—</b></span><span class="sep">·</span>
-  <span>fee <b id="fee">—</b> ETH</span><span class="sep">·</span>
-  <span>holding <b id="gateReq">—</b> $JUSTICE</span><span class="sep">·</span>
-  <span><b id="feedCount">0</b> <span id="feedNoun">entries</span></span>
+<div class="lede">
+  <div class="shell">
+    <p>
+      Write what you want kept. It goes into Ethereum calldata and is minted as an
+      ethscription <strong>you own</strong> — not a link, not a file on someone's
+      server. There is nothing to renew, nothing to unpin, and no one who can
+      quietly delete it.
+    </p>
+  </div>
 </div>
 
-<main class="wrap">
+<main>
 
-  <section>
-    <h2><span class="n">I</span>Write an entry</h2>
-    <p class="sub">
-      Draft freely — nothing leaves this page until you sign. You will need
-      <span id="gateReq2">—</span> $JUSTICE in your wallet and the write fee to publish.
-    </p>
-
-    <div class="panel">
-      <div class="walletbar">
-        <div id="walletInfo" hidden>
-          <div class="ident">writing as <b id="who">—</b></div>
-        </div>
-        <div class="ident" id="notConnected">not connected — you can still draft</div>
-        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
-          <span class="holding" id="gate"></span>
-          <span class="ident" id="gateNote"></span>
-          <button class="ghost small" id="faucet" hidden>Get test $JUSTICE</button>
-          <button id="connect">Connect wallet</button>
-        </div>
+  <section class="shell">
+    <div class="head">
+      <div>
+        <h2><span class="n">I</span>Write an entry</h2>
+        <p class="sub">Draft freely — nothing leaves this page until you sign.</p>
       </div>
+    </div>
 
-      <div class="status" id="status" hidden></div>
-
-      <div class="field">
-        <label for="body">Entry <span class="hint">— up to <span id="max">500</span> characters, any language</span></label>
+    <div class="composer">
+      <div class="write">
+        <label for="body">Your entry
+          <span class="hint">— up to <span id="max">500</span> characters, any language</span></label>
         <textarea id="body" placeholder="March 10, 2024 — I joined my first rally.&#10;&#10;Write the thing you would want someone to be able to read in twenty years."></textarea>
-        <div class="meter"><i id="meterbar"></i></div>
-        <div class="metrics">
-          <span id="count">0 / 500</span>
-          <span id="bytes"></span>
+
+        <div class="tagrow">
+          <label for="tags">Tags <span class="hint">— optional, comma separated, lowercase</span></label>
+          <input type="text" id="tags" placeholder="assange, press-freedom">
         </div>
+
+        <details class="bytes">
+          <summary>The exact bytes that will be recorded</summary>
+          <pre class="preview" id="preview"></pre>
+        </details>
       </div>
 
-      <div class="field">
-        <label for="tags">Tags <span class="hint">— optional, comma separated, lowercase</span></label>
-        <input type="text" id="tags" placeholder="assange, press-freedom">
-      </div>
+      <aside class="rail">
+        <div class="railgroup">
+          <div class="railkey">Wallet</div>
+          <div id="walletInfo" hidden>
+            <div class="railval" id="who">—</div>
+            <div class="railnote"><span class="holding" id="gate"></span> <span id="gateNote"></span></div>
+          </div>
+          <div class="railnote" id="notConnected">not connected — you can still draft</div>
+          <div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">
+            <button class="ghost small" id="faucet" hidden>Get test $JUSTICE</button>
+            <button class="small" id="connect">Connect wallet</button>
+          </div>
+        </div>
 
-      <div class="submit">
-        <span class="counter">entry #<span id="seq">0</span> from this wallet</span>
-        <button id="send" disabled>Write to chain</button>
-      </div>
-      <p class="problems" id="problems"></p>
+        <div class="railgroup">
+          <div class="railkey">Length</div>
+          <div class="railval" id="count">0 / 500</div>
+          <div class="meter"><i id="meterbar"></i></div>
+          <div class="railnote" id="bytes"></div>
+        </div>
 
-      <details class="bytes">
-        <summary>The exact bytes that will be recorded</summary>
-        <pre class="preview" id="preview"></pre>
-      </details>
+        <div class="railgroup">
+          <div class="railkey">Entry</div>
+          <div class="railval">#<span id="seq">0</span> <span class="railnote">from this wallet</span></div>
+        </div>
+
+        <div class="railgroup">
+          <button class="block" id="send" disabled>Write to chain</button>
+          <p class="problems" id="problems"></p>
+          <div class="status" id="status" hidden></div>
+        </div>
+      </aside>
     </div>
   </section>
 
-  <section>
-    <div class="archive-head">
+  <section class="shell">
+    <div class="head">
       <div>
         <h2><span class="n">II</span>The archive</h2>
-        <p class="sub" style="margin:0">Every accepted entry, read straight from the chain.</p>
+        <p class="sub">Every accepted entry, read straight from the chain.</p>
       </div>
       <button class="ghost small" id="reload">Reload</button>
     </div>
@@ -246,9 +278,13 @@ footer .addr{word-break:break-all}
     <div id="feed"><p class="sub">Loading…</p></div>
   </section>
 
-  <section>
-    <h2><span class="n">III</span>How this works</h2>
-    <p class="sub">Four things worth knowing before you write.</p>
+  <section class="shell">
+    <div class="head">
+      <div>
+        <h2><span class="n">III</span>How this works</h2>
+        <p class="sub">Four things worth knowing before you write.</p>
+      </div>
+    </div>
     <div class="notes">
       <div class="note">
         <h3>Your words live in calldata</h3>
@@ -277,44 +313,54 @@ footer .addr{word-break:break-all}
     </div>
   </section>
 
-  <section>
-    <h2><span class="n">IV</span>What it costs</h2>
-    <p class="sub">Gas only; the write fee is on top. Calibrated against a real transaction, not estimated.</p>
-    <table class="costs">
-      <tr><th>entry</th><th>gas</th><th>@1 gwei</th><th>@5 gwei</th></tr>
-      <tr><td>113 characters, English</td><td>41,233</td><td>0.000041 ETH</td><td>0.000206 ETH</td></tr>
-      <tr><td>500 characters, Chinese</td><td>83,950</td><td>0.000084 ETH</td><td>0.000420 ETH</td></tr>
-    </table>
-    <p class="sub" style="margin:1rem 0 0">
-      Chinese costs more per character because UTF-8 spends three bytes on each one.
-      The 500-character limit counts characters, not bytes, so every language gets the
-      same room.
-    </p>
-  </section>
-
-  <section class="verify">
-    <h2><span class="n">V</span>Verify it yourself</h2>
-    <p class="sub">
-      The archive above is produced by an open indexer with no privileged access.
-      Re-run it and you must get a byte-identical file. That property is the whole
-      claim — please check it rather than trust it.
-    </p>
-    <pre><span class="c"># reproduce this page's archive from the chain alone</span>
-git clone &lt;repo&gt; &amp;&amp; cd justicejournal &amp;&amp; npm install
-node src/indexer.mjs --rpc &lt;any rpc&gt; --from &lt;genesis&gt;
-node src/render.mjs &amp;&amp; open out/journal.html</pre>
+  <section class="shell">
+    <div class="split">
+      <div>
+        <div class="head"><div>
+          <h2><span class="n">IV</span>What it costs</h2>
+          <p class="sub">Gas only; the write fee is on top. Calibrated against a real transaction.</p>
+        </div></div>
+        <table class="costs">
+          <tr><th>entry</th><th>gas</th><th>@1 gwei</th><th>@5 gwei</th></tr>
+          <tr><td>113 characters, English</td><td>41,233</td><td>0.000041 ETH</td><td>0.000206 ETH</td></tr>
+          <tr><td>500 characters, Chinese</td><td>83,950</td><td>0.000084 ETH</td><td>0.000420 ETH</td></tr>
+        </table>
+        <p class="sub" style="margin-top:1.2rem">
+          Chinese costs more per character because UTF-8 spends three bytes on each one.
+          The limit counts characters, not bytes, so every language gets the same room.
+        </p>
+      </div>
+      <div>
+        <div class="head"><div>
+          <h2><span class="n">V</span>Verify it yourself</h2>
+          <p class="sub">Re-run the indexer and you must get a byte-identical file.
+            That property is the whole claim — please check it rather than trust it.</p>
+        </div></div>
+        <pre class="cmd"><span class="c"># rebuild this archive from the chain alone</span>
+git clone &lt;repo&gt; &amp;&amp; cd justicejournal
+npm install
+node src/indexer.mjs --rpc &lt;any rpc&gt;
+node src/render.mjs</pre>
+      </div>
+    </div>
   </section>
 
 </main>
 
 <footer>
-  <div class="wrap">
-    Contract <span class="addr" id="contractAddr">—</span><br>
-    Content is stored in L1 calldata and minted under
-    <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-3-smart-contract-ethscription-creations" target="_blank" rel="noreferrer">ESIP-3</a>,
-    with <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-6-opt-in-ethscription-non-uniqueness" target="_blank" rel="noreferrer">ESIP-6</a> non-uniqueness.<br>
-    This page loads no libraries, fonts, or trackers, and makes no request to any
-    host but the RPC endpoint you configure.
+  <div class="shell">
+    <div class="cols">
+      <div>
+        Contract<br><span class="addr" id="contractAddr">—</span>
+      </div>
+      <div>
+        Content is stored in L1 calldata and minted under
+        <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-3-smart-contract-ethscription-creations" target="_blank" rel="noreferrer">ESIP-3</a>,
+        with <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-6-opt-in-ethscription-non-uniqueness" target="_blank" rel="noreferrer">ESIP-6</a> non-uniqueness.<br>
+        This page loads no libraries, fonts, or trackers, and makes no request to any
+        host but the RPC endpoint you configure.
+      </div>
+    </div>
   </div>
 </footer>
 

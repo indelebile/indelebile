@@ -38,7 +38,15 @@ node src/indexer.mjs --rpc $RPC --from <genesis> --seen ethscriptions.txt
 node src/render.mjs --hidden hidden.json
 ```
 
-An ordinary RPC is enough — the holding gate lives in the contract, so the
+`--rpc` takes a comma-separated list and falls through it. That is not
+belt-and-braces: rebuilding the archive needs historical `eth_getLogs`, and
+most free public endpoints now refuse it — one demands a token, another
+caps the range at ten blocks, and they change policy without notice. Two
+that worked when this was written are `rpc.mevblocker.io` and
+`eth.api.onfinality.io/public`; your own node or any provider's free tier
+also works and is more dependable.
+
+No archive node is needed — the holding gate lives in the contract, so the
 indexer never reads historical state. It reads ESIP-3 logs from the
 JusticeJournal address, so indexing is one filtered request per range
 rather than a request per block.

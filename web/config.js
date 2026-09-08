@@ -11,7 +11,16 @@ window.JJ_CONFIG = {
 
   // Read-only endpoint. The archive must be readable without connecting a
   // wallet — requiring one to read a public record would be absurd.
-  READ_RPC: 'https://ethereum-rpc.publicnode.com',
+  // Tried in order until one answers. A list rather than one endpoint
+  // because rebuilding the archive needs historical eth_getLogs, and most
+  // free public nodes now refuse it — some outright, some past a ten-block
+  // range. Depending on a single endpoint would mean the archive stops
+  // being readable the day that endpoint changes its policy.
+  READ_RPCS: [
+    'https://rpc.mevblocker.io',
+    'https://eth.api.onfinality.io/public',
+    'https://ethereum-rpc.publicnode.com',
+  ],
 
   // Passed to wallet_addEthereumChain when the wallet does not know this
   // network yet, so a mismatch is one click to fix rather than a dead end.
@@ -19,7 +28,7 @@ window.JJ_CONFIG = {
     chainId: '0x1',
     chainName: 'Ethereum',
     nativeCurrency: {"name":"Ether","symbol":"ETH","decimals":18},
-    rpcUrls: ['https://ethereum-rpc.publicnode.com'],
+    rpcUrls: ['https://rpc.mevblocker.io'],
     blockExplorerUrls: ['https://etherscan.io'],
   },
 

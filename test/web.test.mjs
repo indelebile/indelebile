@@ -31,11 +31,13 @@ test('config.js executes and exports the fields app.js reads', () => {
   vm.createContext(sandbox);
   vm.runInContext(readFileSync(new URL('../web/config.js', import.meta.url), 'utf8'), sandbox);
   const c = sandbox.window.JJ_CONFIG;
-  for (const k of ['CHAIN_ID', 'CHAIN_NAME', 'READ_RPC', 'JOURNALS', 'JUSTICE',
+  for (const k of ['CHAIN_ID', 'CHAIN_NAME', 'READ_RPCS', 'JOURNALS', 'JUSTICE',
                    'MIN_FEE_WEI', 'MIN_BALANCE', 'BODY_MAX_CHARS', 'MAX_TAGS', 'GENESIS_BLOCK']) {
     assert.ok(c[k] !== undefined, `missing config: ${k}`);
   }
   assert.ok(Array.isArray(c.JOURNALS) && c.JOURNALS.length, 'JOURNALS must be a non-empty list');
+  assert.ok(Array.isArray(c.READ_RPCS) && c.READ_RPCS.length > 1,
+    'more than one endpoint — public nodes refuse historical getLogs without warning');
   for (const j of c.JOURNALS) {
     assert.match(j.address, /^0x[0-9a-fA-F]{40}$/);
     assert.equal(typeof j.fromBlock, 'number');

@@ -7,7 +7,7 @@
 // An ordinary RPC is enough. The holding gate moved into the contract, so
 // nothing here reads historical state.
 
-import { createPublicClient, http, parseAbiItem } from 'viem';
+import { createPublicClient, http, fallback, parseAbiItem } from 'viem';
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { PARAMS } from './config.mjs';
 import { scan } from './scan.mjs';
@@ -16,8 +16,12 @@ import { RULES } from './rules.mjs';
 const argv = process.argv.slice(2);
 const arg = (k, d) => { const i = argv.indexOf('--' + k); return i === -1 ? d : argv[i + 1]; };
 
-const rpc = arg('rpc', process.env.ETH_RPC_URL);
-if (!rpc) { console.error('need --rpc <url> or ETH_RPC_URL'); process.exit(1); }
+// Comma-separated, tried in order. Rebuilding the archive needs historical
+// eth_getLogs, and most free public nodes now refuse it — one demands a
+// token, another caps the range at ten blocks — so a single endpoint is a
+// single point of failure for the one property that matters.
+const rpcs = (arg('rpc', process.env.ETH_RPC_URL) ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+if (!rpcs.length) { console.error('need --rpc <url[,url...]> or ETH_RPC_URL'); process.exit(1); }
 if (!PARAMS.journalContracts?.length || PARAMS.journalContracts.some((c) => /^0x0+$/.test(c.address))) {
   console.error('set journalContracts in src/config.mjs to the deployed address(es) first');
   process.exit(1);
@@ -25,7 +29,9 @@ if (!PARAMS.journalContracts?.length || PARAMS.journalContracts.some((c) => /^0x
 
 // No `chain`: the indexer must work against mainnet, Sepolia or a local
 // node without a flag. getLogs and getBlockNumber need no chain metadata.
-const client = createPublicClient({ transport: http(rpc) });
+// viem's fallback transport moves on when an endpoint errors, and ranks
+// them by responsiveness after that.
+const client = createPublicClient({ transport: fallback(rpcs.map((u) => http(u)), { rank: false }) });
 
 const ESIP2 = parseAbiItem(
   'event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI)');

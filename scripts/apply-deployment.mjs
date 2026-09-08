@@ -22,20 +22,20 @@ const NETWORKS = {
   sepolia: {
     chainId: 11155111, name: 'Sepolia',
     explorer: 'https://sepolia.etherscan.io',
-    rpc: 'https://ethereum-sepolia-rpc.publicnode.com',
+    rpcs: ['https://ethereum-sepolia-rpc.publicnode.com'],
     currency: { name: 'Sepolia Ether', symbol: 'ETH', decimals: 18 },
     faucet: true,
   },
   anvil: {
     chainId: 31337, name: 'Anvil (local)',
-    explorer: '', rpc: 'http://127.0.0.1:8547',
+    explorer: '', rpcs: ['http://127.0.0.1:8547'],
     currency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     faucet: true,
   },
   mainnet: {
     chainId: 1, name: 'Ethereum',
     explorer: 'https://etherscan.io',
-    rpc: 'https://ethereum-rpc.publicnode.com',
+    rpcs: ['https://rpc.mevblocker.io', 'https://eth.api.onfinality.io/public', 'https://ethereum-rpc.publicnode.com'],
     currency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
     faucet: false,
   },
@@ -103,7 +103,8 @@ let web = readFileSync(webPath, 'utf8');
 web = sub(web, line('CHAIN_ID', '\\d+'), `$1${net.chainId}`);
 web = sub(web, line('CHAIN_NAME', "'[^']*'"), `$1'${net.name}'`);
 web = sub(web, line('EXPLORER', "'[^']*'"), `$1'${net.explorer}'`);
-web = sub(web, line('READ_RPC', "'[^']*'"), `$1'${net.rpc}'`);
+web = sub(web, /  READ_RPCS: \[[\s\S]*?\n  \],/,
+  '  READ_RPCS: [\n' + net.rpcs.map((u) => `    '${u}',`).join('\n') + '\n  ],');
 web = sub(web, /  JOURNALS: \[[\s\S]*?\n  \],/,
   '  JOURNALS: [\n' + entries.map((c) =>
     `    { address: '${c.address}', fromBlock: ${c.fromBlock}, toBlock: ${c.toBlock ?? 'null'} },`).join('\n') + '\n  ],');
@@ -114,7 +115,7 @@ web = sub(web, /CHAIN_PARAMS: \{[\s\S]*?\n  \},/, `CHAIN_PARAMS: {
     chainId: '0x${net.chainId.toString(16)}',
     chainName: '${net.name}',
     nativeCurrency: ${JSON.stringify(net.currency)},
-    rpcUrls: ['${net.rpc}'],${net.explorer ? `\n    blockExplorerUrls: ['${net.explorer}'],` : ''}
+    rpcUrls: ['${net.rpcs[0]}'],${net.explorer ? `\n    blockExplorerUrls: ['${net.explorer}'],` : ''}
   },`);
 writeFileSync(webPath, web);
 
@@ -136,7 +137,8 @@ const checks = [
   ['page JOURNALS (newest)', (webNow.match(/address: '(0x[0-9a-fA-F]{40})'/g) ?? []).at(-1)?.match(/0x[0-9a-fA-F]{40}/)[0].toLowerCase(), journal.toLowerCase()],
   ['page JUSTICE', readWeb('JUSTICE')?.toLowerCase(), justice.toLowerCase()],
   ['page CHAIN_ID', readWeb('CHAIN_ID'), String(net.chainId)],
-  ['page READ_RPC', readWeb('READ_RPC'), net.rpc],
+  // readWeb reads a scalar; READ_RPCS is a list, so match the first entry.
+  ['page READ_RPCS (first)', webNow.match(/READ_RPCS: \[\s*\n\s*'([^']*)'/)?.[1], net.rpcs[0]],
   ['page GENESIS_BLOCK', readWeb('GENESIS_BLOCK'), String(entries[0].fromBlock)],
 ];
 const wrong = checks.filter(([, got, want]) => got !== want);
@@ -152,6 +154,6 @@ console.log(`both configs now point at ${net.name} (chain ${net.chainId})
   treasury  ${treasury}
   genesis   ${genesis}
   protocol  ${protocol}${protocol === 'justice-journal' ? '' : '   ← rehearsal; these entries are not the archive'}
-  rpc       ${net.rpc}
+  rpc       ${net.rpcs.join(', ')}
 
 next:  npm test  &&  npm run web`);

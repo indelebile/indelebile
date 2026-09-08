@@ -25,9 +25,10 @@ const eth = () => window.ethereum;
 const wallet = (method, params = []) => eth().request({ method, params });
 
 let readId = 0;
-async function read(method, params = []) {
-  if (!C.READ_RPC) return wallet(method, params);
-  const res = await fetch(C.READ_RPC, {
+let workingRpc = null;  // remember the one that answered
+
+async function callRpc(url, method, params) {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: ++readId, method, params }),
@@ -35,6 +36,27 @@ async function read(method, params = []) {
   const j = await res.json();
   if (j.error) throw new Error(j.error.message);
   return j.result;
+}
+
+/// Tries each endpoint in turn. Free public nodes increasingly refuse the
+/// historical eth_getLogs the archive is rebuilt from — one demands a token,
+/// another caps the range at ten blocks — and they change policy without
+/// notice, so falling through a list is the difference between the archive
+/// being readable and not.
+async function read(method, params = []) {
+  const list = C.READ_RPCS ?? (C.READ_RPC ? [C.READ_RPC] : []);
+  if (!list.length) return wallet(method, params);
+
+  const ordered = workingRpc ? [workingRpc, ...list.filter((u) => u !== workingRpc)] : list;
+  let last;
+  for (const url of ordered) {
+    try {
+      const r = await callRpc(url, method, params);
+      workingRpc = url;
+      return r;
+    } catch (e) { last = e; }
+  }
+  throw new Error(`no RPC endpoint would answer ${method}: ${last?.message ?? 'unknown'}`);
 }
 
 let account = null;
@@ -341,13 +363,15 @@ function renderEntry(e) {
   return `<article class="entry" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
-      <span class="seq">#${esc(e.seq)}</span>
-      <time>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</time>
+      <span class="seq">entry #${esc(e.seq)}</span>
+      <span>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</span>
       ${link}
     </div>
-    <p class="entry-body">${esc(e.body)}</p>
-    ${tags.length ? `<div class="entry-tags">${tags
-      .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+    <div>
+      <p class="entry-body">${esc(e.body)}</p>
+      ${tags.length ? `<div class="entry-tags">${tags
+        .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+    </div>
   </article>`;
 }
 
@@ -387,9 +411,7 @@ $('clearfilter').onclick = () => {
 
 $('chain').textContent = C.CHAIN_NAME;
 $('fee').textContent = fmtEth(C.MIN_FEE_WEI);
-const gateReq = (C.MIN_BALANCE / 10n ** 18n).toLocaleString();
-$('gateReq').textContent = gateReq;
-$('gateReq2').textContent = gateReq;
+$('gateReq').textContent = (C.MIN_BALANCE / 10n ** 18n).toLocaleString();
 $('max').textContent = C.BODY_MAX_CHARS;
 $('contractAddr').innerHTML = C.JOURNALS.map((j) => C.EXPLORER
   ? `<a href="${C.EXPLORER}/address/${j.address}" target="_blank" rel="noreferrer">${j.address}</a>`
