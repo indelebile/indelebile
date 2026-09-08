@@ -4,10 +4,10 @@
 // counts as an entry.
 window.JJ_CONFIG = {
   // --- Sepolia ---
-  // CHAIN_ID: 11155111,
-  // CHAIN_NAME: 'Sepolia',
-  // EXPLORER: 'https://sepolia.etherscan.io',
-  // READ_RPC: 'https://ethereum-sepolia-rpc.publicnode.com',
+  // CHAIN_ID: 31337,
+  // CHAIN_NAME: 'Anvil (local)',
+  // EXPLORER: '',
+  // READ_RPC: 'http://127.0.0.1:8547',
   // FAUCET: true,
 
   CHAIN_ID: 31337,
@@ -21,9 +21,9 @@ window.JJ_CONFIG = {
   // Passed to wallet_addEthereumChain when the wallet does not know this
   // network yet, so a mismatch is one click to fix rather than a dead end.
   CHAIN_PARAMS: {
-    chainId: '0x7a69', // 31337
+    chainId: '0x7a69',
     chainName: 'Anvil (local)',
-    nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+    nativeCurrency: {"name":"Ether","symbol":"ETH","decimals":18},
     rpcUrls: ['http://127.0.0.1:8547'],
   },
 

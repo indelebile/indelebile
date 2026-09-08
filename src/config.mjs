@@ -8,11 +8,11 @@ import { TAG_PATTERN } from './canonical.mjs';
 export const PARAMS = {
   // The JusticeJournal contract. Entries are ESIP-3 logs emitted by this
   // address and nothing else; a log from anywhere else is not an entry.
-  journalContract: '0x68B1D87F95878fE05B998F19b66F4baba5De1aed', // local anvil
+  journalContract: '0x68B1D87F95878fE05B998F19b66F4baba5De1aed', // Anvil (local)
 
   // Where swept fees land. The contract holds it immutably, so this is
   // recorded here for verifiers, not used to decide validity.
-  treasury: '0x000000000000000000000000000000000000bEEF', // local anvil
+  treasury: '0xe54A3CFB2Dbdfb8100c41fbFB04B4E9D4c7c3bA2', // Anvil (local)
 
   // Per-entry write fee, in wei. This is the real anti-spam cost.
   minFeeWei: 1_000_000_000_000_000n, // 0.001 ETH
@@ -20,7 +20,7 @@ export const PARAMS = {
   // Holding gate, enforced inside write(). A holding gate is per wallet
   // while writing is per entry, so it filters non-holders and nothing
   // more — minFeeWei is the actual per-entry spam cost.
-  justiceToken: '0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1', // local anvil
+  justiceToken: '0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1', // Anvil (local)
   minJusticeBalance: 100_000n * 10n ** 18n,
 
   // Rate limit, enforced by the indexer over a trailing window of blocks.
