@@ -50,9 +50,16 @@ contract JusticeJournal {
     /// @notice Everything up to and including the author's address. The
     ///         contract writes this itself rather than accepting it, for
     ///         two reasons — see `writeEntry`.
-    string public constant HEAD =
-        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
-    uint256 public constant HEAD_LEN = 88;
+    ///
+    ///         Set at deployment rather than hardcoded, so a rehearsal can
+    ///         run under a different protocol tag without a second copy of
+    ///         this contract. The production indexer rejects any other tag
+    ///         outright, which is what keeps a rehearsal out of the archive.
+    string public head;
+
+    /// Derived, never written down twice. A hardcoded length that disagreed
+    /// with the string would corrupt the content cap silently.
+    uint256 public immutable headLen;
 
     /// @notice Upper bound on one entry. 500 characters of Chinese is
     ///         1,500 bytes, plus the envelope and up to five tags.
@@ -65,13 +72,19 @@ contract JusticeJournal {
     error NothingToSweep();
     error TransferFailed();
 
+    error EmptyHead();
+
     constructor(
         IERC20 _justice,
         IUniswapV2Router _router,
         address _treasury,
         uint256 _minFee,
-        uint256 _minBalance
+        uint256 _minBalance,
+        string memory _head
     ) {
+        if (bytes(_head).length == 0) revert EmptyHead();
+        head = _head;
+        headLen = bytes(_head).length;
         justice = _justice;
         router = _router;
         treasury = _treasury;
@@ -110,10 +123,10 @@ contract JusticeJournal {
         if (held < minBalance) revert BalanceTooLow(held, minBalance);
         if (bytes(entryTail).length == 0) revert EmptyContent();
 
-        uint256 total = HEAD_LEN + 40 + bytes(entryTail).length;
+        uint256 total = headLen + 40 + bytes(entryTail).length;
         if (total > MAX_CONTENT_BYTES) revert ContentTooLong(total, MAX_CONTENT_BYTES);
 
-        string memory contentURI = string.concat(HEAD, _hexAddress(msg.sender), entryTail);
+        string memory contentURI = string.concat(head, _hexAddress(msg.sender), entryTail);
 
         emit ethscriptions_protocol_CreateEthscription(msg.sender, contentURI);
         emit EntryWritten(msg.sender, keccak256(bytes(contentURI)), msg.value);

@@ -81,14 +81,38 @@ if the DAO wants them, or left out by simply not listing it.
 | **minFee** | 0.001 ETH ≈ $2.48. Reasonable, or lower while validating? Immutable. |
 | **minBalance** | 100,000 $JUSTICE ≈ $2.29 is close to no barrier. Keep it as the proposal specifies, or raise it? Immutable. |
 
+## The rehearsal runs under a different protocol tag
+
+Entries written while validating are permanent, real ethscriptions. They
+must not be readable as part of the archive — otherwise someone can
+reasonably say the archive was started before the DAO decided to start it.
+
+So the rehearsal deploys with `PROTOCOL=justice-journal-test`. The tag is
+inside every entry's content, and the production rules require an exact
+match (V5), so the two sets can never mix in either direction. Tested both
+ways.
+
+Nothing else differs. The contract, the assembly, the fee, the gate, the
+event, the calldata shape — all the production code path. Only the string
+constant changes, and `headLen` is derived from it rather than written
+down twice, so the two cannot drift.
+
+This lets the proposal say something otherwise unavailable: **the archive
+is empty. Not one entry exists. It begins when the DAO says it begins.**
+
+Transitioning is a deployment, not a migration: deploy again with the real
+tag and the DAO's multisig treasury, list it, and leave the rehearsal
+contract off the list. Nothing has to be moved or rewritten.
+
 ## Sequence
 
 ```bash
 cd contracts
 export MAINNET_RPC=https://ethereum-rpc.publicnode.com
-export TREASURY=<decided>
+export TREASURY=<an address you control; the DAO multisig comes later>
 export JUSTICE=0x59d1e836f7b7210a978b25a855085cc46fd090b5
 export NO_ROUTER=true
+export PROTOCOL=justice-journal-test
 
 forge script script/Deploy.s.sol --rpc-url $MAINNET_RPC --broadcast --private-key $YOUR_KEY
 ```

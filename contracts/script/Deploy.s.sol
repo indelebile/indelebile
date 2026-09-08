@@ -21,6 +21,10 @@ import {TestRouter, ITestJustice} from "../src/testnet/TestRouter.sol";
 ///                liquidity is too thin for an automatic swap to be honest.
 ///   MIN_FEE      optional — wei, default 0.001 ether
 ///   MIN_BALANCE  optional — wei, default 100,000e18
+///   PROTOCOL     optional — protocol tag, default "justice-journal".
+///                Use "justice-journal-test" for a rehearsal: the
+///                production indexer rejects any other tag, so rehearsal
+///                entries can never be mistaken for the archive.
 contract Deploy is Script {
     function run() external {
         address treasury = vm.envAddress("TREASURY");
@@ -31,6 +35,10 @@ contract Deploy is Script {
         address router = vm.envOr("ROUTER", address(0));
         uint256 minFee = vm.envOr("MIN_FEE", uint256(0.001 ether));
         uint256 minBalance = vm.envOr("MIN_BALANCE", uint256(100_000 ether));
+        string memory protocol = vm.envOr("PROTOCOL", string("justice-journal"));
+        string memory head = string.concat(
+            'data:application/json;charset=utf-8;rule=esip6,{"p":"', protocol, '","v":1,"author":"0x'
+        );
 
         bool needsStubs = justice == address(0) || (router == address(0) && !noRouter);
         // The stand-ins have an open faucet and a fixed-rate swap. On
@@ -54,9 +62,10 @@ contract Deploy is Script {
         }
 
         JusticeJournal jj = new JusticeJournal(
-            IERC20(justice), IUniswapV2Router(router), treasury, minFee, minBalance
+            IERC20(justice), IUniswapV2Router(router), treasury, minFee, minBalance, head
         );
         console.log("JusticeJournal", address(jj));
+        console.log("protocol tag  ", protocol);
 
         vm.stopBroadcast();
 
@@ -67,6 +76,7 @@ contract Deploy is Script {
         console.log("justiceToken:    '%s',", vm.toString(justice));
         console.log("minFeeWei:       %sn,", vm.toString(minFee));
         console.log("genesisBlock:    %s,", vm.toString(block.number));
+        console.log("protocol:        '%s',", protocol);
         console.log("");
         console.log("--- paste into web/app.js ---");
         console.log("JOURNAL: '%s',", vm.toString(address(jj)));

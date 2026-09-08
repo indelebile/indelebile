@@ -2,7 +2,13 @@
 // this exact file, so the page and the indexer cannot drift apart on what
 // the bytes are. A duplicated encoder here would silently break V4.
 
+// The archive's protocol tag. A rehearsal deployment uses
+// PROTOCOL_REHEARSAL instead: the production rules reject anything whose
+// `p` is not exactly PROTOCOL (V5), so entries written while testing can
+// never be read as part of the archive, and nobody can claim the archive
+// was started before the DAO decided to start it.
 export const PROTOCOL = 'justice-journal';
+export const PROTOCOL_REHEARSAL = 'justice-journal-test';
 export const VERSION = 1;
 // `rule=esip6` opts out of the protocol's global content-uniqueness rule
 // (ESIP-6). ESIP-6 exists for exactly our case and names it: a contract
@@ -22,9 +28,9 @@ export const DATA_URI_PREFIX = `data:${MIME},`;
 // that without a canonical-JSON dependency.
 export const KEY_ORDER = ['p', 'v', 'author', 'seq', 'ts', 'tags', 'body'];
 
-export function buildEntry({ author, seq, ts, tags = [], body }) {
+export function buildEntry({ author, seq, ts, tags = [], body, p = PROTOCOL }) {
   return {
-    p: PROTOCOL,
+    p,
     v: VERSION,
     author: author.toLowerCase(),
     seq,
@@ -40,12 +46,15 @@ export const toDataUri = (entry) => DATA_URI_PREFIX + canonicalJson(entry);
 // The contract writes everything up to and including the author's address
 // and the caller supplies the rest, so that `author` cannot disagree with
 // the sender and the calldata carries no `data:` prefix of its own.
-export const ENTRY_HEAD = `${DATA_URI_PREFIX}{"p":"${PROTOCOL}","v":${VERSION},"author":"0x`;
-export const HEAD_LEN = ENTRY_HEAD.length + 40; // + the address
+export const headFor = (p = PROTOCOL) =>
+  `${DATA_URI_PREFIX}{"p":"${p}","v":${VERSION},"author":"0x`;
+export const ENTRY_HEAD = headFor();
+export const headLenFor = (p = PROTOCOL) => headFor(p).length + 40; // + the address
+export const HEAD_LEN = headLenFor();
 
 // Derived from the full URI rather than re-serialised, so the two can
 // never drift: whatever the indexer hashes is exactly head + tail.
-export const entryTail = (entry) => toDataUri(entry).slice(HEAD_LEN);
+export const entryTail = (entry) => toDataUri(entry).slice(headLenFor(entry.p));
 export const codePointLength = (s) => [...s].length;
 export const byteLength = (s) => new TextEncoder().encode(s).length;
 
@@ -56,7 +65,8 @@ export const TAG_PATTERN = /^[a-z0-9-]+$/;
 /// indexer will reject.
 export function checkLocal(entry, limits) {
   const failed = [];
-  if (entry.p !== PROTOCOL || entry.v !== VERSION) failed.push('V5');
+  const expected = limits.protocol ?? PROTOCOL;
+  if (entry.p !== expected || entry.v !== VERSION) failed.push('V5');
   if (!Number.isInteger(entry.ts) || entry.ts < 0) failed.push('V5');
   if (!Number.isInteger(entry.seq) || entry.seq < 0) failed.push('V8');
   if (typeof entry.body !== 'string' || entry.body.length === 0 ||

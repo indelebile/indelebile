@@ -172,3 +172,34 @@ test('sequence numbers carry across a migration', async () => {
   assert.equal(r.entries.length, 1);
   assert.ok(r.rejected[0].failed.includes('V8'));
 });
+
+// A mainnet rehearsal writes real, permanent ethscriptions. They must be
+// impossible to read as part of the archive, so that nobody can say the
+// archive was started before the DAO decided to start it.
+test('rehearsal entries are invisible to the production rules', async () => {
+  const { PROTOCOL_REHEARSAL } = await import('../src/canonical.mjs');
+  const rehearsal = buildEntry({
+    author: A, seq: 0, ts: 1757280000, tags: [], body: 'written while validating on mainnet',
+    p: PROTOCOL_REHEARSAL,
+  });
+  const { toDataUri } = await import('../src/canonical.mjs');
+
+  const production = await scan(chainOf([write(A, 0, 'x', { contentURI: toDataUri(rehearsal) })]),
+    { from: 1000, to: 1000, params: { ...P, protocol: 'justice-journal' } });
+  assert.equal(production.entries.length, 0, 'the archive must not contain it');
+  assert.ok(production.rejected[0].failed.includes('V5'));
+
+  // And the same bytes are a valid entry under the rehearsal's own rules,
+  // so the rehearsal actually exercises the production code path.
+  const rehearsalRun = await scan(chainOf([write(A, 0, 'x', { contentURI: toDataUri(rehearsal) })]),
+    { from: 1000, to: 1000, params: { ...P, protocol: PROTOCOL_REHEARSAL } });
+  assert.equal(rehearsalRun.entries.length, 1);
+});
+
+test('a production entry is equally invisible to the rehearsal rules', async () => {
+  const { PROTOCOL_REHEARSAL } = await import('../src/canonical.mjs');
+  const r = await scan(chainOf([write(A, 0, 'a real entry')]),
+    { from: 1000, to: 1000, params: { ...P, protocol: PROTOCOL_REHEARSAL } });
+  assert.equal(r.entries.length, 0);
+  assert.ok(r.rejected[0].failed.includes('V5'));
+});

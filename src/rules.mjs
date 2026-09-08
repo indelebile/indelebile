@@ -68,7 +68,7 @@ export function validate(ev, ctx) {
   }
   const e = d.entry;
 
-  if (e.p !== 'justice-journal' || e.v !== 1) failed.push('V5');
+  if (e.p !== (P.protocol ?? 'justice-journal') || e.v !== 1) failed.push('V5');
   if (!Number.isInteger(e.ts) || e.ts < 0) failed.push('V5');
   if (typeof e.author !== 'string' || e.author.toLowerCase() !== ev.author.toLowerCase()) failed.push('V6');
 

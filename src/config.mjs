@@ -1,4 +1,4 @@
-import { TAG_PATTERN } from './canonical.mjs';
+import { TAG_PATTERN, PROTOCOL } from './canonical.mjs';
 
 // Justice Journal — protocol parameters.
 // Everything the DAO votes on lives here. Changing any value changes the
@@ -49,8 +49,13 @@ export const PARAMS = {
   tagMaxChars: 32,
   tagPattern: TAG_PATTERN,
 
+  // Which protocol tag this deployment reads. PROTOCOL for the archive,
+  // PROTOCOL_REHEARSAL while validating on mainnet — the two never mix,
+  // because V5 requires an exact match.
+  protocol: PROTOCOL,
+
   // Block before which no entry is valid — the first contract's start.
   genesisBlock: 11659670,
 };
 
-export { PROTOCOL, VERSION, MIME, DATA_URI_PREFIX } from './canonical.mjs';
+export { PROTOCOL, PROTOCOL_REHEARSAL, VERSION, MIME, DATA_URI_PREFIX } from './canonical.mjs';

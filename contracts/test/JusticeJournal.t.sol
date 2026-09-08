@@ -64,7 +64,7 @@ contract JusticeJournalTest is Test {
     function setUp() public {
         justice = new MockJustice();
         router = new MockRouter();
-        jj = new JusticeJournal(justice, router, treasury, FEE, GATE);
+        jj = new JusticeJournal(justice, router, treasury, FEE, GATE, HEAD);
         justice.setBalance(author, GATE);
         vm.deal(author, 10 ether);
         vm.deal(stranger, 10 ether);
@@ -123,7 +123,7 @@ contract JusticeJournalTest is Test {
         for (uint256 i; i < logs.length; i++) {
             if (logs[i].topics[0] != sig) continue;
             string memory uri = abi.decode(logs[i].data, (string));
-            assertEq(_slice(bytes(uri), 0, 88), HEAD, "header must be ours");
+            assertEq(_slice(bytes(uri), 0, bytes(HEAD).length), HEAD, "header must be ours");
         }
     }
 
@@ -139,7 +139,7 @@ contract JusticeJournalTest is Test {
             if (logs[i].topics[0] != sig) continue;
             string memory uri = abi.decode(logs[i].data, (string));
             // lowercase hex of address(0xA11CE), 40 chars, right after HEAD
-            assertEq(_slice(bytes(uri), 88, 40), "00000000000000000000000000000000000a11ce");
+            assertEq(_slice(bytes(uri), bytes(HEAD).length, 40), "00000000000000000000000000000000000a11ce");
         }
     }
 
@@ -151,7 +151,7 @@ contract JusticeJournalTest is Test {
 
     function test_RejectsOversizedContent() public {
         // The cap covers the assembled URI, not just what the caller sends.
-        bytes memory big = new bytes(2048 - 88 - 40 + 1);
+        bytes memory big = new bytes(2048 - bytes(HEAD).length - 40 + 1);
         vm.prank(author);
         vm.expectRevert(abi.encodeWithSelector(JusticeJournal.ContentTooLong.selector, 2049, 2048));
         jj.writeEntry{value: FEE}(string(big));
@@ -162,7 +162,7 @@ contract JusticeJournalTest is Test {
         bytes memory body = new bytes(1500);
         for (uint256 i; i < 1500; i += 3) { body[i] = 0xe8; body[i+1] = 0xae; body[i+2] = 0xb0; }
         string memory tail = string.concat('","seq":0,"ts":1757280000,"tags":[],"body":"', string(body), '"}');
-        assertLe(88 + 40 + bytes(tail).length, 2048, "a full-length Chinese entry must fit");
+        assertLe(bytes(HEAD).length + 40 + bytes(tail).length, 2048, "a full-length Chinese entry must fit");
         vm.prank(author);
         jj.writeEntry{value: FEE}(tail);
     }
@@ -225,6 +225,37 @@ contract JusticeJournalTest is Test {
     function test_SweepRevertsWhenEmpty() public {
         vm.expectRevert(JusticeJournal.NothingToSweep.selector);
         jj.sweepEth();
+    }
+
+    /// A rehearsal deployment carries a different protocol tag, so its
+    /// entries can never be read as part of the archive. Nothing else about
+    /// the contract changes, which is the point: the rehearsal exercises the
+    /// production code path exactly.
+    function test_RehearsalTagIsCarriedThrough() public {
+        string memory testHead =
+            'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal-test","v":1,"author":"0x';
+        JusticeJournal test = new JusticeJournal(justice, router, treasury, FEE, GATE, testHead);
+        assertEq(test.headLen(), bytes(testHead).length, "headLen must follow the string");
+
+        vm.recordLogs();
+        vm.prank(author);
+        test.writeEntry{value: FEE}('","seq":0,"ts":1,"tags":[],"body":"x"}');
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        bytes32 sig = keccak256("ethscriptions_protocol_CreateEthscription(address,string)");
+        for (uint256 i; i < logs.length; i++) {
+            if (logs[i].topics[0] != sig) continue;
+            string memory uri = abi.decode(logs[i].data, (string));
+            assertEq(_slice(bytes(uri), 0, bytes(testHead).length), testHead);
+        }
+    }
+
+    function test_HeadLenAlwaysMatchesHead() public view {
+        assertEq(jj.headLen(), bytes(jj.head()).length);
+    }
+
+    function test_RejectsEmptyHead() public {
+        vm.expectRevert(JusticeJournal.EmptyHead.selector);
+        new JusticeJournal(justice, router, treasury, FEE, GATE, "");
     }
 
     function test_StrayEthIsRejected() public {
