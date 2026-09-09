@@ -73,7 +73,13 @@ h1{margin:0;font-size:clamp(1.9rem,4vw,2.5rem);font-weight:400;letter-spacing:-.
 .lede .shell{padding-top:2.2rem;padding-bottom:2.2rem;
   display:grid;grid-template-columns:1fr;gap:1.8rem}
 @media(min-width:900px){.lede .shell{grid-template-columns:minmax(0,1fr) 19rem;gap:0}}
-.lede p{margin:0;max-width:42rem;font-size:1.16rem;line-height:1.62;color:var(--ink)}
+.lede p{margin:0;max-width:42rem;font-size:1.16rem;line-height:1.62;color:var(--ink);
+  /* Justified: the one designed block of copy on the page, and at ~75
+     characters a line there is room to set it flush both sides. Measured
+     with and without hyphenation — both come out flush, so it stays off
+     rather than breaking "eth-scription" across a line. The last line
+     stays ragged, as it should. */
+  text-align:justify;hyphens:none;text-wrap:pretty}
 .lede strong{color:var(--ink);font-weight:400;
   box-shadow:inset 0 -.45em 0 rgba(35,74,114,.15)}
 .facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem 1.2rem;

@@ -190,3 +190,15 @@ test('the last entry does not double the section rule', () => {
   assert.ok(!/article\.entry:last-child\{[^}]*border-bottom\s*:\s*\d/.test(css),
     'article.entry:last-child draws a border the section rule already provides');
 });
+
+// The opening statement is the one designed block of copy on the page and
+// the first thing anyone reads. Left-aligned it trailed a ragged right
+// edge across a widened shell, which is what made the block look adrift.
+test('the opening statement is set flush both sides', () => {
+  const css = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const rule = css.match(/\.lede p\{([^}]*)\}/)?.[1] ?? '';
+  assert.match(rule, /text-align:\s*justify/, '.lede p must be justified');
+  // Hyphenation is off deliberately: measured, both settings come out
+  // flush, and leaving it on broke "eth-scription" across a line.
+  assert.match(rule, /hyphens:\s*none/, 'hyphenation must stay off — it breaks "ethscription"');
+});
