@@ -1,14 +1,24 @@
 # Code and requirements audit
 
 2026-09-09. Everything below was found by reading the code and running it,
-not from memory. Three items were breaking and are fixed; the rest are
-listed rather than changed, because most involve a decision.
+not from memory.
+
+**All eleven findings are now closed.** Three were breaking. What remains
+after them is the *unimplemented* list at the foot of this page, which is
+deliberate and, with two exceptions, waiting on decisions rather than work.
+
+The pattern worth noticing: every fault here was silent. A tool that
+refused to build anything, a preview showing bytes that were not going to
+be written, gas figures a quarter too high, vectors that would have passed
+a wrong implementation, a demo script replacing the live archive. None of
+them raised an error. Each fix that could be guarded now has a test that
+was verified by reintroducing the bug.
 
 ---
 
-## Fixed in this pass
+## Findings
 
-### 1. `compose.mjs` could not build an entry at all — *breaking*
+### 1. `compose.mjs` could not build an entry at all — *breaking*, fixed
 
 It built entries with the default protocol tag while the deployed contract
 writes `justice-journal-test`, so its own local validation rejected every
@@ -27,7 +37,7 @@ exercise the rules rather than whatever deployment happens to be
 configured — which is right, and which is exactly why nothing failed when
 the configured deployment diverged.
 
-### 2. The page previewed bytes it was not going to write — *breaking*
+### 2. The page previewed bytes it was not going to write — *breaking*, fixed
 
 Under a heading reading *"the exact bytes that will be recorded"*, the page
 showed `"p":"justice-journal"` while the contract writes
@@ -36,7 +46,7 @@ is 133. `web/config.js` had no protocol field at all, so the page could not
 have known. It has one now, and a test fails if it disagrees with the
 indexer's.
 
-### 3. `demo.mjs` quoted gas figures ~27% too high
+### 3. `demo.mjs` quoted gas figures ~27% too high — fixed
 
 It still added `26_000` for execution — the pre-calibration estimate taken
 from forge's harness. The measured figure is `17_341`. Every number it
@@ -95,26 +105,32 @@ way for it to fail in an archive.
 
 ---
 
-### 11. `demo.mjs` silently overwrites the live archive
+### 11. `demo.mjs` silently overwrites the live archive — fixed
 
 Found while auditing: running it replaces `out/index.json` with synthetic
 entries and says nothing, so the page then shows sample data as though it
 were the archive. It now warns on the way out, `render.mjs` warns when it
 reads one, and the page labels it instead of printing a block height.
 
-## Stale documentation
+## Documentation
 
-### 7. `STATUS.md` predates six changes
+### 7. ~~`STATUS.md` predates six changes~~ — fixed
 
-Written 2026-09-08, before: the mainnet deployment, multi-deployment
-support, the rehearsal protocol tag, watch mode, the public-RPC finding,
-and the page moving to read the indexer's output. Its audit of the original
-proposal is still sound; its description of the system is not.
+*Was:* written before the mainnet deployment, multi-deployment support, the
+rehearsal protocol tag, watch mode, the public-RPC finding, and the page
+moving to read the indexer's output.
 
-### 8. `MAINNET.md` still says "Still needed before deploying"
+*Now:* those six have a section of their own, the rows they invalidated are
+corrected, and the $2.29 holding gate is recorded among the things the
+proposal did not anticipate. The requirements audit itself needed no
+change — it was the system description that had gone stale.
 
-It has been deployed. The section now reads as a to-do list for something
-already done.
+### 8. ~~`MAINNET.md` still says "Still needed before deploying"~~ — fixed
+
+Folded into `DEPLOY.md`, where what the rehearsal established is recorded
+as fact and what remains is scoped to the *real* deployment: the DAO's
+multisig treasury, the production protocol tag, and inscribing the reading
+rules.
 
 ### 9. ~~`SPEC.md` and `PRD.md` do not mention four shipped things~~ — fixed
 
@@ -128,9 +144,12 @@ are a list; §3 covers the protocol tag as a deployment parameter; a new
 and how watch mode stays consistent with a from-scratch build. `PRD.md`
 gains NFR-6 and NFR-7. The singular reference is gone.
 
-### 10. `DEPLOY-SEPOLIA.md` is superseded by `MAINNET.md`
+### 10. ~~`DEPLOY-SEPOLIA.md` is superseded by `MAINNET.md`~~ — fixed
 
-Two runbooks, one obsolete, neither saying which to follow.
+Both replaced by one `DEPLOY.md` covering local, Sepolia and mainnet, with
+the reasons for each mainnet setting and what the rehearsal established.
+`README.md` was rewritten alongside it: it advertised the wrong test
+counts and led with `demo.mjs`, which overwrites the real archive.
 
 ---
 

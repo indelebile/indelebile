@@ -1,7 +1,7 @@
 # Against the original proposal
 
-Audited 2026-09-08 against the AssangeDAO Justice Journal proposal as
-written. Four outcomes: **done**, **partial**, **changed** (built
+Audited against the AssangeDAO Justice Journal proposal as written.
+Requirements checked 2026-09-08; system description current to 2026-09-09. Four outcomes: **done**, **partial**, **changed** (built
 differently, with a reason), **not built**.
 
 The pattern is deliberate. Everything irreversible — the data format, the
@@ -15,7 +15,7 @@ can be added at any time without touching a single entry already written.
 
 | # | Proposal | Status | |
 |---|---|---|---|
-| 1 | Visit the Journal page on the DAO website | **partial** | The page exists and runs; it is not hosted on the DAO site. |
+| 1 | Visit the Journal page on the DAO website | **partial** | The page exists and runs; it is not hosted on the DAO site, and the repository is not public. |
 | 2 | Connect wallet, verify holding ≥100,000 $JUSTICE | **done** | Enforced in the contract, not only in the page — a hand-built transaction cannot bypass it. |
 | 3 | Compose up to 500 characters | **done** | Counted in Unicode code points, so Chinese gets the same allowance as English rather than a third of it. |
 | 4 | Fixed fee: 1,000 $JUSTICE + gas | **changed** | See below. |
@@ -67,7 +67,7 @@ one deployment away.
 |---|---|---|
 | Entry threshold (hold + fee) | **done** | With one correction: the holding gate is per *wallet* while writing is per *entry*, so one bag can write indefinitely. The fee is the real per-entry cost; a rate limit caps bursts. |
 | Community reports | **not built** | |
-| Snapshot/GTU vote may hide entries, never delete | **partial** | The mechanism exists — `hidden.json` collapses an entry in the rendered archive while leaving it in the index and on chain. It is not wired into the live page, and there is no voting integration. |
+| Snapshot/GTU vote may hide entries, never delete | **partial** | Done except the vote. `hidden.json` collapses an entry in both the live page and the rendered archive, keeping its author, date, block link and tags and saying it is still in the index and still on chain. A missing list hides nothing — moderation fails open. What is absent is any governance integration that would write to that list. |
 | Transparency: verifiable, timestamped on-chain | **done, and further** | The archive is reproducible: a clean clone with no local state rebuilds it byte for byte. Conformance vectors let anyone check their own implementation. |
 
 ---
@@ -101,7 +101,7 @@ one deployment away.
 
 | Proposal | Status | |
 |---|---|---|
-| Off-chain indexer for fast display | **done, and load-bearing** | The proposal called this optional. It is not: nothing on chain marks a Journal entry apart from any other calldata, so the rules *are* the archive. |
+| Off-chain indexer for fast display | **done, and load-bearing** | The proposal called this optional. It is not: nothing on chain marks a Journal entry apart from any other calldata, so the rules *are* the archive — and the page reads its output rather than querying the chain, so there is only one implementation of them. Runs continuously (`--watch`) or once. |
 | Filter by time, tags | **done** | |
 | Filter by popularity | **not built** | |
 | ENS mapping, avatars, social links | **not built** | |
@@ -142,6 +142,20 @@ one deployment away.
 
 ---
 
+## What changed after this audit was first written
+
+Six things shipped between the first pass and now, none of which the
+proposal anticipated and all of which are now in `SPEC.md`:
+
+| | |
+|---|---|
+| **Deployed on mainnet** | Under a separate protocol tag; the canonical Ethscriptions indexer confirms the author owns the entry and `esip6` took effect. See `DEPLOY.md`. |
+| **Deployments are a list** | Contract parameters are immutable, so a DAO multisig treasury means redeploying. `journalContracts` carries block ranges so the archive spans deployments; without it the archive would end at its own first governance decision. |
+| **A rehearsal protocol tag** | `justice-journal-test`. V5 demands an exact match, so mainnet can be exercised with permanent entries while the archive stays empty until the DAO starts it. |
+| **The page reads the indexer's output** | It used to query logs and filter them itself — a second copy of the rules in the browser, free to drift. |
+| **Public RPCs refuse historical `getLogs`** | Of ten mainnet endpoints tested, two answered. Rebuilding needs a list of endpoints, or your own node. Reading the archive needs none. |
+| **Watch mode** | Incremental to fetch, full to derive, so a long-running build and a from-scratch build produce the same `entriesHash`. |
+
 ## Things found that the proposal did not anticipate
 
 1. **The proposal's own design would have given the DAO ownership of every
@@ -160,6 +174,11 @@ one deployment away.
 4. **Chinese cost three bytes per character.** The 500-character limit had
    to be defined in code points, or a Chinese entry would have had a third
    of the room.
+5. **The holding gate is worth about $2.29.** 100,000 $JUSTICE at the price
+   when this was measured. The barrier the proposal specifies is close to
+   no barrier, which is why the write fee does all the anti-spam work — and
+   why §5's incentives and §6's anti-abuse section quietly contradict each
+   other. `PROPOSAL-SHORT.md` §6 works that through.
 
 ---
 
@@ -177,6 +196,8 @@ built after entries exist, without invalidating one.
 | **Governance layer** | reports, wiring `hidden.json` to a vote and to the live page |
 | **Incentives** | referral rewards, airdrop logic, reward caps |
 | **Hosting** | putting the page on the DAO site; a public repository |
+| **Governance wiring** | something that writes to `hidden.json` after a vote; the list is honoured, nothing fills it |
+| **Provenance** | inscribing `docs/READING-RULES.txt`, so rebuilding the archive does not depend on this repository surviving |
 
 The one thing that **cannot** be deferred is anything that changes the
 entry format, because the format is fixed at the moment an entry is

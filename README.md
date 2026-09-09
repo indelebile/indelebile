@@ -1,20 +1,42 @@
-# Justice Journal (calldata prototype)
+# Justice Journal
 
-Reference implementation for storing AssangeDAO Journal entries directly
-in Ethereum L1 calldata instead of IPFS, minted as ethscriptions owned by
-their authors.
+Journal entries written into Ethereum L1 calldata rather than IPFS, and
+minted as ethscriptions **owned by their authors**. A reference
+implementation: contract, indexer, and a page to write from.
 
-- [PRD.md](PRD.md) — requirements, scope, open decisions for the DAO
-- [SPEC.md](SPEC.md) — entry format, validity rules, cost, front-running
+| | |
+|---|---|
+| [PROPOSAL-SHORT.md](PROPOSAL-SHORT.md) | the case, at forum length |
+| [SPEC.md](SPEC.md) | entry format, validity rules, cost, front-running |
+| [PRD.md](PRD.md) | requirements, scope, decisions left to the DAO |
+| [STATUS.md](STATUS.md) | what is built, against the original proposal |
+| [AUDIT.md](AUDIT.md) | known faults and gaps |
+| [DEPLOY.md](DEPLOY.md) | deploying, and what the mainnet rehearsal established |
+| [PROTOCOL-NOTES.md](PROTOCOL-NOTES.md) | what the Ethscriptions spec actually says |
 
 ```bash
 npm install
-node --test 'test/*.test.mjs'        # 20 tests, no network needed
-cd contracts && forge test           # 14 tests
-
-node src/demo.mjs && node src/render.mjs   # synthetic index + viewer
-open out/journal.html
+npm test                       # 81 tests, no network needed
+cd contracts && forge test     # 23 tests
 ```
+
+## Running it
+
+```bash
+node src/indexer.mjs --rpc <rpc>              # build the archive
+node src/indexer.mjs --rpc <rpc> --watch 30   # or keep it current
+npm run web                                   # http://127.0.0.1:8080
+```
+
+The page reads the archive the indexer produced; it does not query the
+chain to display entries. Without `out/index.json` it has nothing to show,
+so run the indexer first.
+
+`node src/demo.mjs` fills the archive with synthetic entries for a look
+around — it **overwrites `out/index.json`**, so run the indexer again
+afterwards.
+
+Deploying, on any network: [DEPLOY.md](DEPLOY.md).
 
 ## Sending a real entry
 
@@ -27,9 +49,14 @@ node src/compose.mjs \
   --body "March 10, 2024 — I joined my first Julian Assange support rally."
 ```
 
-Set `journalContract` in `src/config.mjs` to the deployed address first.
-Send through a private RPC (the printed command uses Flashbots Protect) —
-a public mempool exposes the bytes to front-running, see SPEC.md §6.
+Point `src/config.mjs` at a deployment first — `scripts/apply-deployment.mjs`
+does that and `web/config.js` together, and refuses if the two end up
+disagreeing.
+
+The printed command uses a private RPC. Since entries carry `rule=esip6`
+that is a privacy preference rather than a requirement: nobody can take
+your content by inscribing it first (SPEC.md §6). It still keeps your words
+out of the public mempool until they are mined.
 
 ## Indexing
 
@@ -98,4 +125,8 @@ MIT licensed, so a second implementation needs nobody's permission.
 | `web/index.html` | the write page: compose, validate locally, send |
 | `web/abi.js` | hand-rolled ABI encoding; the page loads no libraries |
 | `web/serve.mjs` | dev server rooted at the project so the page can share `src/canonical.mjs` |
+| `scripts/apply-deployment.mjs` | points both configs at a deployment, and verifies it took |
+| `scripts/verify-mainnet.mjs` | checks an entry against the canonical Ethscriptions indexer |
+| `scripts/inscribe-rules.mjs` | inscribes the reading rules, so they outlive this repository |
+| `hidden.json` | entries governance voted to collapse; never removed |
 | `contracts/script/Deploy.s.sol` | deploys the journal plus testnet stand-ins |
