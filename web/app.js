@@ -316,11 +316,21 @@ async function faucet() {
 // anyone can re-run, and `entriesHash` is printed below so a reader can
 // compare their own build against this one instead of trusting it.
 let archive = null;
+let hidden = new Set();
 
 async function loadArchive() {
   const res = await fetch('../out/index.json', { cache: 'no-store' });
   if (!res.ok) throw new Error(`no index.json (HTTP ${res.status}) — run the indexer`);
   archive = await res.json();
+
+  // Governance can collapse an entry here; it can never remove one. A
+  // missing or unreadable list simply hides nothing — moderation failing
+  // open is the right way for it to fail in an archive.
+  hidden = await fetch('../hidden.json', { cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => new Set(j?.hidden ?? []))
+    .catch(() => new Set());
+
   return archive;
 }
 
@@ -334,7 +344,9 @@ async function loadFeed() {
        Nothing has been written here yet. Yours would be entry number one.</div>`;
   $('feedCount').textContent = items.length;
   $('feedNoun').textContent = items.length === 1 ? 'entry' : 'entries';
-  $('asOf').textContent = `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
+  $('asOf').textContent = idx.synthetic
+    ? 'synthetic sample data — run the indexer for the real archive'
+    : `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
   $('archiveHash').textContent = idx.entriesHash ?? '';
 }
 
@@ -344,7 +356,8 @@ function renderEntry(e) {
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
     : `block ${e.block}`;
   const tags = (e.tags ?? []);
-  return `<article class="entry" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
+  const collapsed = hidden.has(e.tx);
+  return `<article class="entry${collapsed ? ' collapsed' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
       <span class="seq">entry #${esc(e.seq)}</span>
@@ -352,7 +365,12 @@ function renderEntry(e) {
       ${link}
     </div>
     <div>
-      <p class="entry-body">${esc(e.body)}</p>
+      ${collapsed
+        ? `<p class="veil">Collapsed by governance vote. The entry is still in the index
+           and still on chain — ${C.EXPLORER
+             ? `<a href="${C.EXPLORER}/tx/${esc(e.tx)}" target="_blank" rel="noreferrer">read it from the calldata</a>`
+             : 'read it from the calldata'}.</p>`
+        : `<p class="entry-body">${esc(e.body)}</p>`}
       ${tags.length ? `<div class="entry-tags">${tags
         .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
     </div>

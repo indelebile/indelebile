@@ -24,6 +24,19 @@ three failure modes, in increasing severity:
 Calldata removes all three, costs less (§5), and eliminates the storage
 contract entirely.
 
+### Two things that shipped and are worth stating
+
+**Deployments are a list.** Every contract parameter is immutable — the
+treasury included — so the arrival of a DAO multisig means deploying again.
+`journalContracts` carries each deployment with a block range so the
+archive spans them; without it the archive would end at its own first
+governance decision.
+
+**Rehearsals run under a separate protocol tag.** `justice-journal-test`
+instead of `justice-journal`. V5 demands an exact match, so mainnet can be
+exercised with permanent entries while the archive itself stays empty until
+the DAO starts it.
+
 **Out of scope for MVP:** NFT marketplace, comments, likes, curation,
 Snapshot integration, referral rewards, profile pages, ZK login. Every one
 of those is additive later and none of them is needed to prove the thesis.
@@ -164,6 +177,8 @@ Chinese one. The original design (contract + SSTORE + IPFS hash) is
 | NFR-3 | The viewer is one self-contained file, no server, no external requests. |
 | NFR-4 | No component holds a private key. Signing is always the author's wallet. |
 | NFR-5 | Every governance parameter lives in one file, and changing it is a governance action with an effective-from block — never a silent edit. |
+| NFR-6 | The archive survives its own redeployment. Contract parameters are immutable, so changing one means a new contract; `journalContracts` is a list of deployments with block ranges, and author state carries across the boundary. |
+| NFR-7 | Reading the archive requires no RPC. The page reads the indexer's output and compares `entriesHash`; only writing touches a chain. |
 
 ---
 

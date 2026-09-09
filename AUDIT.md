@@ -72,19 +72,35 @@ set able to make that distinction: it requires more than one deployment, a
 closed range, a real gap, and at least three vectors that fail V1 from an
 otherwise valid address.
 
-### 5. A test enforces dead code
+### 5. ~~A test enforces dead code~~ — fixed
 
-`web.test.mjs` asserts that `abi.js` exports `decodeEsip3String`, `padAddr`
-and `TOPIC`. The page stopped using all three when it moved to reading the
-indexer's output. The test now keeps dead code alive.
+*Was:* `web.test.mjs` asserted that `abi.js` exports `decodeEsip3String`,
+`padAddr` and `TOPIC`, all unused since the page moved to reading the
+indexer's output. The test kept dead code alive.
 
-### 6. `hidden.json` is not wired to the live page
+*Now:* removed, and the test asserts the opposite — those helpers must
+**not** come back, because exporting them invites re-deriving the rules in
+the browser, which is what the page was moved away from.
 
-Governance-hidden entries collapse in `render.mjs`'s static output but not
-in the page people actually visit. The mechanism exists; the path to it
-does not.
+### 6. ~~`hidden.json` is not wired to the live page~~ — fixed
+
+*Was:* governance-hidden entries collapsed in `render.mjs`'s static output
+but not in the page people actually visit.
+
+*Now:* the page reads `hidden.json` and collapses the entry in place,
+keeping its author, date, block link and tags, and saying it is *still in
+the index and still on chain* with a link to the calldata. A missing or
+unreadable list hides nothing — moderation fails open, which is the right
+way for it to fail in an archive.
 
 ---
+
+### 11. `demo.mjs` silently overwrites the live archive
+
+Found while auditing: running it replaces `out/index.json` with synthetic
+entries and says nothing, so the page then shows sample data as though it
+were the archive. It now warns on the way out, `render.mjs` warns when it
+reads one, and the page labels it instead of printing a block height.
 
 ## Stale documentation
 
@@ -100,12 +116,17 @@ proposal is still sound; its description of the system is not.
 It has been deployed. The section now reads as a to-do list for something
 already done.
 
-### 9. `SPEC.md` and `PRD.md` do not mention four shipped things
+### 9. ~~`SPEC.md` and `PRD.md` do not mention four shipped things~~ — fixed
 
-Neither documents `journalContracts` (the deployment list), the rehearsal
-protocol tag, the public-RPC constraint on rebuilding the archive, or watch
-mode. `SPEC.md` also still refers to a singular `journalContract` in one
-place. The specification is what a second implementer reads.
+*Was:* neither documented `journalContracts`, the rehearsal protocol tag,
+the public-RPC constraint, or watch mode — and the specification is what a
+second implementer reads.
+
+*Now:* `SPEC.md` §4 explains that V1 is two conditions and why deployments
+are a list; §3 covers the protocol tag as a deployment parameter; a new
+§6c covers the RPC constraint, why reading the archive needs no endpoint,
+and how watch mode stays consistent with a from-scratch build. `PRD.md`
+gains NFR-6 and NFR-7. The singular reference is gone.
 
 ### 10. `DEPLOY-SEPOLIA.md` is superseded by `MAINNET.md`
 

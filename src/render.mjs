@@ -99,4 +99,7 @@ document.getElementById('clear').onclick=()=>{
 </script>`;
 
 writeFileSync(new URL('../out/journal.html', import.meta.url), html);
+if (index.synthetic) {
+  console.error('⚠  this index is synthetic sample data, not the archive');
+}
 console.error(`wrote out/journal.html (${index.entries.length} entries, ${hidden.size} hidden)`);

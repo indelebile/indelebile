@@ -43,6 +43,8 @@ const to = P.genesisBlock + (SAMPLES.length - 1) * 7;
 const { entries, rejected } = await scan(chain, { from, to, params: P });
 
 mkdirSync(new URL('../out/', import.meta.url), { recursive: true });
+console.error('⚠  overwriting out/index.json with synthetic entries.');
+console.error('   Run the indexer again to restore the real archive.\n');
 writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
   protocol: 'justice-journal', version: 1, synthetic: true,
   range: { from, to },

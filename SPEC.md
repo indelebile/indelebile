@@ -62,7 +62,24 @@ parsing JSON in Solidity, which is not worth doing. The remaining rules
 stay in the indexer where they cost no gas.
 
 Because the header carries `"v":1`, a format version bump requires a new
-deployment. That is already true of every other parameter. Moving the gate on-chain has a useful side
+deployment. That is already true of every other parameter.
+
+### The protocol tag is set at deployment
+
+`p` is written by the contract, from a string fixed at construction. The
+archive's tag is `justice-journal`; a rehearsal deployment uses
+`justice-journal-test` instead.
+
+V5 demands an exact match, so the two sets are mutually invisible — tested
+in both directions. That is what allows a deployment to be exercised on
+mainnet, with permanent entries, without anyone being able to say the
+archive was started before the DAO decided to start it. Transitioning is a
+deployment, not a migration: deploy with the real tag, list it, and leave
+the rehearsal contract off the list.
+
+`headLen` is derived from the string rather than written down beside it. A
+length that disagreed with the header would corrupt the content cap
+silently. Moving the gate on-chain has a useful side
 effect: **the indexer no longer needs an archive node**, because it never
 reads historical state.
 
@@ -130,8 +147,44 @@ atomically by `write()`:
 - *holding gate* — checked in `write()`. This is what removes the archive
   node requirement.
 
-**V1 matters more than it looks.** Anyone can emit the ESIP-3 event from
-their own contract. Only logs from the canonical address are entries.
+**V1 matters more than it looks**, and it is two conditions, not one.
+
+Anyone can emit the ESIP-3 event from their own contract, so the emitter
+must be one of ours. But `journalContracts` is a **list**, each entry
+covering a block range, and the block must fall inside the range of the
+contract that emitted it.
+
+```js
+journalContracts: [
+  { address: '0x…retired', fromBlock: 900,  toBlock: 1400 },
+  { address: '0x…current', fromBlock: 1501, toBlock: null },
+]
+```
+
+It is a list because every contract parameter is immutable: changing the
+fee, the gate or the treasury means deploying again. With a single
+canonical address, every entry written before that redeployment would stop
+being an entry — **the archive would end at its own first governance
+decision.**
+
+Three consequences, all of them testable and all in the conformance
+vectors:
+
+- A superseded contract still owns the blocks it covered. Entries written
+  under it remain entries.
+- A superseded contract can still emit afterwards. Those emissions are not
+  entries.
+- Ranges need not be contiguous. A block covered by no contract yields no
+  entries, whoever emitted the log.
+
+Author state spans the boundary: sequence numbers (V8), the rate-limit
+window (V9) and content uniqueness (V12) all carry across, so an author
+cannot reset their history by migrating.
+
+An implementation that checks the address and ignores the range passes
+every other rule and still produces a different archive the first time the
+contract is replaced. `conformance/vectors.json` is built to catch exactly
+that.
 
 ### The fee is the only per-entry cost
 
@@ -246,11 +299,41 @@ a raw body rather than accept the finished string, so the calldata contains
 no `data:` prefix at all. That would also make `author == msg.sender` true
 by construction instead of by rule, and shrink calldata by 88 bytes.
 
+## 6c. Rebuilding needs an endpoint that serves historical logs
+
+The archive is derived from `eth_getLogs` over the contracts' ranges. Most
+free public endpoints now refuse that: one answers *"archive requests
+require a personal token"*, another caps `eth_getLogs` at a ten-block
+range, and policies change without notice — an endpoint that served this
+archive one day refused it days later.
+
+Of ten public mainnet endpoints tested, two answered. Both the indexer and
+the page therefore take a **list** and fall through it, and anyone
+rebuilding seriously should use their own node or a provider's free tier.
+
+This is a weaker dependency than an IPFS pin — the data is on Ethereum, any
+node can serve it, and you can always run one — but it is not nothing, and
+a specification that did not say so would be misleading.
+
+**Reading the archive needs no endpoint at all.** The page reads the
+indexer's output, not the chain: a page that queried logs and filtered them
+itself would be a second implementation of these rules in the browser, free
+to drift and answerable to no vectors. The indexer stamps `entriesHash`, so
+a reader compares one number against their own build rather than trusting
+the file.
+
+Watch mode keeps that file current. Only the fetch is incremental — every
+tick re-derives the whole archive from the accumulated writes, because
+`scan()` is a pure function of that list, so a long-running build and a
+from-scratch build cannot disagree. Entries within five blocks of the head
+are held back, since a reorg that dropped one should not remove it from an
+archive that had already shown it.
+
 ## 7. Governance and moderation
 
 - **Contract parameters** are immutable and set at deployment. Changing
   one means deploying a new contract and a governance vote to move
-  `journalContract`; the old index stays valid for its own range.
+  `journalContracts`; the old contract keeps its range and its entries.
 - **Indexer parameters** live in `src/config.mjs`. Changing one changes the index,
   so every change is a governance action with an effective-from block —
   never a silent edit.

@@ -20,9 +20,14 @@ function loadAbiJs() {
 test('abi.js executes and exports everything app.js imports', () => {
   const abi = loadAbiJs();
   assert.ok(abi, 'window.JJ_ABI must be set');
-  for (const k of ['SEL', 'TOPIC', 'encodeWriteEntry', 'encodeBalanceOf',
-                   'decodeEsip3String', 'padAddr', 'utf8Hex']) {
+  for (const k of ['SEL', 'encodeWriteEntry', 'encodeBalanceOf']) {
     assert.ok(abi[k], `missing export: ${k}`);
+  }
+  // Log decoding and topic filters belong to the indexer. Exporting them
+  // here is an invitation to re-derive the rules in the browser, which is
+  // the thing the page was moved away from.
+  for (const gone of ['TOPIC', 'decodeEsip3String']) {
+    assert.ok(!abi[gone], `${gone} is back — the page must not read logs itself`);
   }
 });
 
@@ -58,10 +63,10 @@ test('hand-rolled encoding matches viem for the same entry', () => {
   }
 });
 
-test('log topic matches the ESIP-3 event signature', () => {
-  const abi = loadAbiJs();
-  assert.equal(abi.TOPIC.esip3,
-    '0x665fba0baf3dc33e9943340197893ac16f56482c2defb8de60f944987fee451c');
+test('the indexer knows the ESIP-3 event signature', () => {
+  const idx = readFileSync(new URL('../src/indexer.mjs', import.meta.url), 'utf8');
+  assert.match(idx, /ethscriptions_protocol_CreateEthscription\(address indexed initialOwner, string contentURI\)/,
+    'the ESIP-3 signature is not ours to change');
 });
 
 // app.js reaches into the markup by id. A redesign that renames or drops
@@ -220,4 +225,19 @@ test('the page knows which protocol tag the deployment uses', () => {
   assert.equal(web, quoted ?? 'justice-journal',
     'web/config.js and src/config.mjs disagree about the protocol tag');
   assert.ok(quoted || isDefault, 'src/config.mjs must set protocol');
+});
+
+// Governance can collapse an entry but never remove one. The mechanism
+// existed only in the static renderer; the page people actually visit
+// ignored it entirely.
+test('the page honours hidden.json, and collapsing is not deletion', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  assert.match(app, /hidden\.json/, 'the page must read hidden.json');
+  assert.match(app, /hidden\.has\(/, 'and apply it when rendering an entry');
+  // Failing open matters: a missing list must hide nothing rather than
+  // hide everything or break the archive.
+  assert.match(app, /\.catch\(\(\) => new Set\(\)\)/, 'a missing list must hide nothing');
+  // The collapsed entry must still say where to read it.
+  assert.match(app, /still in the index[\s\S]{0,80}still on chain/,
+    'a collapsed entry must say it is still there');
 });
