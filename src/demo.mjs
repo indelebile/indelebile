@@ -58,7 +58,7 @@ console.log('per-entry gas, contract route (write(string), EIP-7623 floor):');
 for (const e of entries) {
   const uri = encode(buildEntry(e)).uri;
   const g = estimateGas(encodeFunctionData({ abi, functionName: 'write', args: [uri] }));
-  const gas = Math.max(g.floor, g.standard + 26_000); // + measured execution
+  const gas = Math.max(g.floor, g.standard + 17_341); // execution, calibrated in src/gas.mjs
   const cn = /[一-鿿]/.test(e.body) ? ' [zh]' : '';
   console.log(`  ${String([...e.body].length).padStart(3)} chars${cn.padEnd(5)} ${String(gas).padStart(7)} gas   @5gwei ${(gas * 5e-9).toFixed(6)} ETH`);
 }

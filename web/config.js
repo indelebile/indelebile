@@ -40,6 +40,11 @@ window.JJ_CONFIG = {
   ],
   JUSTICE: '0x59d1e836F7b7210A978b25a855085cc46fd090B5',
 
+  // Must match what the contract was deployed with. The page previews
+  // "the exact bytes that will be recorded", and without this it previewed
+  // the default tag while the contract wrote another.
+  PROTOCOL: 'justice-journal-test',
+
   MIN_FEE_WEI: 1000000000000000n,        // 0.001 ETH
   MIN_BALANCE: 100000n * 10n ** 18n,     // 100,000 $JUSTICE
   BODY_MAX_CHARS: 500,

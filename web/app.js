@@ -178,6 +178,7 @@ function currentEntry() {
     ts: Math.floor(Date.now() / 1000),
     tags,
     body: $('body').value,
+    p: C.PROTOCOL,
   });
 }
 
@@ -196,7 +197,9 @@ function update() {
   bar.style.width = pct + '%';
   setState(bar, ['warn', 'over'], chars > C.BODY_MAX_CHARS ? 'over' : pct > 85 ? 'warn' : null);
 
-  const failed = checkLocal(entry, { bodyMaxChars: C.BODY_MAX_CHARS, maxTags: C.MAX_TAGS });
+  const failed = checkLocal(entry, {
+    bodyMaxChars: C.BODY_MAX_CHARS, maxTags: C.MAX_TAGS, protocol: C.PROTOCOL,
+  });
   const explain = {
     V5: 'malformed protocol fields',
     V8: 'bad sequence number',

@@ -202,3 +202,22 @@ test('the opening statement is set flush both sides', () => {
   // flush, and leaving it on broke "eth-scription" across a line.
   assert.match(rule, /hyphens:\s*none/, 'hyphenation must stay off — it breaks "ethscription"');
 });
+
+// The page previews "the exact bytes that will be recorded". They are only
+// exact if it knows which protocol tag the deployed contract writes — a
+// rehearsal contract writes a different one, and the preview showed the
+// default while the chain got the other.
+test('the page knows which protocol tag the deployment uses', () => {
+  const sandbox = { window: {} };
+  vm.createContext(sandbox);
+  vm.runInContext(readFileSync(new URL('../web/config.js', import.meta.url), 'utf8'), sandbox);
+  const web = sandbox.window.JJ_CONFIG.PROTOCOL;
+  assert.ok(web, 'web/config.js must carry PROTOCOL');
+
+  const indexer = readFileSync(new URL('../src/config.mjs', import.meta.url), 'utf8');
+  const quoted = indexer.match(/^(?!\s*\/\/)\s*protocol:\s*'([^']*)'/m)?.[1];
+  const isDefault = /^(?!\s*\/\/)\s*protocol:\s*PROTOCOL\b/m.test(indexer);
+  assert.equal(web, quoted ?? 'justice-journal',
+    'web/config.js and src/config.mjs disagree about the protocol tag');
+  assert.ok(quoted || isDefault, 'src/config.mjs must set protocol');
+});

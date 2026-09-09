@@ -110,6 +110,7 @@ web = sub(web, /  JOURNALS: \[[\s\S]*?\n  \],/,
     `    { address: '${c.address}', fromBlock: ${c.fromBlock}, toBlock: ${c.toBlock ?? 'null'} },`).join('\n') + '\n  ],');
 web = sub(web, line('JUSTICE', "'0x[0-9a-fA-F]{40}'"), `$1'${justice}'`);
 web = sub(web, line('GENESIS_BLOCK', '\\d+'), `$1${entries[0].fromBlock}`);
+web = sub(web, line('PROTOCOL', "'[^']*'"), `$1'${protocol}'`);
 web = sub(web, line('FAUCET', '(?:true|false)'), `$1${net.faucet}`);
 web = sub(web, /CHAIN_PARAMS: \{[\s\S]*?\n  \},/, `CHAIN_PARAMS: {
     chainId: '0x${net.chainId.toString(16)}',
@@ -134,6 +135,7 @@ const checks = [
   ['indexer treasury', PARAMS.treasury.toLowerCase(), treasury.toLowerCase()],
   ['indexer genesisBlock', String(PARAMS.genesisBlock), String(entries[0].fromBlock)],
   ['indexer protocol', PARAMS.protocol, protocol],
+  ['page PROTOCOL', readWeb('PROTOCOL'), protocol],
   ['page JOURNALS (newest)', (webNow.match(/address: '(0x[0-9a-fA-F]{40})'/g) ?? []).at(-1)?.match(/0x[0-9a-fA-F]{40}/)[0].toLowerCase(), journal.toLowerCase()],
   ['page JUSTICE', readWeb('JUSTICE')?.toLowerCase(), justice.toLowerCase()],
   ['page CHAIN_ID', readWeb('CHAIN_ID'), String(net.chainId)],

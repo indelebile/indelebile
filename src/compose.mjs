@@ -7,7 +7,7 @@
 
 import { encodeFunctionData, parseAbi, formatEther } from 'viem';
 import { buildEntry, encode, estimateGas, byteLength, codePointLength } from './entry.mjs';
-import { entryTail, ENTRY_HEAD } from './canonical.mjs';
+import { entryTail, headFor } from './canonical.mjs';
 import { validate } from './rules.mjs';
 import { PARAMS } from './config.mjs';
 
@@ -21,12 +21,16 @@ if (!author || !body) {
   process.exit(1);
 }
 
+// The tag has to come from the configured deployment, not the default. A
+// rehearsal contract writes a different one, and building against the
+// default made every entry fail V5 — the tool refused to compose anything.
 const entry = buildEntry({
   author,
   seq: Number(arg('seq', '0')),
   ts: Number(arg('ts', String(Math.floor(Date.now() / 1000)))),
   tags: (arg('tags', '') || '').split(',').filter(Boolean),
   body,
+  p: PARAMS.protocol,
 });
 const { uri } = encode(entry);
 
@@ -48,7 +52,7 @@ const local = dry.failed.filter((r) => r !== 'V1'); // V1 needs the deployed add
 
 console.log(`
 body        ${codePointLength(entry.body)} chars / ${byteLength(entry.body)} bytes
-data URI    ${byteLength(uri)} bytes (${byteLength(ENTRY_HEAD) + 40} of them written by the contract)
+data URI    ${byteLength(uri)} bytes (${byteLength(headFor(entry.p)) + 40} of them written by the contract)
 calldata    ${(calldata.length - 2) / 2} bytes
 fee         ${formatEther(PARAMS.minFeeWei)} ETH
 local rules ${local.length ? 'FAILS ' + local.join(',') : 'all pass'}
