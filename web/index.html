@@ -46,6 +46,13 @@ body{margin:0;background:var(--paper);color:var(--ink);
   font:17.5px/1.72 var(--serif);text-rendering:optimizeLegibility}
 .shell{max-width:var(--shell);margin:0 auto;padding:0 2rem}
 @media(max-width:640px){.shell{padding:0 1.15rem}}
+/* Sections carry .shell too, and .shell wins on specificity — which
+   silently zeroed their vertical padding, leaving content flush against
+   the section rule and that rule sitting 1px off the composer's own
+   border. Set both here, at the same specificity, rather than hoping the
+   element selector below survives. */
+section.shell{padding-top:3.4rem;padding-bottom:3.4rem}
+@media(max-width:640px){section.shell{padding-top:2.4rem;padding-bottom:2.4rem}}
 .prose{max-width:var(--measure)}
 .prose p{margin:0 0 1rem;color:var(--ink-2);font-size:.98rem}
 a{color:inherit}
@@ -53,23 +60,29 @@ a{color:inherit}
 
 /* ---------- masthead ---------- */
 .masthead{border-bottom:1px solid var(--rule)}
-.masthead .shell{display:flex;align-items:flex-end;justify-content:space-between;
-  gap:2rem;flex-wrap:wrap;padding-top:2.4rem;padding-bottom:1.4rem}
+.masthead .shell{padding-top:2.6rem;padding-bottom:1.5rem}
 h1{margin:0;font-size:clamp(1.9rem,4vw,2.5rem);font-weight:400;letter-spacing:-.02em;line-height:1}
-.tagline{margin:.5rem 0 0;color:var(--ink-3);font:.72rem/1 var(--mono);
+.tagline{margin:.55rem 0 0;color:var(--ink-3);font:.72rem/1 var(--mono);
   letter-spacing:.2em;text-transform:uppercase}
-.facts{display:flex;gap:1.6rem;flex-wrap:wrap;font:.73rem/1.5 var(--mono);color:var(--ink-3)}
-.facts b{display:block;color:var(--ink);font-weight:400;font-size:.85rem;letter-spacing:-.01em}
 
 /* ---------- lede ---------- */
+/* Same two columns as the composer below, so the right-hand rail starts at
+   the same x on both. The opening statement was a 44rem paragraph adrift in
+   a 74rem shell — widening the page without giving it a spine to sit on. */
 .lede{border-bottom:1px solid var(--rule-2)}
-.lede .shell{padding-top:2rem;padding-bottom:2rem}
-.lede p{margin:0;max-width:44rem;font-size:1.14rem;color:var(--ink)}
+.lede .shell{padding-top:2.2rem;padding-bottom:2.2rem;
+  display:grid;grid-template-columns:1fr;gap:1.8rem}
+@media(min-width:900px){.lede .shell{grid-template-columns:minmax(0,1fr) 19rem;gap:0}}
+.lede p{margin:0;max-width:42rem;font-size:1.16rem;line-height:1.62;color:var(--ink)}
 .lede strong{color:var(--ink);font-weight:400;
   box-shadow:inset 0 -.45em 0 rgba(35,74,114,.15)}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem 1.2rem;
+  align-content:start;font:.72rem/1.35 var(--mono);color:var(--ink-3)}
+@media(min-width:900px){.facts{padding-left:2rem;border-left:1px solid var(--rule-2)}}
+.facts b{display:block;color:var(--ink);font-weight:400;font-size:.92rem;letter-spacing:-.01em}
 
 /* ---------- sections ---------- */
-section{padding:3.4rem 0;border-bottom:1px solid var(--rule-2)}
+section{border-bottom:1px solid var(--rule-2)}
 section:last-of-type{border-bottom:0}
 .head{display:flex;align-items:baseline;justify-content:space-between;gap:1.5rem;
   flex-wrap:wrap;margin-bottom:1.8rem}
@@ -143,7 +156,8 @@ pre.preview{margin:.8rem 0 0;padding:.9rem 1rem;background:var(--code);border-ra
 article.entry{display:grid;grid-template-columns:1fr;gap:.65rem;
   padding:1.9rem 0;border-top:1px solid var(--rule)}
 @media(min-width:860px){article.entry{grid-template-columns:11rem minmax(0,var(--measure));gap:2.5rem}}
-article.entry:last-child{border-bottom:1px solid var(--rule)}
+/* No bottom border on the last entry — the section rule below already
+   closes the list, and the two landed a pixel apart. */
 .entry-meta{font:.71rem/1.85 var(--mono);color:var(--ink-3)}
 .entry-meta span,.entry-meta a{display:inline;margin-right:.7rem}
 @media(min-width:860px){.entry-meta span,.entry-meta a{display:block;margin-right:0}}
@@ -208,16 +222,8 @@ footer .addr{word-break:break-all}
 
 <header class="masthead">
   <div class="shell">
-    <div>
-      <h1>Justice Journal</h1>
-      <p class="tagline">A permanent record</p>
-    </div>
-    <div class="facts">
-      <span><b id="chain">—</b>network</span>
-      <span><b id="fee">—</b>ETH per entry</span>
-      <span><b id="gateReq">—</b>$JUSTICE to write</span>
-      <span><b id="feedCount">0</b><span id="feedNoun">entries</span></span>
-    </div>
+    <h1>Justice Journal</h1>
+    <p class="tagline">A permanent record</p>
   </div>
 </header>
 
@@ -229,6 +235,12 @@ footer .addr{word-break:break-all}
       server. There is nothing to renew, nothing to unpin, and no one who can
       quietly delete it.
     </p>
+    <div class="facts">
+      <span><b id="chain">—</b>network</span>
+      <span><b id="fee">—</b>ETH per entry</span>
+      <span><b id="gateReq">—</b>$JUSTICE to write</span>
+      <span><b id="feedCount">0</b><span id="feedNoun">entries</span></span>
+    </div>
   </div>
 </div>
 

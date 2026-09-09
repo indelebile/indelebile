@@ -169,3 +169,24 @@ test('every tab points at a panel that exists, and exactly one starts open', () 
   const panelTag = html.match(new RegExp(`<div class="panel" id="${openPanel}"[^>]*>`))[0];
   assert.ok(!panelTag.includes('hidden'), `${openPanel} is selected but hidden`);
 });
+
+// `section` elements also carry `.shell`, and `.shell` wins on specificity.
+// That silently zeroed every section's vertical padding, so content sat
+// flush against the section rule and the rule landed a pixel off the
+// composer's own border. Nothing errors when a rule loses like this.
+test('section spacing is not overridden by the shell', () => {
+  const css = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const bare = css.match(/\bsection\{([^}]*)\}/)?.[1] ?? '';
+  assert.ok(!/padding/.test(bare),
+    'a bare `section` padding rule loses to `.shell`; set it on `section.shell`');
+  assert.ok(/section\.shell\{[^}]*padding/.test(css),
+    'section.shell must carry the vertical padding');
+});
+
+// Two horizontal rules a pixel apart read as one thick smudge. The section
+// rule already closes the entry list, so entries must not draw their own.
+test('the last entry does not double the section rule', () => {
+  const css = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  assert.ok(!/article\.entry:last-child\{[^}]*border-bottom\s*:\s*\d/.test(css),
+    'article.entry:last-child draws a border the section rule already provides');
+});
