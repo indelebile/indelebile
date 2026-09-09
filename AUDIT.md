@@ -46,17 +46,31 @@ printed was wrong; `gas.mjs` was corrected at the time and this was missed.
 
 ## Gaps in the guarantees
 
-### 4. The conformance vectors do not cover multi-deployment ranges
+### 4. ~~The conformance vectors do not cover multi-deployment ranges~~ — fixed
 
-Contracts are a list now, each covering a block range, and a superseded
-contract's later emissions are not entries. That behaviour is tested in
-`scan.test.mjs` — but **not in `conformance/vectors.json`**, which is the
-only thing a second implementation checks itself against.
+*Was:* contracts are a list, each covering a block range, and that
+behaviour was tested in `scan.test.mjs` but not in the vectors — the only
+thing a second implementation checks itself against. An indexer could get
+the range semantics wrong and still pass everything.
 
-So a second indexer could get the range semantics wrong, produce a
-different archive, and still pass every vector. This is the sharpest
-remaining hole, because the vectors are what the whole "anyone can
-reimplement this" claim rests on.
+*Now:* the vector set carries two deployments with a deliberate gap between
+them, and V1 is exercised as the two conditions it actually is:
+
+| vector | why |
+|---|---|
+| `V1-retired-contract-after-its-range` | a superseded contract can still emit |
+| `V1-current-contract-before-its-range` | it cannot reach back before it existed |
+| `V1-in-the-gap-between-deployments` | the ranges are not contiguous |
+| `valid-under-retired-contract` | and the retired one still owns its blocks |
+| `V8-seq-carries-across-a-migration` | an author cannot reset their history |
+| `V9-rate-limit-carries-across-a-migration` | nor their rate limit |
+
+22 vectors became 28. Proved by writing an implementation that checks the
+address and ignores the range — the shape of the mistake anyone would
+make — and confirming three vectors catch it. A test now keeps the vector
+set able to make that distinction: it requires more than one deployment, a
+closed range, a real gap, and at least three vectors that fail V1 from an
+otherwise valid address.
 
 ### 5. A test enforces dead code
 

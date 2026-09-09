@@ -6,7 +6,12 @@
     "journalContracts": [
       {
         "address": "0x1000000000000000000000000000000000000001",
-        "fromBlock": 0,
+        "fromBlock": 900,
+        "toBlock": 1400
+      },
+      {
+        "address": "0x2000000000000000000000000000000000000002",
+        "fromBlock": 1501,
         "toBlock": null
       }
     ],
@@ -24,9 +29,9 @@
       "why": "the ordinary case",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -46,9 +51,9 @@
       "why": "500 code points of Chinese is 1500 bytes and must still pass",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记\"}",
         "feeWei": "1000000000000000"
@@ -68,9 +73,9 @@
       "why": "tags may be empty",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -90,9 +95,9 @@
       "why": "JSON escapes control characters, so a newline survives",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"one\\ntwo\"}",
         "feeWei": "1000000000000000"
@@ -108,13 +113,107 @@
       }
     },
     {
-      "name": "V1-foreign-emitter",
-      "why": "anyone can emit the ESIP-3 event; only our contract counts",
+      "name": "valid-under-retired-contract",
+      "why": "a superseded deployment still owns the blocks it covered",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1200,
+        "logIndex": 0,
+        "emitter": "0x1000000000000000000000000000000000000001",
+        "author": "0xaaaa000000000000000000000000000000000001",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "feeWei": "1000000000000000"
+      },
+      "authorState": {
+        "maxSeq": null,
+        "recentBlocks": []
+      },
+      "expect": {
+        "valid": true,
+        "failed": [],
+        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+      }
+    },
+    {
+      "name": "V1-foreign-emitter",
+      "why": "anyone can emit the ESIP-3 event; only our contracts count",
+      "event": {
+        "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "blockNumber": 1600,
         "logIndex": 0,
         "emitter": "0x9999999999999999999999999999999999999999",
+        "author": "0xaaaa000000000000000000000000000000000001",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "feeWei": "1000000000000000"
+      },
+      "authorState": {
+        "maxSeq": null,
+        "recentBlocks": []
+      },
+      "expect": {
+        "valid": false,
+        "failed": [
+          "V1"
+        ],
+        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+      }
+    },
+    {
+      "name": "V1-retired-contract-after-its-range",
+      "why": "a superseded contract can still emit, and those emissions are not entries",
+      "event": {
+        "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "blockNumber": 1600,
+        "logIndex": 0,
+        "emitter": "0x1000000000000000000000000000000000000001",
+        "author": "0xaaaa000000000000000000000000000000000001",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "feeWei": "1000000000000000"
+      },
+      "authorState": {
+        "maxSeq": null,
+        "recentBlocks": []
+      },
+      "expect": {
+        "valid": false,
+        "failed": [
+          "V1"
+        ],
+        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+      }
+    },
+    {
+      "name": "V1-current-contract-before-its-range",
+      "why": "and a contract cannot reach back before it existed",
+      "event": {
+        "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "blockNumber": 1200,
+        "logIndex": 0,
+        "emitter": "0x2000000000000000000000000000000000000002",
+        "author": "0xaaaa000000000000000000000000000000000001",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "feeWei": "1000000000000000"
+      },
+      "authorState": {
+        "maxSeq": null,
+        "recentBlocks": []
+      },
+      "expect": {
+        "valid": false,
+        "failed": [
+          "V1"
+        ],
+        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+      }
+    },
+    {
+      "name": "V1-in-the-gap-between-deployments",
+      "why": "ranges are not contiguous — a block covered by neither contract is not an entry",
+      "event": {
+        "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "blockNumber": 1450,
+        "logIndex": 0,
+        "emitter": "0x1000000000000000000000000000000000000001",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -136,9 +235,9 @@
       "why": "the fee is the per-entry spam cost",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "999999999999999"
@@ -160,9 +259,9 @@
       "why": "canonical key order is p,v,author,seq,ts,tags,body",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"v\":1,\"p\":\"justice-journal\",\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
@@ -184,9 +283,9 @@
       "why": "unknown keys would let two ethscriptions decode to one entry",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\",\"extra\":1}",
         "feeWei": "1000000000000000"
@@ -208,9 +307,9 @@
       "why": "whitespace is not canonical",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\n  \"p\": \"justice-journal\",\n  \"v\": 1,\n  \"author\": \"0xaaaa000000000000000000000000000000000001\",\n  \"seq\": 0,\n  \"ts\": 1,\n  \"tags\": [],\n  \"body\": \"x\"\n}",
         "feeWei": "1000000000000000"
@@ -232,9 +331,9 @@
       "why": "the rule=esip6 parameter is part of the canonical form",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
@@ -256,9 +355,9 @@
       "why": "malformed content is not an entry",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,not json",
         "feeWei": "1000000000000000"
@@ -280,9 +379,9 @@
       "why": "another protocol reusing our contract is still not us",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"other\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
@@ -304,9 +403,9 @@
       "why": "the body author must equal the ESIP-3 initialOwner",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xbbbb000000000000000000000000000000000002",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -328,9 +427,9 @@
       "why": "an empty entry is not an entry",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"\"}",
         "feeWei": "1000000000000000"
@@ -352,9 +451,9 @@
       "why": "501 code points",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记\"}",
         "feeWei": "1000000000000000"
@@ -376,9 +475,9 @@
       "why": "tags are lowercase letters, digits and hyphens",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[\"Assange\"],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
@@ -400,9 +499,9 @@
       "why": "at most five",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"a\",\"b\",\"c\",\"d\",\"e\",\"f\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -421,10 +520,10 @@
     },
     {
       "name": "V13-before-genesis",
-      "why": "nothing before the protocol starts",
+      "why": "nothing before the protocol starts, even inside a contract's range",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 999,
+        "blockNumber": 950,
         "logIndex": 0,
         "emitter": "0x1000000000000000000000000000000000000001",
         "author": "0xaaaa000000000000000000000000000000000001",
@@ -448,9 +547,9 @@
       "why": "seq must exceed every seq this author already had accepted",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -472,9 +571,9 @@
       "why": "gaps are allowed; only the direction is enforced",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":7,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -494,9 +593,9 @@
       "why": "three entries per author per 50,400 blocks",
       "event": {
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
-        "blockNumber": 1000,
+        "blockNumber": 1600,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -504,9 +603,9 @@
       "authorState": {
         "maxSeq": null,
         "recentBlocks": [
-          999,
-          998,
-          997
+          1599,
+          1598,
+          1597
         ]
       },
       "expect": {
@@ -524,7 +623,7 @@
         "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
         "blockNumber": 100000,
         "logIndex": 0,
-        "emitter": "0x1000000000000000000000000000000000000001",
+        "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
         "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
@@ -541,6 +640,60 @@
         "valid": true,
         "failed": [],
         "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+      }
+    },
+    {
+      "name": "V8-seq-carries-across-a-migration",
+      "why": "an author cannot reset their history by moving to the new contract",
+      "event": {
+        "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "blockNumber": 1600,
+        "logIndex": 0,
+        "emitter": "0x2000000000000000000000000000000000000002",
+        "author": "0xaaaa000000000000000000000000000000000001",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":2,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "feeWei": "1000000000000000"
+      },
+      "authorState": {
+        "maxSeq": 4,
+        "recentBlocks": [
+          1200
+        ]
+      },
+      "expect": {
+        "valid": false,
+        "failed": [
+          "V8"
+        ],
+        "contentHash": "0xbe00d6618c9515abf028a22cc23f6616c7fa66ea5f29a07b8a29b7dd6b687264"
+      }
+    },
+    {
+      "name": "V9-rate-limit-carries-across-a-migration",
+      "why": "and the trailing window counts entries written under the old one",
+      "event": {
+        "txHash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+        "blockNumber": 1600,
+        "logIndex": 0,
+        "emitter": "0x2000000000000000000000000000000000000002",
+        "author": "0xaaaa000000000000000000000000000000000001",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":9,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "feeWei": "1000000000000000"
+      },
+      "authorState": {
+        "maxSeq": 3,
+        "recentBlocks": [
+          1200,
+          1300,
+          1400
+        ]
+      },
+      "expect": {
+        "valid": false,
+        "failed": [
+          "V9"
+        ],
+        "contentHash": "0x4f2b8983b8a3b98f67098b3303f74b9df7a572b5e426d663ea4f71422c805fd0"
       }
     }
   ]
