@@ -4,7 +4,7 @@
 // and is what EIP-7623 governs. Quoting either half alone understates the
 // entry cost, so combine them here.
 //
-// EXEC_GAS comes from `forge test -vv` (test_Gas* in JusticeJournal.t.sol).
+// EXEC_GAS comes from `forge test -vv` (test_Gas* in Indelebile.t.sol).
 
 import { encodeFunctionData, parseAbi, formatEther } from 'viem';
 import { buildEntry, encode, estimateGas } from './entry.mjs';

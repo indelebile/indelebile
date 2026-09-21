@@ -7,8 +7,8 @@
 // `p` is not exactly PROTOCOL (V5), so entries written while testing can
 // never be read as part of the archive, and nobody can claim the archive
 // was started before the DAO decided to start it.
-export const PROTOCOL = 'justice-journal';
-export const PROTOCOL_REHEARSAL = 'justice-journal-test';
+export const PROTOCOL = 'indelebile';
+export const PROTOCOL_REHEARSAL = 'indelebile-test';
 export const VERSION = 1;
 // `rule=esip6` opts out of the protocol's global content-uniqueness rule
 // (ESIP-6). ESIP-6 exists for exactly our case and names it: a contract

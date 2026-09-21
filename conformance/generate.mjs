@@ -82,13 +82,13 @@ const cases = [
     ev({ emitter: RETIRED, blockNumber: 1450 })],
   ['V2-underpaid', 'the fee is the per-entry spam cost', ev({ feeWei: (P.minFeeWei - 1n).toString() })],
   ['V4-reordered-keys', 'canonical key order is p,v,author,seq,ts,tags,body',
-    ev({ contentURI: raw('{"v":1,"p":"justice-journal","author":"' + A + '","seq":0,"ts":1,"tags":[],"body":"x"}') })],
+    ev({ contentURI: raw('{"v":1,"p":"indelebile","author":"' + A + '","seq":0,"ts":1,"tags":[],"body":"x"}') })],
   ['V4-extra-key', 'unknown keys would let two ethscriptions decode to one entry',
     ev({ contentURI: raw(canonicalJson(buildEntry({ author: A, seq: 0, ts: 1, tags: [], body: 'x' })).slice(0, -1) + ',"extra":1}') })],
   ['V4-pretty-printed', 'whitespace is not canonical',
     ev({ contentURI: raw(JSON.stringify(buildEntry({ author: A, seq: 0, ts: 1, tags: [], body: 'x' }), null, 2)) })],
   ['V4-wrong-prefix', 'the rule=esip6 parameter is part of the canonical form',
-    ev({ contentURI: 'data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"' + A + '","seq":0,"ts":1,"tags":[],"body":"x"}' })],
+    ev({ contentURI: 'data:application/json;charset=utf-8,{"p":"indelebile","v":1,"author":"' + A + '","seq":0,"ts":1,"tags":[],"body":"x"}' })],
   ['V4-not-json', 'malformed content is not an entry', ev({ contentURI: DATA_URI_PREFIX + 'not json' })],
   ['V5-wrong-protocol', 'another protocol reusing our contract is still not us',
     ev({ contentURI: raw('{"p":"other","v":1,"author":"' + A + '","seq":0,"ts":1,"tags":[],"body":"x"}') })],
@@ -97,7 +97,7 @@ const cases = [
   ['V10-empty-body', 'an empty entry is not an entry', ev({ contentURI: uriFor({ body: '' }) })],
   ['V10-over-limit', '501 code points', ev({ contentURI: uriFor({ body: '记'.repeat(501) }) })],
   ['V11-uppercase-tag', 'tags are lowercase letters, digits and hyphens',
-    ev({ contentURI: raw('{"p":"justice-journal","v":1,"author":"' + A + '","seq":0,"ts":1,"tags":["Assange"],"body":"x"}') })],
+    ev({ contentURI: raw('{"p":"indelebile","v":1,"author":"' + A + '","seq":0,"ts":1,"tags":["Assange"],"body":"x"}') })],
   ['V11-too-many-tags', 'at most five',
     ev({ contentURI: uriFor({ tags: ['a', 'b', 'c', 'd', 'e', 'f'] }) })],
   ['V13-before-genesis', 'nothing before the protocol starts, even inside a contract\'s range',
@@ -138,8 +138,8 @@ for (const [name, why, e, authorState] of stateful) {
 }
 
 writeFileSync(new URL('vectors.json', import.meta.url), JSON.stringify({
-  protocol: 'justice-journal', version: 1,
-  note: 'Expected results for any implementation of the Justice Journal rules. See conformance/README.md.',
+  protocol: 'indelebile', version: 1,
+  note: 'Expected results for any implementation of the Indelebile rules. See conformance/README.md.',
   params: {
     journalContracts: P.journalContracts,
     protocol: P.protocol,

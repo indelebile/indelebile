@@ -50,7 +50,7 @@ const treasury = arg('treasury');
 const genesis = arg('genesis');
 // Must match what the contract was deployed with, or every entry it writes
 // is rejected at V5 and the archive silently stays empty.
-const protocol = arg('protocol', 'justice-journal');
+const protocol = arg('protocol', 'indelebile');
 for (const [k, v] of Object.entries({ journal, justice, treasury, genesis })) {
   if (!v) { console.error(`missing --${k}`); process.exit(1); }
 }
@@ -94,7 +94,7 @@ cfg = sub(cfg, line('genesisBlock', '\\d+'), `$1${entries[0].fromBlock}`);
 // Grouped: an ungrouped alternation would escape the anchor and match a
 // quoted string anywhere in the file.
 cfg = sub(cfg, line('protocol', "(?:PROTOCOL|'[^']*')"),
-  protocol === 'justice-journal' ? '$1PROTOCOL' : `$1'${protocol}'`);
+  protocol === 'indelebile' ? '$1PROTOCOL' : `$1'${protocol}'`);
 writeFileSync(cfgPath, cfg);
 
 // --- web/config.js (the page) ---
@@ -155,7 +155,7 @@ console.log(`both configs now point at ${net.name} (chain ${net.chainId})
   justice   ${justice}
   treasury  ${treasury}
   genesis   ${genesis}
-  protocol  ${protocol}${protocol === 'justice-journal' ? '' : '   ← rehearsal; these entries are not the archive'}
+  protocol  ${protocol}${protocol === 'indelebile' ? '' : '   ← rehearsal; these entries are not the archive'}
   rpc       ${net.rpcs.join(', ')}
 
 next:  npm test  &&  npm run web`);

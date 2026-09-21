@@ -1,6 +1,6 @@
-# Justice Journal — calldata specification (draft v1)
+# Indelebile — calldata specification (draft v1)
 
-An entry is a call to `JusticeJournal.write(string)`. The content lives in
+An entry is a call to `Indelebile.write(string)`. The content lives in
 that transaction's calldata and is minted as an ethscription **owned by its
 author**. There is no IPFS, no storage, and no privileged operator. The
 rules below decide which calls count as entries; anyone can re-run the
@@ -47,7 +47,7 @@ layer and indefensible on its own terms.
 
 **ESIP-3** lets a contract name the `initialOwner` in an event. That is the
 only construction that collects a fee *and* leaves the author owning their
-words. `JusticeJournal.sol` is ~110 lines: no storage, no owner, no
+words. `Indelebile.sol` is ~110 lines: no storage, no owner, no
 upgradeability, all parameters immutable.
 
 It enforces what must be atomic with the write — `msg.value >= minFee` and
@@ -67,8 +67,8 @@ deployment. That is already true of every other parameter.
 ### The protocol tag is set at deployment
 
 `p` is written by the contract, from a string fixed at construction. The
-archive's tag is `justice-journal`; a rehearsal deployment uses
-`justice-journal-test` instead.
+archive's tag is `indelebile`; a rehearsal deployment uses
+`indelebile-test` instead.
 
 V5 demands an exact match, so the two sets are mutually invisible — tested
 in both directions. That is what allows a deployment to be exercised on
@@ -96,7 +96,7 @@ a failed swap would revert the entry.
 The `contentURI` argument is an Ethscriptions data URI:
 
 ```
-data:application/json;charset=utf-8,{"p":"justice-journal","v":1,"author":"0x…","seq":0,"ts":1757280000,"tags":["assange"],"body":"…"}
+data:application/json;charset=utf-8,{"p":"indelebile","v":1,"author":"0x…","seq":0,"ts":1757280000,"tags":["assange"],"body":"…"}
 ```
 
 Keys appear in exactly this order: `p, v, author, seq, ts, tags, body`.
@@ -126,11 +126,11 @@ reproducible by anyone.
 
 | # | rule |
 |---|---|
-| V1 | the ESIP-3 log was emitted by the canonical JusticeJournal contract |
+| V1 | the ESIP-3 log was emitted by the canonical Indelebile contract |
 | V1b | *(contract)* the header and author are written by the contract, not the caller; assembled content is ≤2,048 bytes |
 | V2 | `fee >= minFeeWei` |
 | V4 | `contentURI` decodes to a canonical entry (§3) |
-| V5 | `p == "justice-journal"`, `v == 1`, `ts` is a non-negative integer |
+| V5 | `p == "indelebile"`, `v == 1`, `ts` is a non-negative integer |
 | V6 | `entry.author` equals the ESIP-3 `initialOwner` |
 | V8 | `seq` exceeds the author's highest accepted `seq` |
 | V9 | author is under the rate limit for the trailing window |
@@ -260,7 +260,7 @@ whenever creation failure would mean loss of funds.
 Every entry therefore carries it:
 
 ```
-data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal",...
+data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile",...
 ```
 
 Our own uniqueness does not weaken. The body carries `author` and `seq`, so
@@ -297,7 +297,7 @@ We are correct under the specification, but only by one anchor. A hardening
 worth considering before mainnet: have the contract build the dataURI from
 a raw body rather than accept the finished string, so the calldata contains
 no `data:` prefix at all. That would also make `author == msg.sender` true
-by construction instead of by rule, and shrink calldata by 88 bytes.
+by construction instead of by rule, and shrink calldata by the length of the header.
 
 ## 6c. Rebuilding needs an endpoint that serves historical logs
 

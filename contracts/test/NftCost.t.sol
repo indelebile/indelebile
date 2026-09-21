@@ -10,7 +10,7 @@ contract NftProbe {
     event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI);
 
     string constant HEAD =
-        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile","v":1,"author":"0x';
 
     // minimal ERC-721 state
     uint256 public totalSupply;

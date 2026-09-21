@@ -1,7 +1,7 @@
 # Conformance vectors
 
 The indexer *is* the protocol. Ethereum's calldata carries a great deal
-that is not a Justice Journal entry, and nothing on chain distinguishes
+that is not a Indelebile entry, and nothing on chain distinguishes
 ours from the rest — the rules do. So the rules have to be checkable by
 someone who has never seen this repository and does not trust it.
 

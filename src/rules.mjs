@@ -4,7 +4,7 @@
 // application of this same function.
 //
 // Two rules from the pre-contract draft are gone, both because the
-// JusticeJournal contract now enforces them atomically:
+// Indelebile contract now enforces them atomically:
 //   - "the transaction succeeded" — a reverted transaction emits no logs,
 //     so a rejected write cannot reach the indexer at all.
 //   - "the author holds 100,000 $JUSTICE" — checked in `write()`.
@@ -16,7 +16,7 @@ import { decode, contentHash, codePointLength, canonicalJson } from './entry.mjs
 import { DATA_URI_PREFIX } from './config.mjs';
 
 export const RULES = {
-  V1: 'log must come from a canonical JusticeJournal contract, within its block range',
+  V1: 'log must come from a canonical Indelebile contract, within its block range',
   V2: 'fee paid must be at least minFeeWei',
   V4: 'contentURI must be a canonical Journal entry',
   V5: 'protocol tag, version and timestamp must be well-formed',
@@ -29,7 +29,7 @@ export const RULES = {
   V13: 'block is before the protocol genesis block',
 };
 
-// Enforced on-chain by JusticeJournal, not re-derived here.
+// Enforced on-chain by Indelebile, not re-derived here.
 export const CONTRACT_ENFORCED = {
   'tx success': 'a reverted write emits no log',
   'holding gate': 'write() reverts below minBalance',
@@ -68,7 +68,7 @@ export function validate(ev, ctx) {
   }
   const e = d.entry;
 
-  if (e.p !== (P.protocol ?? 'justice-journal') || e.v !== 1) failed.push('V5');
+  if (e.p !== (P.protocol ?? 'indelebile') || e.v !== 1) failed.push('V5');
   if (!Number.isInteger(e.ts) || e.ts < 0) failed.push('V5');
   if (typeof e.author !== 'string' || e.author.toLowerCase() !== ev.author.toLowerCase()) failed.push('V6');
 

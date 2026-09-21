@@ -21,7 +21,7 @@ redeployment — the arrival of a DAO multisig treasury guarantees it.
 | `TREASURY` | required; where swept fees land |
 | `JUSTICE` | real token, or a `TestJustice` with an open faucet is deployed |
 | `ROUTER` | real router, or a `TestRouter` is deployed; `NO_ROUTER=true` deploys with none |
-| `PROTOCOL` | `justice-journal`, or `justice-journal-test` for a rehearsal |
+| `PROTOCOL` | `indelebile`, or `indelebile-test` for a rehearsal |
 | `MIN_FEE` | wei, default 0.001 ETH |
 | `MIN_BALANCE` | wei, default 100,000e18 |
 
@@ -72,7 +72,7 @@ cd contracts
 TREASURY=<yours> \
 JUSTICE=0x59d1e836f7b7210a978b25a855085cc46fd090b5 \
 NO_ROUTER=true \
-PROTOCOL=justice-journal-test \
+PROTOCOL=indelebile-test \
   forge script script/Deploy.s.sol --rpc-url https://ethereum-rpc.publicnode.com \
   --broadcast --private-key $YOUR_KEY
 ```
@@ -82,7 +82,7 @@ key in shell history.
 
 ### Why those settings
 
-**`PROTOCOL=justice-journal-test` for anything but the real launch.**
+**`PROTOCOL=indelebile-test` for anything but the real launch.**
 Entries written while validating are permanent. Under the archive's own tag
 they would be indistinguishable from it, and someone could fairly say the
 archive had been started before the DAO decided to start it. V5 demands an
@@ -103,7 +103,7 @@ honest, and that bears directly on the fee-denomination decision.
 ## After deploying
 
 ```bash
-node scripts/apply-deployment.mjs --network mainnet --protocol justice-journal-test \
+node scripts/apply-deployment.mjs --network mainnet --protocol indelebile-test \
   --journal <address> --justice <address> --treasury <address> --genesis <block>
 ```
 
@@ -129,7 +129,8 @@ the whole point of deploying at all.
 ## What the mainnet rehearsal established
 
 Contract `0x3F06F46Fd1ff8B0f4ec6F2022568C8F660ee035a`, block 25932137,
-deployed for 0.00021 ETH. One entry, `0xdf4f13fb…`, reported by the
+deployed for 0.00021 ETH, under the project's working name and the tag
+`justice-journal-test`. One entry, `0xdf4f13fb…`, reported by the
 canonical indexer as **ethscription #16251113**:
 
 ```
@@ -157,10 +158,12 @@ the Journal's, but it makes measurements taken through one useless.
 
 ## Still to come, for the real deployment
 
-- The treasury must come from AssangeDAO and should be a multisig. It is
-  immutable, so that means deploying again — use `--supersede`.
-- Deploy under `PROTOCOL=justice-journal` and list it; leave the rehearsal
-  contract off the list.
+- The treasury is AssangeDAO's own: `assangedao.eth` =
+  `0x7BE99ca4E6893ef57cf349ab56307628100feA00`, a Safe with a 3-of-9
+  threshold. It is immutable, so that means deploying again.
+- The rehearsal wrote under a different tag, so its entries are invalid
+  under the new one whatever the list says. Start a fresh archive: list
+  the new contract alone, with its own genesis block, and no `--supersede`.
 - Inscribe the reading rules (`node scripts/inscribe-rules.mjs`), so the
   instructions for rebuilding the archive stop living only in this
   repository.

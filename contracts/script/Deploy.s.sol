@@ -2,11 +2,11 @@
 pragma solidity ^0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {JusticeJournal, IERC20, IUniswapV2Router} from "../src/JusticeJournal.sol";
+import {Indelebile, IERC20, IUniswapV2Router} from "../src/Indelebile.sol";
 import {TestJustice} from "../src/testnet/TestJustice.sol";
 import {TestRouter, ITestJustice} from "../src/testnet/TestRouter.sol";
 
-/// Deploys JusticeJournal, plus testnet stand-ins for $JUSTICE and the DEX
+/// Deploys Indelebile, plus testnet stand-ins for $JUSTICE and the DEX
 /// router when real addresses are not supplied.
 ///
 ///   forge script script/Deploy.s.sol --rpc-url $SEPOLIA_RPC --broadcast
@@ -21,8 +21,8 @@ import {TestRouter, ITestJustice} from "../src/testnet/TestRouter.sol";
 ///                liquidity is too thin for an automatic swap to be honest.
 ///   MIN_FEE      optional — wei, default 0.001 ether
 ///   MIN_BALANCE  optional — wei, default 100,000e18
-///   PROTOCOL     optional — protocol tag, default "justice-journal".
-///                Use "justice-journal-test" for a rehearsal: the
+///   PROTOCOL     optional — protocol tag, default "indelebile".
+///                Use "indelebile-test" for a rehearsal: the
 ///                production indexer rejects any other tag, so rehearsal
 ///                entries can never be mistaken for the archive.
 contract Deploy is Script {
@@ -35,7 +35,7 @@ contract Deploy is Script {
         address router = vm.envOr("ROUTER", address(0));
         uint256 minFee = vm.envOr("MIN_FEE", uint256(0.001 ether));
         uint256 minBalance = vm.envOr("MIN_BALANCE", uint256(100_000 ether));
-        string memory protocol = vm.envOr("PROTOCOL", string("justice-journal"));
+        string memory protocol = vm.envOr("PROTOCOL", string("indelebile"));
         string memory head = string.concat(
             'data:application/json;charset=utf-8;rule=esip6,{"p":"', protocol, '","v":1,"author":"0x'
         );
@@ -61,10 +61,10 @@ contract Deploy is Script {
             console.log("router        ", address(0), "- sweepAndBuy disabled, sweepEth only");
         }
 
-        JusticeJournal jj = new JusticeJournal(
+        Indelebile jj = new Indelebile(
             IERC20(justice), IUniswapV2Router(router), treasury, minFee, minBalance, head
         );
-        console.log("JusticeJournal", address(jj));
+        console.log("Indelebile    ", address(jj));
         console.log("protocol tag  ", protocol);
 
         vm.stopBroadcast();

@@ -47,7 +47,7 @@ const rows = index.entries.map((e) => {
 </article>`;
 }).join('\n');
 
-const html = `<title>Justice Journal</title>
+const html = `<title>Indelebile</title>
 <style>
 :root{--bg:#faf9f7;--fg:#1a1a1a;--dim:#6b6b6b;--line:#e2e0dc;--card:#fff;--accent:#8b1e1e}
 @media(prefers-color-scheme:dark){:root:not([data-theme=light]){
@@ -79,7 +79,7 @@ h1{font-size:1.6rem;margin:0 0 .3rem;letter-spacing:-.01em}
 .entry[hidden]{display:none}
 </style>
 <main>
-<h1>Justice Journal</h1>
+<h1>Indelebile</h1>
 <p class="sub">${index.entries.length} entries · blocks ${index.range.from}–${index.range.to} ·
   ${index.rejected.length} rejected · content lives in L1 calldata, not IPFS</p>
 <p id="filter" hidden>filtering <b id="ftag"></b> — <button id="clear">show all</button></p>

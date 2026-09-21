@@ -1,6 +1,6 @@
 import { TAG_PATTERN, PROTOCOL } from './canonical.mjs';
 
-// Justice Journal — protocol parameters.
+// Indelebile — protocol parameters.
 // Everything the DAO votes on lives here. Changing any value changes the
 // resulting index, so a change must be a governance action with an
 // effective-from block, never a silent edit. See SPEC.md §6.

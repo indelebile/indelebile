@@ -46,7 +46,7 @@ mkdirSync(new URL('../out/', import.meta.url), { recursive: true });
 console.error('⚠  overwriting out/index.json with synthetic entries.');
 console.error('   Run the indexer again to restore the real archive.\n');
 writeFileSync(new URL('../out/index.json', import.meta.url), JSON.stringify({
-  protocol: 'justice-journal', version: 1, synthetic: true,
+  protocol: 'indelebile', version: 1, synthetic: true,
   range: { from, to },
   params: { journalContracts: P.journalContracts, minFeeWei: P.minFeeWei.toString(),
             minJusticeBalance: P.minJusticeBalance.toString(),

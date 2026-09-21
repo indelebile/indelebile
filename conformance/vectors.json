@@ -1,7 +1,7 @@
 {
-  "protocol": "justice-journal",
+  "protocol": "indelebile",
   "version": 1,
-  "note": "Expected results for any implementation of the Justice Journal rules. See conformance/README.md.",
+  "note": "Expected results for any implementation of the Indelebile rules. See conformance/README.md.",
   "params": {
     "journalContracts": [
       {
@@ -15,7 +15,7 @@
         "toBlock": null
       }
     ],
-    "protocol": "justice-journal",
+    "protocol": "indelebile",
     "minFeeWei": "1000000000000000",
     "maxEntriesPerAuthorPerWindow": 3,
     "rateLimitWindowBlocks": 50400,
@@ -33,7 +33,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -43,7 +43,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -55,7 +55,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -65,7 +65,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0x126e9a0607e9833c767b30cc519786f4ab6139b0d6299bab20eda27ce71bed75"
+        "contentHash": "0x9a9ef674ea8d5872d7ac12e3ad4542463cc5a75f3739e171b92292297c17cbfe"
       }
     },
     {
@@ -77,7 +77,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -87,7 +87,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0xe27a0f28eb0c23cb5f4c7db27519c716b96bc41d02fda148d423aefa6ec57857"
+        "contentHash": "0xae0dc807df3bbcc238b97a4cb8c085109507e572c8c7ffff17058eeced78a3ee"
       }
     },
     {
@@ -99,7 +99,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"one\\ntwo\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"one\\ntwo\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -109,7 +109,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0xed5c1789e4d80e20fcb65a90fe89af54ab0bb86dbb7c2a268d2fa2015b58c5d7"
+        "contentHash": "0x2823aae4cd868b56a99e8b7ede4e67b3efe98c083995ac6a74ef9d076e9ea047"
       }
     },
     {
@@ -121,7 +121,7 @@
         "logIndex": 0,
         "emitter": "0x1000000000000000000000000000000000000001",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -131,7 +131,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -143,7 +143,7 @@
         "logIndex": 0,
         "emitter": "0x9999999999999999999999999999999999999999",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -155,7 +155,7 @@
         "failed": [
           "V1"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -167,7 +167,7 @@
         "logIndex": 0,
         "emitter": "0x1000000000000000000000000000000000000001",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -179,7 +179,7 @@
         "failed": [
           "V1"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -191,7 +191,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -203,7 +203,7 @@
         "failed": [
           "V1"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -215,7 +215,7 @@
         "logIndex": 0,
         "emitter": "0x1000000000000000000000000000000000000001",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -227,7 +227,7 @@
         "failed": [
           "V1"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -239,7 +239,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "999999999999999"
       },
       "authorState": {
@@ -251,7 +251,7 @@
         "failed": [
           "V2"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -263,7 +263,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"v\":1,\"p\":\"justice-journal\",\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"v\":1,\"p\":\"indelebile\",\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -287,7 +287,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\",\"extra\":1}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\",\"extra\":1}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -311,7 +311,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\n  \"p\": \"justice-journal\",\n  \"v\": 1,\n  \"author\": \"0xaaaa000000000000000000000000000000000001\",\n  \"seq\": 0,\n  \"ts\": 1,\n  \"tags\": [],\n  \"body\": \"x\"\n}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\n  \"p\": \"indelebile\",\n  \"v\": 1,\n  \"author\": \"0xaaaa000000000000000000000000000000000001\",\n  \"seq\": 0,\n  \"ts\": 1,\n  \"tags\": [],\n  \"body\": \"x\"\n}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -335,7 +335,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
+        "contentURI": "data:application/json;charset=utf-8,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -407,7 +407,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xbbbb000000000000000000000000000000000002",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -419,7 +419,7 @@
         "failed": [
           "V6"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -431,7 +431,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -443,7 +443,7 @@
         "failed": [
           "V10"
         ],
-        "contentHash": "0xab24547e9377e33688754d662132a041971d7a638c6d5011cb9ee24efb9df31a"
+        "contentHash": "0x01a4bc5ccb9235fe154398f86a94daabc4237d2de09a3bb239ecd2055377268c"
       }
     },
     {
@@ -455,7 +455,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记记\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -467,7 +467,7 @@
         "failed": [
           "V10"
         ],
-        "contentHash": "0x04190eb12a4e37bb1140d367d4e58dd6d58e8ee67135e95c086de5ca3999b6ad"
+        "contentHash": "0x1c73fe6d4f308600eb29bedb6178c6039fbab31a2f2c8640c5209c6ac347be46"
       }
     },
     {
@@ -479,7 +479,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[\"Assange\"],\"body\":\"x\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1,\"tags\":[\"Assange\"],\"body\":\"x\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -491,7 +491,7 @@
         "failed": [
           "V11"
         ],
-        "contentHash": "0xa3e9982e03340227373bf5028bdf750d9d0081b82ca7333375447dd7e086ce6c"
+        "contentHash": "0x00a84432969fa6d589e249d68cfcd569550c42eafeca55711735612f4f95e3d4"
       }
     },
     {
@@ -503,7 +503,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"a\",\"b\",\"c\",\"d\",\"e\",\"f\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"a\",\"b\",\"c\",\"d\",\"e\",\"f\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -515,7 +515,7 @@
         "failed": [
           "V11"
         ],
-        "contentHash": "0x1df335fcbf91446fa5c974a1528b28249122937c035ff9b706cc048cd3fd25c1"
+        "contentHash": "0x13a699af132bea9f71fcab61a54673b21456f0d4854de673038c139ebfdcbbb4"
       }
     },
     {
@@ -527,7 +527,7 @@
         "logIndex": 0,
         "emitter": "0x1000000000000000000000000000000000000001",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -539,7 +539,7 @@
         "failed": [
           "V13"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -551,7 +551,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -563,7 +563,7 @@
         "failed": [
           "V8"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -575,7 +575,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":7,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":7,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -585,7 +585,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0x77fe9141015b7df4523230027e6618ab66ec255a4b7acff547e6f296c128ac94"
+        "contentHash": "0x89180953027ba2e2868cce4a68d652660089b2365f0249474f5a17c704f2276d"
       }
     },
     {
@@ -597,7 +597,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -613,7 +613,7 @@
         "failed": [
           "V9"
         ],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -625,7 +625,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":0,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -639,7 +639,7 @@
       "expect": {
         "valid": true,
         "failed": [],
-        "contentHash": "0x5f8d8a7960a9eb92450ea08cb4a27cdd7ec84e07765916e30bce21f06e6010e9"
+        "contentHash": "0xb2c6228341d5d70ade3305af4f5dfe43a9ac9741fcb455ad70c7f8af8f56ee21"
       }
     },
     {
@@ -651,7 +651,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":2,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":2,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -665,7 +665,7 @@
         "failed": [
           "V8"
         ],
-        "contentHash": "0xbe00d6618c9515abf028a22cc23f6616c7fa66ea5f29a07b8a29b7dd6b687264"
+        "contentHash": "0x355123e5682fc94d7fae0f820ea45ee3bb8921bf939a78b332c7f14038b4755f"
       }
     },
     {
@@ -677,7 +677,7 @@
         "logIndex": 0,
         "emitter": "0x2000000000000000000000000000000000000002",
         "author": "0xaaaa000000000000000000000000000000000001",
-        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"justice-journal\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":9,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
+        "contentURI": "data:application/json;charset=utf-8;rule=esip6,{\"p\":\"indelebile\",\"v\":1,\"author\":\"0xaaaa000000000000000000000000000000000001\",\"seq\":9,\"ts\":1757280000,\"tags\":[\"assange\"],\"body\":\"hello\"}",
         "feeWei": "1000000000000000"
       },
       "authorState": {
@@ -693,7 +693,7 @@
         "failed": [
           "V9"
         ],
-        "contentHash": "0x4f2b8983b8a3b98f67098b3303f74b9df7a572b5e426d663ea4f71422c805fd0"
+        "contentHash": "0x48b9596eb4190359e5e768a32222ac509f5ca1dad747b5f3b9d5f946f469ef27"
       }
     }
   ]

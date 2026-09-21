@@ -1,4 +1,4 @@
-# Justice Journal — MVP requirements (draft v1, 2026-09-07)
+# Indelebile — MVP requirements (draft v1, 2026-09-07)
 
 ## 0. One-paragraph summary
 
@@ -32,8 +32,8 @@ treasury included — so the arrival of a DAO multisig means deploying again.
 archive spans them; without it the archive would end at its own first
 governance decision.
 
-**Rehearsals run under a separate protocol tag.** `justice-journal-test`
-instead of `justice-journal`. V5 demands an exact match, so mainnet can be
+**Rehearsals run under a separate protocol tag.** `indelebile-test`
+instead of `indelebile`. V5 demands an exact match, so mainnet can be
 exercised with permanent entries while the archive itself stays empty until
 the DAO starts it.
 
@@ -97,7 +97,7 @@ treasury (§4).
 
 ## 4. Contract scope
 
-`JusticeJournal.sol`, ~110 lines, no storage, no owner, no upgradeability.
+`Indelebile.sol`, ~110 lines, no storage, no owner, no upgradeability.
 All parameters immutable, set at deployment.
 
 It enforces **only what must be atomic with the write**:

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IUniswapV2Router} from "../JusticeJournal.sol";
+import {IUniswapV2Router} from "../Indelebile.sol";
 
 interface ITestJustice {
     function faucet() external;

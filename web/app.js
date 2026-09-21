@@ -1,4 +1,4 @@
-// Justice Journal — write page.
+// Indelebile — write page.
 //
 // Loads no libraries. The canonical entry form is imported from the same
 // file the indexer uses (../src/canonical.mjs), so the bytes this page

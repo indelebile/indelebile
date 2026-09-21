@@ -8,7 +8,7 @@ import {Test, console} from "forge-std/Test.sol";
 contract Probe {
     event E(address indexed a, string s);
     string constant HEAD =
-        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile","v":1,"author":"0x';
 
     /// baseline: emit the caller's calldata string directly
     function a_calldata(string calldata s) external { emit E(msg.sender, s); }
@@ -47,7 +47,8 @@ contract Probe {
     bytes32 constant PREFIX_HASH = keccak256(bytes(HEAD));
     function f_old(string calldata uri) external {
         bytes calldata c = bytes(uri);
-        require(c.length >= 88 && keccak256(c[:88]) == PREFIX_HASH, "prefix");
+        uint256 n = bytes(HEAD).length;
+        require(c.length >= n && keccak256(c[:n]) == PREFIX_HASH, "prefix");
         emit E(msg.sender, uri);
     }
 
@@ -101,7 +102,7 @@ contract GasProbeTest is Test {
 
         // same content, expressed the way each design takes it
         string memory fullUri = string.concat(
-            'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x',
+            'data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile","v":1,"author":"0x',
             "0000000000000000000000000000000000000000", tail);
         console.log("");
         console.log("--- same entry, both designs (execution only) ---");

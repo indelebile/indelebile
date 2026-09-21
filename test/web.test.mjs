@@ -222,7 +222,7 @@ test('the page knows which protocol tag the deployment uses', () => {
   const indexer = readFileSync(new URL('../src/config.mjs', import.meta.url), 'utf8');
   const quoted = indexer.match(/^(?!\s*\/\/)\s*protocol:\s*'([^']*)'/m)?.[1];
   const isDefault = /^(?!\s*\/\/)\s*protocol:\s*PROTOCOL\b/m.test(indexer);
-  assert.equal(web, quoted ?? 'justice-journal',
+  assert.equal(web, quoted ?? 'indelebile',
     'web/config.js and src/config.mjs disagree about the protocol tag');
   assert.ok(quoted || isDefault, 'src/config.mjs must set protocol');
 });

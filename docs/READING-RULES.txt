@@ -1,4 +1,4 @@
-Justice Journal — how to read this archive, without us.
+Indelebile — how to read this archive, without us.
 
 Entries are ESIP-3 ethscriptions emitted by contract CONTRACT_ADDR on
 Ethereum mainnet, from block GENESIS onward. Each is owned by its author.
@@ -11,7 +11,7 @@ To rebuild the archive from Ethereum alone:
 2. topics[1] is the author. The log data holds one ABI-encoded string,
    the entry's data URI.
 3. A valid entry's URI is exactly:
-   data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal",
+   data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile",
    "v":1,"author":"0x..","seq":N,"ts":N,"tags":[..],"body":".."}
    Keys in that order, no whitespace, no extra keys. Anything else is not
    an entry.

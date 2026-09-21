@@ -32,7 +32,7 @@ test('keys are emitted in the canonical order', () => {
 
 test('decode rejects reordered keys, extra keys and stray whitespace', () => {
   const hex = (s) => '0x' + Buffer.from('data:application/json;charset=utf-8,' + s, 'utf8').toString('hex');
-  const base = { p: 'justice-journal', v: 1, author: AUTHOR, seq: 0, ts: 1, tags: [], body: 'x' };
+  const base = { p: 'indelebile', v: 1, author: AUTHOR, seq: 0, ts: 1, tags: [], body: 'x' };
   assert.equal(decode(hex(JSON.stringify({ body: 'x', ...base }))).ok, false);
   assert.equal(decode(hex(JSON.stringify({ ...base, extra: 1 }))).ok, false);
   assert.equal(decode(hex(JSON.stringify(base, null, 1))).ok, false);

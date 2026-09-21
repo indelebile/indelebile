@@ -11,7 +11,7 @@ interface IUniswapV2Router {
     function WETH() external view returns (address);
 }
 
-/// @title Justice Journal
+/// @title Indelebile — an implementation of the AssangeDAO Justice Journal proposal
 /// @notice Writes an entry into L1 calldata and mints it as an ethscription
 ///         owned by its author.
 ///
@@ -29,7 +29,7 @@ interface IUniswapV2Router {
 /// global uniqueness rule. ESIP-6 calls out this exact case: a contract
 /// that has already taken a user's money cannot revert if the creation
 /// fails as a duplicate.
-contract JusticeJournal {
+contract Indelebile {
     /// @notice ESIP-3 (Smart Contract Ethscription Creations, live since
     ///         L1 block 18130000). The Ethscriptions indexer watches for
     ///         this exact signature; the name is not ours to change.

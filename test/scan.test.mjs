@@ -54,7 +54,7 @@ test('V6 rejects a body whose author field is not the initialOwner', async () =>
 
 test('V4 rejects non-canonical key order', async () => {
   const uri = 'data:application/json;charset=utf-8,' +
-    `{"body":"x","p":"justice-journal","v":1,"author":"${A}","seq":0,"ts":1,"tags":[]}`;
+    `{"body":"x","p":"indelebile","v":1,"author":"${A}","seq":0,"ts":1,"tags":[]}`;
   const r = await scan(chainOf([write(A, 0, 'x', { contentURI: uri })]),
     { from: 1000, to: 1000, params: P });
   assert.ok(r.rejected[0].failed.includes('V4'));
@@ -186,7 +186,7 @@ test('rehearsal entries are invisible to the production rules', async () => {
   const { toDataUri } = await import('../src/canonical.mjs');
 
   const production = await scan(chainOf([write(A, 0, 'x', { contentURI: toDataUri(rehearsal) })]),
-    { from: 1000, to: 1000, params: { ...P, protocol: 'justice-journal' } });
+    { from: 1000, to: 1000, params: { ...P, protocol: 'indelebile' } });
   assert.equal(production.entries.length, 0, 'the archive must not contain it');
   assert.ok(production.rejected[0].failed.includes('V5'));
 

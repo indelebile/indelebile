@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Test, console, Vm} from "forge-std/Test.sol";
-import {JusticeJournal, IERC20, IUniswapV2Router} from "../src/JusticeJournal.sol";
+import {Indelebile, IERC20, IUniswapV2Router} from "../src/Indelebile.sol";
 
 contract MockJustice is IERC20 {
     mapping(address => uint256) public bal;
@@ -37,8 +37,8 @@ contract RejectingTreasury {
     receive() external payable { revert("no"); }
 }
 
-contract JusticeJournalTest is Test {
-    JusticeJournal jj;
+contract IndelebileTest is Test {
+    Indelebile jj;
     MockJustice justice;
     MockRouter router;
     address treasury = address(0xBEEF);
@@ -50,12 +50,12 @@ contract JusticeJournalTest is Test {
 
     // Byte-for-byte what src/entry.mjs produces.
     string constant HEAD =
-        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x';
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile","v":1,"author":"0x';
     /// Everything after the author's address — what a caller now supplies.
     string constant TAIL_EN =
         '","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
     string constant EXPECTED_EN =
-        'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal","v":1,"author":"0x00000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
+        'data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile","v":1,"author":"0x00000000000000000000000000000000000a11ce","seq":0,"ts":1757280000,"tags":["assange"],"body":"March 10, 2024 -- I joined my first Julian Assange support rally. Today, I log this date into the Justice Journal."}';
 
     /// ESIP-3
     event ethscriptions_protocol_CreateEthscription(address indexed initialOwner, string contentURI);
@@ -64,7 +64,7 @@ contract JusticeJournalTest is Test {
     function setUp() public {
         justice = new MockJustice();
         router = new MockRouter();
-        jj = new JusticeJournal(justice, router, treasury, FEE, GATE, HEAD);
+        jj = new Indelebile(justice, router, treasury, FEE, GATE, HEAD);
         justice.setBalance(author, GATE);
         vm.deal(author, 10 ether);
         vm.deal(stranger, 10 ether);
@@ -99,14 +99,14 @@ contract JusticeJournalTest is Test {
 
     function test_RejectsUnderpaidWrite() public {
         vm.prank(author);
-        vm.expectRevert(abi.encodeWithSelector(JusticeJournal.FeeTooLow.selector, FEE - 1, FEE));
+        vm.expectRevert(abi.encodeWithSelector(Indelebile.FeeTooLow.selector, FEE - 1, FEE));
         jj.writeEntry{value: FEE - 1}(TAIL_EN);
     }
 
     function test_RejectsAuthorBelowHoldingGate() public {
         justice.setBalance(stranger, GATE - 1);
         vm.prank(stranger);
-        vm.expectRevert(abi.encodeWithSelector(JusticeJournal.BalanceTooLow.selector, GATE - 1, GATE));
+        vm.expectRevert(abi.encodeWithSelector(Indelebile.BalanceTooLow.selector, GATE - 1, GATE));
         jj.writeEntry{value: FEE}(TAIL_EN);
     }
 
@@ -153,7 +153,7 @@ contract JusticeJournalTest is Test {
         // The cap covers the assembled URI, not just what the caller sends.
         bytes memory big = new bytes(2048 - bytes(HEAD).length - 40 + 1);
         vm.prank(author);
-        vm.expectRevert(abi.encodeWithSelector(JusticeJournal.ContentTooLong.selector, 2049, 2048));
+        vm.expectRevert(abi.encodeWithSelector(Indelebile.ContentTooLong.selector, 2049, 2048));
         jj.writeEntry{value: FEE}(string(big));
     }
 
@@ -169,7 +169,7 @@ contract JusticeJournalTest is Test {
 
     function test_RejectsEmptyContent() public {
         vm.prank(author);
-        vm.expectRevert(JusticeJournal.EmptyContent.selector);
+        vm.expectRevert(Indelebile.EmptyContent.selector);
         jj.writeEntry{value: FEE}("");
     }
 
@@ -223,7 +223,7 @@ contract JusticeJournalTest is Test {
     }
 
     function test_SweepRevertsWhenEmpty() public {
-        vm.expectRevert(JusticeJournal.NothingToSweep.selector);
+        vm.expectRevert(Indelebile.NothingToSweep.selector);
         jj.sweepEth();
     }
 
@@ -233,8 +233,8 @@ contract JusticeJournalTest is Test {
     /// production code path exactly.
     function test_RehearsalTagIsCarriedThrough() public {
         string memory testHead =
-            'data:application/json;charset=utf-8;rule=esip6,{"p":"justice-journal-test","v":1,"author":"0x';
-        JusticeJournal test = new JusticeJournal(justice, router, treasury, FEE, GATE, testHead);
+            'data:application/json;charset=utf-8;rule=esip6,{"p":"indelebile-test","v":1,"author":"0x';
+        Indelebile test = new Indelebile(justice, router, treasury, FEE, GATE, testHead);
         assertEq(test.headLen(), bytes(testHead).length, "headLen must follow the string");
 
         vm.recordLogs();
@@ -254,8 +254,8 @@ contract JusticeJournalTest is Test {
     }
 
     function test_RejectsEmptyHead() public {
-        vm.expectRevert(JusticeJournal.EmptyHead.selector);
-        new JusticeJournal(justice, router, treasury, FEE, GATE, "");
+        vm.expectRevert(Indelebile.EmptyHead.selector);
+        new Indelebile(justice, router, treasury, FEE, GATE, "");
     }
 
     function test_StrayEthIsRejected() public {

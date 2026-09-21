@@ -2,7 +2,7 @@
 // chain in tests. Deterministic given the same events and range.
 //
 // `chain.getWrites(from, to)` returns every ESIP-3 write log from the
-// JusticeJournal contract in ascending (blockNumber, logIndex) order.
+// Indelebile contract in ascending (blockNumber, logIndex) order.
 // Reading logs rather than scanning blocks is what makes this fast: one
 // filtered request per range instead of a request per block.
 //
