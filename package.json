@@ -1,7 +1,7 @@
 {
   "name": "indelebile",
   "version": "1.0.0",
-  "description": "",
+  "description": "Writing that cannot be erased: an AssangeDAO journal in Ethereum calldata, owned by its authors.",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -17,7 +17,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "viem": "^2.56.3"
   },

@@ -1,0 +1,57 @@
+# Rebuild the archive from Ethereum and publish it to indelebile.xyz.
+#
+# Every run starts from nothing: it reads the chain, applies src/rules.mjs,
+# and publishes what comes out. The hash in each run's summary is the one
+# anyone should get by running the same indexer themselves.
+#
+# If the indexer fails, nothing is published and the previous site stays up.
+# A partial read must never replace a complete one.
+
+name: publish
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Index the archive from the chain
+        run: node src/indexer.mjs --rpc "$RPCS"
+        env:
+          RPCS: https://rpc.mevblocker.io,https://eth.drpc.org,https://ethereum-rpc.publicnode.com
+      - name: Build the site
+        run: node scripts/build-site.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

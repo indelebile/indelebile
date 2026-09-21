@@ -4,6 +4,9 @@ Journal entries written into Ethereum L1 calldata rather than IPFS, and
 minted as ethscriptions **owned by their authors**. A reference
 implementation: contract, indexer, and a page to write from.
 
+Live at **https://indelebile.xyz**, rebuilt from the chain every ten minutes by
+[a public job](.github/workflows/publish.yml).
+
 | | |
 |---|---|
 | [PROPOSAL-SHORT.md](PROPOSAL-SHORT.md) | the case, at forum length |

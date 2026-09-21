@@ -395,16 +395,19 @@ footer .addr{word-break:break-all}
         <div>
           <pre class="cmd"><span class="c"># rebuild this archive from the chain alone,</span>
 <span class="c"># then compare your hash with the one above</span>
-git clone &lt;repo&gt; &amp;&amp; cd indelebile
+git clone https://github.com/indelebile/indelebile &amp;&amp; cd indelebile
 npm install
 node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
         </div>
         <div class="prose">
           <p style="margin-top:0">Re-run the indexer and you must get a byte-identical
           file. That property is the whole claim — please check it rather than trust it.</p>
-          <p style="margin-bottom:0">This page does not read the chain to show you the
+          <p>This page does not read the chain to show you the
           archive; it reads the file the indexer produced. Doing otherwise would put a
           second copy of the rules in the browser, free to drift from the first.</p>
+          <p style="margin-bottom:0">The copy you are reading is rebuilt every ten minutes
+          by a public job; each run's log and hash are on
+          <a href="https://github.com/indelebile/indelebile/actions/workflows/publish.yml">GitHub Actions</a>.</p>
         </div>
       </div>
     </div>
