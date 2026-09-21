@@ -1,4 +1,4 @@
-# Justice Journal — a revision to the technical design
+# Indelebile — a technical design for the Justice Journal proposal
 
 *From a $JUSTICE holder, not the core team. Everything below is deployed
 and can be checked; a working prototype is MIT licensed and linked at the
