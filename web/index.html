@@ -411,9 +411,14 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
           <p>This page does not read the chain to show you the
           archive; it reads the file the indexer produced. Doing otherwise would put a
           second copy of the rules in the browser, free to drift from the first.</p>
-          <p style="margin-bottom:0">The copy you are reading is rebuilt every ten minutes
+          <p>The copy you are reading is rebuilt every ten minutes
           by a public job; each run's log and hash are on
           <a href="https://github.com/indelebile/indelebile/actions/workflows/publish.yml">GitHub Actions</a>.</p>
+          <p style="margin-bottom:0">Step by step, including which public RPC endpoints
+          will serve these queries and what to check if your hash differs:
+          <a href="https://github.com/indelebile/indelebile/blob/main/VERIFY.md">VERIFY.md</a>.
+          The contract's source is verified against the deployed bytecode on
+          <a href="https://repo.sourcify.dev/1/0x064A64cfBa8CfbBaaa39FEdb543B89dc386FE8ef">Sourcify</a>.</p>
         </div>
       </div>
     </div>
