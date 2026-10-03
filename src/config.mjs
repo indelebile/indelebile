@@ -20,13 +20,13 @@ export const PARAMS = {
   //
   // `toBlock: null` means "still current". Set it when superseding.
   journalContracts: [
-    { address: '0x3F06F46Fd1ff8B0f4ec6F2022568C8F660ee035a', fromBlock: 25932136, toBlock: null,
+    { address: '0x064A64cfBa8CfbBaaa39FEdb543B89dc386FE8ef', fromBlock: 26110628, toBlock: null,
       note: 'Ethereum deployment' },
   ],
 
   // Where swept fees land. The contract holds it immutably, so this is
   // recorded here for verifiers, not used to decide validity.
-  treasury: '0xe54A3CFB2Dbdfb8100c41fbFB04B4E9D4c7c3bA2', // Ethereum
+  treasury: '0x7BE99ca4E6893ef57cf349ab56307628100feA00', // Ethereum
 
   // Per-entry write fee, in wei. This is the real anti-spam cost.
   minFeeWei: 1_000_000_000_000_000n, // 0.001 ETH
@@ -52,10 +52,10 @@ export const PARAMS = {
   // Which protocol tag this deployment reads. PROTOCOL for the archive,
   // PROTOCOL_REHEARSAL while validating on mainnet — the two never mix,
   // because V5 requires an exact match.
-  protocol: 'justice-journal-test',
+  protocol: PROTOCOL,
 
   // Block before which no entry is valid — the first contract's start.
-  genesisBlock: 25932136,
+  genesisBlock: 26110628,
 };
 
 export { PROTOCOL, PROTOCOL_REHEARSAL, VERSION, MIME, DATA_URI_PREFIX } from './canonical.mjs';

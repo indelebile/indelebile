@@ -126,6 +126,14 @@ the whole point of deploying at all.
 
 ---
 
+## The live deployment
+
+`0x064A64cfBa8CfbBaaa39FEdb543B89dc386FE8ef`, block 26110629, deployed for
+0.000087 ETH. Protocol tag `indelebile`; fees go to `assangedao.eth`
+(`0x7BE99ca4E6893ef57cf349ab56307628100feA00`, a 3-of-9 Safe), which is
+immutable. `NO_ROUTER=true`, so `sweepEth()` is the only way out. Verified on
+chain after deploying: treasury, token, fee, gate and an 83-byte head.
+
 ## What the mainnet rehearsal established
 
 Contract `0x3F06F46Fd1ff8B0f4ec6F2022568C8F660ee035a`, block 25932137,

@@ -36,20 +36,20 @@ window.JJ_CONFIG = {
   // new contract, and the archive has to span them or it ends at its own
   // first governance decision.
   JOURNALS: [
-    { address: '0x3F06F46Fd1ff8B0f4ec6F2022568C8F660ee035a', fromBlock: 25932136, toBlock: null },
+    { address: '0x064A64cfBa8CfbBaaa39FEdb543B89dc386FE8ef', fromBlock: 26110628, toBlock: null },
   ],
   JUSTICE: '0x59d1e836F7b7210A978b25a855085cc46fd090B5',
 
   // Must match what the contract was deployed with. The page previews
   // "the exact bytes that will be recorded", and without this it previewed
   // the default tag while the contract wrote another.
-  PROTOCOL: 'justice-journal-test',
+  PROTOCOL: 'indelebile',
 
   MIN_FEE_WEI: 1000000000000000n,        // 0.001 ETH
   MIN_BALANCE: 100000n * 10n ** 18n,     // 100,000 $JUSTICE
   BODY_MAX_CHARS: 500,
   MAX_TAGS: 5,
-  GENESIS_BLOCK: 25932136,
+  GENESIS_BLOCK: 26110628,
 
   // Testnet only. Hides the faucet button when false.
   FAUCET: false,
