@@ -154,25 +154,46 @@ test('the accent colour is not reused for errors', () => {
   }
 });
 
-// Three sections of background reading were sharing one cramped strip.
-// They are tabs now, which means the markup has wiring that can silently
-// come apart: a tab whose panel was renamed just does nothing.
-test('every tab points at a panel that exists, and exactly one starts open', () => {
+// Background reading, and the archive's own all/mine switch, are both tab
+// strips. The markup has wiring that can silently come apart: a tab whose
+// panel was renamed just does nothing. Each strip is checked on its own,
+// since each has its own selected tab.
+test('every tab points at something that exists, and each strip opens exactly one', () => {
   const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
-  const tabs = [...html.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"[^>]*aria-selected="(true|false)"/g)];
-  assert.ok(tabs.length >= 2, 'expected a tab strip');
+  const strips = [...html.matchAll(/<div class="tabs"[^>]*>([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+  assert.ok(strips.length >= 2, 'expected the background strip and the archive strip');
 
-  for (const [, panel] of tabs) {
-    assert.ok(html.includes(`id="${panel}"`), `tab points at missing panel: ${panel}`);
-    assert.ok(html.includes(`role="tabpanel" aria-labelledby=`), 'panels need tabpanel roles');
+  for (const strip of strips) {
+    const tabs = [...strip.matchAll(/role="tab"[^>]*aria-controls="([^"]+)"[^>]*aria-selected="(true|false)"/g)];
+    assert.ok(tabs.length >= 2, 'a tab strip needs at least two tabs');
+
+    for (const [tag, target] of tabs) {
+      assert.ok(html.includes(`id="${target}"`), `tab points at a missing element: ${target}`);
+      // A scope tab drives the feed; every other tab reveals a panel.
+      if (!tag.includes('data-scope')) {
+        assert.ok(new RegExp(`id="${target}"[^>]*role="tabpanel"`).test(html)
+          || /role="tabpanel" aria-labelledby=/.test(html), 'panels need tabpanel roles');
+      }
+    }
+
+    const open = tabs.filter(([, , sel]) => sel === 'true');
+    assert.equal(open.length, 1, 'exactly one tab per strip must start selected');
+
+    // Where the open tab owns a panel, that panel must not start hidden.
+    const panelTag = html.match(new RegExp(`<div class="panel" id="${open[0][1]}"[^>]*>`));
+    if (panelTag) assert.ok(!panelTag[0].includes('hidden'), `${open[0][1]} is selected but hidden`);
   }
-  const open = tabs.filter(([, , sel]) => sel === 'true');
-  assert.equal(open.length, 1, 'exactly one tab must start selected');
+});
 
-  // The one that starts selected is the one whose panel is not hidden.
-  const openPanel = open[0][1];
-  const panelTag = html.match(new RegExp(`<div class="panel" id="${openPanel}"[^>]*>`))[0];
-  assert.ok(!panelTag.includes('hidden'), `${openPanel} is selected but hidden`);
+// The archive's two views read the same index.json; "mine" is a filter over
+// it, not a second source. A query against the chain here would be a second
+// copy of the rules, free to disagree with the indexer's.
+test('the "written by me" view filters the index rather than reading the chain', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const fn = app.slice(app.indexOf('function renderFeed'), app.indexOf('function emptyFeed'));
+  assert.ok(/scope === 'mine'/.test(fn), 'renderFeed must branch on the scope');
+  assert.ok(/author\?\.toLowerCase\(\) === account/.test(fn), 'mine must filter by the connected address');
+  assert.ok(!/eth_call|eth_getLogs|wallet\(/.test(fn), 'the feed must not query the chain');
 });
 
 // `section` elements also carry `.shell`, and `.shell` wins on specificity.

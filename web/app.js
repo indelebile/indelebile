@@ -152,6 +152,7 @@ async function refresh() {
   nextSeq = await loadNextSeq();
   $('seq').textContent = nextSeq;
   update();
+  renderFeed();
 }
 
 async function callBalance() {
@@ -334,20 +335,56 @@ async function loadArchive() {
   return archive;
 }
 
+// 'all' or 'mine'. An author's own entries are not a separate list: the
+// archive already carries the author of every entry, so this is a filter
+// over the same file, not a second source that could disagree with it.
+let scope = 'all';
+
 async function loadFeed() {
-  const idx = await loadArchive();
-  const items = idx.entries
+  await loadArchive();
+  renderFeed();
+}
+
+function renderFeed() {
+  const idx = archive;
+  if (!idx) return;
+  const all = idx.entries
     .map((e) => ({ ...e, tx: e.id }))
     .sort((a, b) => b.block - a.block || b.logIndex - a.logIndex);
-  $('feed').innerHTML = items.length ? items.map(renderEntry).join('')
-    : `<div class="empty"><b>The archive is empty.</b>
-       Nothing has been written here yet. Yours would be entry number one.</div>`;
-  $('feedCount').textContent = items.length;
-  $('feedNoun').textContent = items.length === 1 ? 'entry' : 'entries';
+  const items = scope === 'mine'
+    ? (account ? all.filter((e) => e.author?.toLowerCase() === account) : [])
+    : all;
+
+  $('feed').innerHTML = items.length ? items.map(renderEntry).join('') : emptyFeed();
+  $('feedCount').textContent = all.length;
+  $('feedNoun').textContent = all.length === 1 ? 'entry' : 'entries';
   $('asOf').textContent = idx.synthetic
     ? 'synthetic sample data — run the indexer for the real archive'
     : `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
   $('archiveHash').textContent = idx.entriesHash ?? '';
+
+  // The count belongs on the tab rather than in the feed: it answers
+  // "have I written anything" without having to switch to find out.
+  const n = account ? all.filter((e) => e.author?.toLowerCase() === account).length : null;
+  $('tab-mine').textContent = n === null ? 'Written by me' : `Written by me (${n})`;
+
+  // A tag filter applies to whatever is on screen; the feed was replaced,
+  // so the filter has to be dropped with it.
+  $('filterbar').hidden = true;
+}
+
+function emptyFeed() {
+  if (scope !== 'mine') {
+    return `<div class="empty"><b>The archive is empty.</b>
+      Nothing has been written here yet. Yours would be entry number one.</div>`;
+  }
+  if (!account) {
+    return `<div class="empty"><b>Connect a wallet to see what you have written.</b>
+      Nothing is sent anywhere — this filters the same public archive by your address,
+      in your browser. <button class="ghost small" id="feedConnect">Connect wallet</button></div>`;
+  }
+  return `<div class="empty"><b>You have not written anything yet.</b>
+    Entries you write from ${account.slice(0, 6)}…${account.slice(-4)} will appear here.</div>`;
 }
 
 function renderEntry(e) {
@@ -409,25 +446,36 @@ $('reload').onclick = loadFeed;
 // Tabs. Three sections of background reading were competing for the same
 // strip at the foot of the page and none of them had room; one at a time
 // gives each the width it needs.
-const tabs = [...document.querySelectorAll('.tabs [role=tab]')];
-function selectTab(tab) {
-  for (const t of tabs) {
-    const on = t === tab;
-    t.setAttribute('aria-selected', String(on));
-    document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+for (const list of document.querySelectorAll('.tabs')) {
+  const tabs = [...list.querySelectorAll('[role=tab]')];
+  const selectTab = (tab) => {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      // A scope tab switches what the one feed shows; the others each own
+      // a panel to reveal.
+      if (!t.dataset.scope) document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+    }
+    if (tab.dataset.scope) { scope = tab.dataset.scope; renderFeed(); }
+  };
+  for (const [i, t] of tabs.entries()) {
+    t.onclick = () => selectTab(t);
+    t.onkeydown = (ev) => {
+      const d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      ev.preventDefault();
+      const next = tabs[(i + d + tabs.length) % tabs.length];
+      next.focus();
+      selectTab(next);
+    };
   }
 }
-for (const [i, t] of tabs.entries()) {
-  t.onclick = () => selectTab(t);
-  t.onkeydown = (ev) => {
-    const d = ev.key === 'ArrowRight' ? 1 : ev.key === 'ArrowLeft' ? -1 : 0;
-    if (!d) return;
-    ev.preventDefault();
-    const next = tabs[(i + d + tabs.length) % tabs.length];
-    next.focus();
-    selectTab(next);
-  };
-}
+
+// The connect button inside an empty "written by me" feed is rendered and
+// re-rendered with it, so the click is delegated rather than bound.
+document.addEventListener('click', (ev) => {
+  if (ev.target.id === 'feedConnect') connect();
+});
 
 $('clearfilter').onclick = () => {
   $('filterbar').hidden = true;

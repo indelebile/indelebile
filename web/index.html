@@ -323,6 +323,12 @@ footer .addr{word-break:break-all}
       </div>
       <button class="ghost small" id="reload">Reload</button>
     </div>
+
+    <div class="tabs" role="tablist" aria-label="Archive">
+      <button role="tab" id="tab-all" aria-controls="feed" aria-selected="true" data-scope="all">All entries</button>
+      <button role="tab" id="tab-mine" aria-controls="feed" aria-selected="false" data-scope="mine">Written by me</button>
+    </div>
+
     <p id="filterbar" hidden>showing <b id="ftag"></b> — <button id="clearfilter">show all</button></p>
     <div id="feed"><p class="sub">Loading…</p></div>
   </section>
