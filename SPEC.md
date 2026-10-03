@@ -337,15 +337,12 @@ archive that had already shown it.
 - **Indexer parameters** live in `src/config.mjs`. Changing one changes the index,
   so every change is a governance action with an effective-from block —
   never a silent edit.
-- **Moderation is a display overlay.** `hidden.json` lists entry ids the
-  DAO has voted to collapse. The entry stays in the index and stays on L1;
-  the viewer says so and links to the calldata. Nothing is ever deleted,
-  because nothing *can* be.
-- **Plan for the worst entry.** Someone will inscribe something illegal.
-  On IPFS you could unpin; here you cannot. The answer has to be that the
-  chain is the raw layer and the DAO's index is a curated view, plus V2
-  and the holding gate raising the cost of abuse. Have this answer ready before the
-  proposal goes up — it is the strongest objection to the whole approach.
+- **Moderation is a display overlay.** `hidden.json` lists entries the DAO
+  has collapsed, each with who decided, when, on which ground, and a link
+  to the decision. The entry stays in the index and stays on L1; the
+  viewer says it was collapsed and links to the raw calldata. Grounds,
+  who may act, and how an emergency collapse is ratified or reversed are
+  in [MODERATION.md](MODERATION.md). No mechanism removes an entry.
 
 ---
 

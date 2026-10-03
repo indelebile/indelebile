@@ -317,7 +317,7 @@ async function faucet() {
 // anyone can re-run, and `entriesHash` is printed below so a reader can
 // compare their own build against this one instead of trusting it.
 let archive = null;
-let hidden = new Set();
+let hidden = new Map();
 
 async function loadArchive() {
   const res = await fetch('../out/index.json', { cache: 'no-store' });
@@ -329,10 +329,24 @@ async function loadArchive() {
   // open is the right way for it to fail in an archive.
   hidden = await fetch('../hidden.json', { cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : null))
-    .then((j) => new Set(j?.hidden ?? []))
-    .catch(() => new Set());
+    .then((j) => parseHidden(j))
+    .catch(() => new Map());
 
   return archive;
+}
+
+// A collapse is an act by people, so it carries who decided, when, under
+// which clause, and where the decision can be read. An id with no record
+// still collapses — a list that fails to parse would otherwise reveal
+// everything it was meant to collapse — but it says so rather than
+// implying a vote that may not exist.
+function parseHidden(j) {
+  const out = new Map();
+  for (const h of j?.hidden ?? []) {
+    if (typeof h === 'string') out.set(h, {});
+    else if (h?.id) out.set(h.id, h);
+  }
+  return out;
 }
 
 // 'all' or 'mine'. An author's own entries are not a separate list: the
@@ -387,13 +401,32 @@ function emptyFeed() {
     Entries you write from ${account.slice(0, 6)}…${account.slice(-4)} will appear here.</div>`;
 }
 
+// Who did this, when, and on what grounds — shown on the entry itself, so
+// the reader never has to take the collapse on trust. An emergency
+// collapse that has not yet been ratified says so: that is the point of
+// separating the act from the ratification.
+function collapseNote(r, esc) {
+  const when = r?.decided ? ` on ${esc(r.decided)}` : '';
+  const by = r?.by ? ` by ${esc(r.by)}` : '';
+  const why = r?.reason ? ` — ${esc(r.reason)}` : '';
+  const pending = r?.ratified === false ? ' <b>Not yet ratified by a vote.</b>' : '';
+  const where = r?.decision
+    ? ` <a href="${esc(r.decision)}" target="_blank" rel="noreferrer">The decision</a>.`
+    : '';
+  if (!r || !Object.keys(r).length) {
+    return 'Collapsed in this view, with no record of the decision attached.';
+  }
+  return `Collapsed${by}${when}${why}.${pending}${where}`;
+}
+
 function renderEntry(e) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const link = C.EXPLORER
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
     : `block ${e.block}`;
   const tags = (e.tags ?? []);
-  const collapsed = hidden.has(e.tx);
+  const record = hidden.get(e.tx);
+  const collapsed = record !== undefined;
   return `<article class="entry${collapsed ? ' collapsed' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
@@ -403,7 +436,7 @@ function renderEntry(e) {
     </div>
     <div>
       ${collapsed
-        ? `<p class="veil">Collapsed by governance vote. The entry is still in the index
+        ? `<p class="veil">${collapseNote(record, esc)} The entry is still in the index
            and still on chain — ${C.EXPLORER
              ? `<a href="${C.EXPLORER}/tx/${esc(e.tx)}" target="_blank" rel="noreferrer">read it from the calldata</a>`
              : 'read it from the calldata'}.</p>`

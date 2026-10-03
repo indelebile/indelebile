@@ -88,7 +88,8 @@ treasury (§4).
 - `sweepEth()` is the escape hatch if the pool is thin, paused or migrated.
 
 ### FR-4 Moderate without deleting
-- `hidden.json` lists entry ids the DAO voted to collapse.
+- `hidden.json` lists entries the DAO collapsed, each with who, when, the
+  ground, and the decision. See [MODERATION.md](MODERATION.md).
 - The entry stays in the index and on L1; the viewer says it is hidden and
   links to the calldata.
 - Nothing is ever deleted, because nothing *can* be.

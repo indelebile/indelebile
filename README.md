@@ -12,6 +12,7 @@ Live at **https://indelebile.xyz**, rebuilt from the chain every ten minutes by
 | [PROPOSAL-SHORT.md](PROPOSAL-SHORT.md) | the case, at forum length |
 | [SPEC.md](SPEC.md) | entry format, validity rules, cost, front-running |
 | [PRD.md](PRD.md) | requirements, scope, decisions left to the DAO |
+| [MODERATION.md](MODERATION.md) | what may be collapsed, by whom, and how it is undone |
 | [STATUS.md](STATUS.md) | what is built, against the original proposal |
 | [AUDIT.md](AUDIT.md) | known faults and gaps |
 | [DEPLOY.md](DEPLOY.md) | deploying, and what the mainnet rehearsal established |

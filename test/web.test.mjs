@@ -254,11 +254,44 @@ test('the page knows which protocol tag the deployment uses', () => {
 test('the page honours hidden.json, and collapsing is not deletion', () => {
   const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
   assert.match(app, /hidden\.json/, 'the page must read hidden.json');
-  assert.match(app, /hidden\.has\(/, 'and apply it when rendering an entry');
+  assert.match(app, /hidden\.get\(/, 'and apply it when rendering an entry');
   // Failing open matters: a missing list must hide nothing rather than
   // hide everything or break the archive.
-  assert.match(app, /\.catch\(\(\) => new Set\(\)\)/, 'a missing list must hide nothing');
+  assert.match(app, /\.catch\(\(\) => new Map\(\)\)/, 'a missing list must hide nothing');
   // The collapsed entry must still say where to read it.
   assert.match(app, /still in the index[\s\S]{0,80}still on chain/,
     'a collapsed entry must say it is still there');
+});
+
+// A collapse is an act by people. Hiding an entry without saying who did
+// it, when, and why would make the archive's own moderation the one thing
+// in it that leaves no record.
+test('a collapsed entry shows who collapsed it, when, and on what grounds', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const fn = app.slice(app.indexOf('function collapseNote'), app.indexOf('function renderEntry'));
+  for (const field of ['decided', 'by', 'reason', 'decision', 'ratified']) {
+    assert.ok(fn.includes(field), `the collapse note must carry ${field}`);
+  }
+  // An emergency collapse is visible as such until a vote confirms it.
+  assert.match(fn, /ratified === false[\s\S]{0,120}ratified/,
+    'an unratified collapse must say so');
+  // Legacy ids (a bare string) must still collapse, and must not pretend
+  // a decision exists.
+  assert.match(app, /typeof h === 'string'/, 'a bare id must still collapse');
+  assert.match(fn, /no record of the decision attached/,
+    'a collapse with no record must admit it');
+});
+
+// The schema is only useful if the file in the repository matches it.
+test('hidden.json parses, documents its own schema, and is empty by default', () => {
+  const j = JSON.parse(readFileSync(new URL('../hidden.json', import.meta.url), 'utf8'));
+  assert.ok(Array.isArray(j.hidden), 'hidden must be a list');
+  for (const h of j.hidden) {
+    if (typeof h === 'string') continue;
+    for (const field of ['id', 'by', 'decided', 'reason', 'decision']) {
+      assert.ok(h[field], `a collapse record needs ${field}`);
+    }
+  }
+  assert.ok(/MODERATION\.md/.test(j.note), 'the note must point at the policy');
+  assert.ok(j.schema, 'the file must describe its own fields');
 });

@@ -1,4 +1,5 @@
 {
-  "note": "Entry ids governance has voted to collapse. Nothing is ever removed: the entry stays in the index and on chain, and the viewer says so and links to the raw calldata. Empty is the normal state.",
+  "note": "Entries governance has collapsed in this view. Nothing is ever removed: the entry stays in the index and on chain, the viewer says it was collapsed, and links to the raw calldata. Empty is the normal state. See MODERATION.md for who may add an id, on what grounds, and how an emergency collapse is ratified or reversed.",
+  "schema": "id, by, decided (ISO date), reason (one line, quoting a clause of MODERATION.md), decision (link to the vote or the published emergency action), ratified (false until a vote confirms it)",
   "hidden": []
 }

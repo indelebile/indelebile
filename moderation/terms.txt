@@ -1,0 +1,12 @@
+# Terms that send an entry to a human reviewer. One per line; # starts a comment.
+#
+# This list does not hide anything. It decides what somebody looks at.
+# See MODERATION.md §5. Matching ignores case, spacing, dots and dashes,
+# so "l.o.l.i" and "幼 童" match the same way their plain forms do.
+#
+# Keep it short. A long list buries the queue in false positives, and this
+# archive is expected to carry testimony about violence and abuse — those
+# words are not grounds for anything and should not be listed here.
+#
+# The DAO maintains this file by the same process as any other change.
+# It is empty by default: nothing has been proposed yet.
