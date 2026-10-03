@@ -35,11 +35,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      # The archive is built before the tests run, because some of them
+      # check the real archive — that the flagging rules put none of the
+      # live entries in a review queue, for one. On a clean checkout
+      # out/index.json does not exist yet.
       - name: Index the archive from the chain
         run: node src/indexer.mjs --rpc "$RPCS"
         env:
           RPCS: https://rpc.mevblocker.io,https://eth.drpc.org,https://ethereum-rpc.publicnode.com
+      - run: npm test
       - name: Build the site
         run: node scripts/build-site.mjs | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-pages-artifact@v3

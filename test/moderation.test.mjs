@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { flag, SHAPES } from '../scripts/flag.mjs';
 
 // The whole value of the flagging tool is that it cannot do the thing a
@@ -55,8 +55,13 @@ test('ordinary testimony about violence is not flagged', () => {
 
 // The entries actually in the archive should not be sitting in a review
 // queue because of a rule that is too eager.
-test('the live archive produces no findings', () => {
-  const { entries = [] } = JSON.parse(readFileSync(new URL('../out/index.json', import.meta.url), 'utf8'));
+test('the live archive produces no findings', (t) => {
+  // A generated file: present after the indexer has run, absent in a
+  // fresh clone. Skipping says so rather than failing for a reason that
+  // has nothing to do with the rules.
+  const out = new URL('../out/index.json', import.meta.url);
+  if (!existsSync(out)) return t.skip('no out/index.json — run the indexer first');
+  const { entries = [] } = JSON.parse(readFileSync(out, 'utf8'));
   for (const e of entries) {
     assert.deepEqual(flag(e), [], `entry ${e.id} was flagged by a default rule`);
   }
