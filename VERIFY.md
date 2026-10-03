@@ -40,6 +40,8 @@ historical queries this needs. Tested 3 October 2026:
 | `https://eth.drpc.org` | refuses ranges over 10,000 blocks on the free plan |
 | `https://1rpc.io/eth` | usage limit |
 | `https://rpc.ankr.com/eth` | needs an API key |
+| `https://eth.merkle.io` | does not implement `eth_getLogs` |
+| `https://eth.llamarpc.com` | returned an error page, not JSON |
 
 Pass several, comma-separated, and each request falls through to the next
 endpoint that will answer:
