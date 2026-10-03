@@ -295,3 +295,51 @@ test('hidden.json parses, documents its own schema, and is empty by default', ()
   assert.ok(/MODERATION\.md/.test(j.note), 'the note must point at the policy');
   assert.ok(j.schema, 'the file must describe its own fields');
 });
+
+// The dictionary is keyed by the English it replaces, so editing a
+// sentence in index.html silently drops its translation and the passage
+// reverts to English. Nothing throws; the page just quietly changes
+// language in one paragraph. This is the test that notices.
+test('every translation key still matches text in the page', () => {
+  const dir = new URL('../web/', import.meta.url);
+  const i18n = readFileSync(new URL('i18n.js', dir), 'utf8');
+  // Keys are the page's *text*, so the comparison has to be against text:
+  // inline markup inside a sentence (<b>500</b>, <code>esip6</code>) is
+  // not part of the key the runtime builds from textContent.
+  const files = ['index.html', 'app.js'].map((f) => readFileSync(new URL(f, dir), 'utf8')).join('\n');
+  // Text with the markup removed, plus the raw file, since some strings
+  // live in an attribute (a placeholder) rather than in the text.
+  const haystack = (files.replace(/<[^>]+>/g, '') + '\n' + files)
+    .replace(/&#10;/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ');
+
+  // Keys are the quoted left-hand sides of the ZH table.
+  // The keys are JavaScript literals: an escape in the source is one
+  // character at runtime, which is what the page will match against.
+  const keys = [...i18n.matchAll(/^\s{4}'((?:[^'\\]|\\.)+)':/gm)]
+    .map((m) => m[1].replace(/\\'/g, "'").replace(/\\n/g, ' '));
+  assert.ok(keys.length > 30, `expected a full dictionary, found ${keys.length}`);
+
+  const missing = keys.filter((k) => !haystack.includes(k.replace(/\s+/g, ' ')));
+  assert.deepEqual(missing, [], 'these translations no longer match anything in the page');
+});
+
+// Entries are what someone wrote. Translating one would be editing it.
+test('the translator never touches an entry body', () => {
+  const i18n = readFileSync(new URL('../web/i18n.js', import.meta.url), 'utf8');
+  assert.match(i18n, /SKIP\s*=\s*new Set\(\[[^\]]*'PRE'/, 'preview text must be skipped');
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  // The body is rendered escaped into its own element and never passed
+  // through T().
+  assert.match(app, /class="entry-body">\$\{esc\(e\.body\)\}/, 'an entry body must be rendered raw and escaped');
+  assert.ok(!/T\(\s*e\.body/.test(app), 'an entry body must never be translated');
+});
+
+// A browser that refuses storage still has to render.
+test('the language choice degrades without localStorage', () => {
+  const i18n = readFileSync(new URL('../web/i18n.js', import.meta.url), 'utf8');
+  assert.match(i18n, /try\s*\{\s*return localStorage\.getItem/, 'reads must be guarded');
+  assert.match(i18n, /try\s*\{\s*localStorage\.setItem/, 'writes must be guarded');
+  assert.match(i18n, /navigator\.language/, 'a first visit should follow the browser');
+});

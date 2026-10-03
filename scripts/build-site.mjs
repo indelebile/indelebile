@@ -26,7 +26,7 @@ rmSync(site, { recursive: true, force: true });
 mkdirSync(new URL('src/', site), { recursive: true });
 mkdirSync(new URL('out/', site), { recursive: true });
 
-for (const f of ['index.html', 'app.js', 'abi.js', 'config.js']) {
+for (const f of ['index.html', 'app.js', 'abi.js', 'config.js', 'i18n.js']) {
   cpSync(at('web/' + f), new URL(f, site));
 }
 cpSync(at('src/canonical.mjs'), new URL('src/canonical.mjs', site));

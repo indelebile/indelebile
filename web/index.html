@@ -197,6 +197,10 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
   border-radius:4px;color:var(--ink-2)}
 
 /* ---------- tabs ---------- */
+.lang{position:absolute;top:2.6rem;right:0;background:none;border:1px solid var(--rule);
+  color:var(--ink-3);padding:.3rem .7rem;font-size:.74rem;border-radius:6px}
+.lang:hover{color:var(--ink);border-color:var(--ink-3);opacity:1}
+.masthead .shell{position:relative}
 .tabs{display:flex;gap:.4rem;flex-wrap:wrap;border-bottom:1px solid var(--rule);
   margin-bottom:2rem}
 .tabs button{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;
@@ -232,6 +236,7 @@ footer .addr{word-break:break-all}
   <div class="shell">
     <h1>Indelebile</h1>
     <p class="tagline">Italian for <i>indelible</i> · a permanent record for AssangeDAO</p>
+    <button class="lang" id="lang" type="button" aria-label="Switch language">中文</button>
   </div>
 </header>
 
@@ -244,10 +249,10 @@ footer .addr{word-break:break-all}
       quietly delete it.
     </p>
     <div class="facts">
-      <span><b id="chain">—</b>network</span>
-      <span><b id="fee">—</b>ETH per entry</span>
-      <span><b id="gateReq">—</b>$JUSTICE to write</span>
-      <span><b id="feedCount">0</b><span id="feedNoun">entries</span></span>
+      <span><b id="chain">—</b><i data-t>network</i></span>
+      <span><b id="fee">—</b><i data-t>ETH per entry</i></span>
+      <span><b id="gateReq">—</b><i data-t>$JUSTICE to write</i></span>
+      <span><b id="feedCount">0</b><i id="feedNoun">entries</i></span>
     </div>
   </div>
 </div>
@@ -444,6 +449,7 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js"></script>
+<script src="i18n.js"></script>
 <script src="abi.js"></script>
 <script type="module" src="app.js"></script>
 </body>

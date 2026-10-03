@@ -59,6 +59,10 @@ async function read(method, params = []) {
   throw new Error(`no RPC endpoint would answer ${method}: ${last?.message ?? 'unknown'}`);
 }
 
+// Interface strings only. A missing translation returns the English,
+// which is why nothing here can blank out.
+const T = (s) => window.JJ_I18N?.t(s) ?? s;
+
 let account = null;
 let nextSeq = 0;
 
@@ -74,7 +78,7 @@ async function connect() {
   const label = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Check your wallet…';
-  say('Approve the connection in your wallet. If no window opened, click the wallet extension — the request may be waiting there.');
+  say(T('Approve the connection in your wallet. If no window opened, click the wallet extension — the request may be waiting there.'));
 
   try {
     const [a] = await wallet('eth_requestAccounts');
@@ -132,11 +136,10 @@ function walletError(e) {
 function noWallet() {
   const btn = $('connect');
   btn.disabled = true;
-  btn.textContent = 'No wallet detected';
-  $('notConnected').innerHTML =
-    'no wallet detected — install <a href="https://metamask.io" target="_blank" rel="noreferrer">MetaMask</a> ' +
-    'or open this page in a wallet browser. You can still draft and read.';
-  say('This page found no wallet extension. Reading the archive works without one; writing does not.', true);
+  btn.textContent = T('No wallet detected');
+  $('notConnected').innerHTML = T('no wallet detected — install MetaMask or open this page in a wallet browser. You can still draft and read.')
+    .replace('MetaMask', '<a href="https://metamask.io" target="_blank" rel="noreferrer">MetaMask</a>');
+  say(T('This page found no wallet extension. Reading the archive works without one; writing does not.'), true);
 }
 
 async function refresh() {
@@ -145,7 +148,7 @@ async function refresh() {
   const ok = balance >= C.MIN_BALANCE;
   $('gate').textContent = `${held.toLocaleString()} $JUSTICE`;
   setState($('gate'), ['yes', 'no'], ok ? 'yes' : 'no');
-  $('gateNote').textContent = ok ? 'gate cleared'
+  $('gateNote').textContent = ok ? T('gate cleared')
     : `need ${(C.MIN_BALANCE / 10n ** 18n).toLocaleString()}`;
   $('faucet').hidden = !C.FAUCET || ok;
 
@@ -371,7 +374,7 @@ function renderFeed() {
 
   $('feed').innerHTML = items.length ? items.map(renderEntry).join('') : emptyFeed();
   $('feedCount').textContent = all.length;
-  $('feedNoun').textContent = all.length === 1 ? 'entry' : 'entries';
+  $('feedNoun').textContent = T(all.length === 1 ? 'entry' : 'entries');
   $('asOf').textContent = idx.synthetic
     ? 'synthetic sample data — run the indexer for the real archive'
     : `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
@@ -380,25 +383,31 @@ function renderFeed() {
   // The count belongs on the tab rather than in the feed: it answers
   // "have I written anything" without having to switch to find out.
   const n = account ? all.filter((e) => e.author?.toLowerCase() === account).length : null;
-  $('tab-mine').textContent = n === null ? 'Written by me' : `Written by me (${n})`;
+  $('tab-mine').textContent = n === null ? T('Written by me') : `${T('Written by me')} (${n})`;
 
   // A tag filter applies to whatever is on screen; the feed was replaced,
   // so the filter has to be dropped with it.
   $('filterbar').hidden = true;
+
+  // Last, after every label above has been written: the feed and the tab
+  // text were just replaced, so whatever was translated in them is gone.
+  // Entries themselves never match a key — they are what someone wrote.
+  window.JJ_I18N?.apply(window.JJ_I18N.lang);
 }
 
 function emptyFeed() {
   if (scope !== 'mine') {
-    return `<div class="empty"><b>The archive is empty.</b>
-      Nothing has been written here yet. Yours would be entry number one.</div>`;
+    return `<div class="empty"><b>${T('The archive is empty.')}</b>
+      ${T('Nothing has been written here yet. Yours would be entry number one.')}</div>`;
   }
   if (!account) {
-    return `<div class="empty"><b>Connect a wallet to see what you have written.</b>
-      Nothing is sent anywhere — this filters the same public archive by your address,
-      in your browser. <button class="ghost small" id="feedConnect">Connect wallet</button></div>`;
+    return `<div class="empty"><b>${T('Connect a wallet to see what you have written.')}</b>
+      ${T('Nothing is sent anywhere — this filters the same public archive by your address, in your browser.')}
+      <button class="ghost small" id="feedConnect">${T('Connect wallet')}</button></div>`;
   }
-  return `<div class="empty"><b>You have not written anything yet.</b>
-    Entries you write from ${account.slice(0, 6)}…${account.slice(-4)} will appear here.</div>`;
+  return `<div class="empty"><b>${T('You have not written anything yet.')}</b>
+    ${T('Entries you write from this address will appear here.')}
+    <span class="mono">${account.slice(0, 6)}…${account.slice(-4)}</span></div>`;
 }
 
 // Who did this, when, and on what grounds — shown on the entry itself, so
