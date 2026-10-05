@@ -429,3 +429,17 @@ test('the Etherscan route refuses any argument that contains a backslash', () =>
   assert.ok(guard < fn.indexOf('clipboard.writeText'), 'and before it is copied');
   assert.match(fn.slice(guard, guard + 120), /return bad\(/, 'and it must stop there');
 });
+
+// The site stops updating, silently, if GitHub switches the publish job
+// off after 60 quiet days. The keepalive has to cover the publish job and
+// itself, and must not need more than the one permission it uses.
+test('the keepalive re-enables the publish job and itself, with least privilege', () => {
+  const y = readFileSync(new URL('../.github/workflows/keepalive.yml', import.meta.url), 'utf8');
+  assert.match(y, /schedule:/, 'it has to run on its own');
+  assert.match(y, /for wf in publish\.yml keepalive\.yml/, 'it must cover both workflows');
+  assert.match(y, /actions\/workflows\/\$wf\/enable/, 'by re-enabling them through the API');
+  const perms = y.slice(y.indexOf('permissions:'), y.indexOf('jobs:'));
+  assert.match(perms, /actions: write/);
+  assert.ok(!/contents: write|pages: write|id-token/.test(perms), 'no permission beyond actions:write');
+  assert.ok(!/uses: (?!actions\/)/.test(y), 'no third-party actions');
+});

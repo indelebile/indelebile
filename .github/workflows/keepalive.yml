@@ -1,0 +1,41 @@
+# Keeps the scheduled publish job from being switched off.
+#
+# GitHub disables scheduled workflows in a public repository after 60
+# days with no activity. This project is expected to go quiet for long
+# stretches — the archive is on chain and needs nothing from anyone — and
+# a publish job that stopped silently would leave new entries missing
+# from the site with nothing to say so.
+#
+# Re-enabling a workflow through the API restarts that count, so once a
+# week this re-enables the publish job and itself. No commits are made,
+# and nothing outside GitHub's own CLI is used: a third-party action
+# would need the same actions:write permission, for no gain.
+
+name: keepalive
+
+on:
+  schedule:
+    - cron: '17 4 * * 1'   # Mondays, at an hour nobody else picks
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/keepalive.yml']
+
+permissions:
+  actions: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-enable the scheduled workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          for wf in publish.yml keepalive.yml; do
+            gh api --method PUT "repos/$REPO/actions/workflows/$wf/enable"
+            state=$(gh api "repos/$REPO/actions/workflows/$wf" --jq .state)
+            echo "$wf: $state" | tee -a "$GITHUB_STEP_SUMMARY"
+            [ "$state" = "active" ] || { echo "::error::$wf is $state"; exit 1; }
+          done
