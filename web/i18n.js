@@ -30,6 +30,32 @@
     'Tags — optional, comma separated, lowercase':
       '标签 — 可选，英文逗号分隔，小写',
     'The exact bytes that will be recorded': '查看将被写入的确切字节',
+    // signing on Etherscan instead
+    'Sign on Etherscan instead of this page': '不经过本页，改在 Etherscan 上签名',
+    "Draft here, then sign on Etherscan's own page, so nothing from this page touches your wallet.":
+      '在这里起草，然后到 Etherscan 自己的页面上签名——本页的任何代码都不会接触你的钱包。',
+    'The argument has to be exact. The contract will accept a malformed one, and the fee with it, but the archive will not — so this page writes it for you rather than leaving it to be typed.':
+      '参数必须分毫不差。格式错了，合约照样收下、费用照扣，但档案不会收录——所以由本页替你生成，而不是让你手动输入。',
+    'The address you will sign with': '你将用来签名的地址',
+    'Your entry number depends on it. Connecting a wallet fills it in; nothing is signed.':
+      '你的记录序号取决于这个地址。连接钱包会自动填入，不会要求签名。',
+    'Copy the argument': '复制参数',
+    'That is not an Ethereum address.': '这不是一个以太坊地址。',
+    'The archive could not be read, so the entry number is unknown. Try again.':
+      '读取档案失败，无法确定序号。请重试。',
+    'Fix the draft first:': '请先修正草稿：',
+    'Copied.': '已复制。',
+    'Copy the text below by hand.': '请手动复制下方文本。',
+    'This will be entry #{n} from this address.': '这将是该地址的第 #{n} 条记录。',
+    'This address holds less than the $JUSTICE needed to write. The transaction would revert, costing gas.':
+      '这个地址持有的 $JUSTICE 不足门槛。交易会被回退，只损失 gas。',
+    'Write Contract': 'Write Contract',
+    'Open the contract’s {link} tab on Etherscan and connect {who} there.':
+      '在 Etherscan 打开合约的 {link} 标签页，并在那里连接 {who}。',
+    'Under {fn}, set {amount} to {fee} and paste the text below into {arg}.':
+      '在 {fn} 下，把 {amount} 填为 {fee}，并把下方文本粘贴到 {arg}。',
+    'Sign on Etherscan. If you write anything else from this address first, copy again.':
+      '在 Etherscan 上签名。如果在此之前你用这个地址写了别的记录，请重新复制。',
     // Placeholders are attributes, so they are translated separately —
     // and an example in the wrong language is worse than none.
     'March 10, 2024 — I joined my first rally.\n\nWrite the thing you would want someone to be able to read in twenty years.':

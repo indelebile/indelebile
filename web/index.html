@@ -225,6 +225,16 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
 /* The space between the mark and the name is a legal line break; at a
    large text size it would put the mark on a line of its own. */
 .masthead h1{white-space:nowrap}
+.es{padding:.4rem 0 .2rem;font-size:.9rem;color:var(--ink-2)}
+.es p{margin:.5rem 0}
+.es label{display:block;margin-top:1rem;font:.63rem/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+.es input,.es textarea{width:100%;margin:.45rem 0 .2rem;padding:.55rem .65rem;border:1px solid var(--rule);border-radius:7px;
+  background:var(--sheet);color:var(--ink);font:.8rem/1.5 var(--mono)}
+.es textarea{resize:vertical;word-break:break-all}
+.es ol{margin:.8rem 0 .4rem 1.2rem;padding:0}
+.es li{margin:.35rem 0}
+.esnote{font-size:.78rem;color:var(--ink-3)}
+.esnote.bad{color:var(--bad)}
 .lang{position:absolute;top:2.6rem;right:0;background:none;border:1px solid var(--rule);
   color:var(--ink-3);padding:.3rem .7rem;font-size:.74rem;border-radius:6px}
 .lang:hover{color:var(--ink);border-color:var(--ink-3);opacity:1}
@@ -309,6 +319,23 @@ footer .addr{word-break:break-all}
         <details class="bytes">
           <summary>The exact bytes that will be recorded</summary>
           <pre class="preview" id="preview"></pre>
+        </details>
+
+        <details class="bytes" id="esBox">
+          <summary>Sign on Etherscan instead of this page</summary>
+          <div class="es">
+            <p>Draft here, then sign on Etherscan's own page, so nothing from this page touches your wallet.</p>
+            <p>The argument has to be exact. The contract will accept a malformed one, and the fee with it, but the archive will not — so this page writes it for you rather than leaving it to be typed.</p>
+            <label for="esAddr">The address you will sign with</label>
+            <input id="esAddr" placeholder="0x…" spellcheck="false" autocomplete="off">
+            <p class="esnote">Your entry number depends on it. Connecting a wallet fills it in; nothing is signed.</p>
+            <button class="ghost small" id="esCopy" type="button">Copy the argument</button>
+            <p class="esnote" id="esMsg"></p>
+            <div id="esDone" hidden>
+              <ol id="esSteps"></ol>
+              <textarea id="esOut" readonly rows="3" aria-label="entryTail"></textarea>
+            </div>
+          </div>
         </details>
       </div>
 

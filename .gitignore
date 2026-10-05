@@ -3,3 +3,4 @@ out/
 out/index.json
 out/journal.html
 _site/
+.scratch/

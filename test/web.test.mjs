@@ -399,3 +399,17 @@ test('every icon and image link carries a stamp of its current contents', async 
   }
   assert.ok(STAMPED instanceof RegExp);
 });
+
+// Signing on Etherscan only helps if the argument is the one the page would
+// itself have sent. So it must come from the same canonical functions, be
+// checked by the same local rules, carry the entry number for the address
+// that will actually sign — and the page must ask the wallet for nothing.
+test('the Etherscan argument is built the way the page builds its own', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const fn = app.slice(app.indexOf('async function copyForEtherscan'), app.indexOf('// ---------- composing'));
+  for (const call of ['buildEntry(', 'entryTail(', 'checkLocal(', 'nextSeqFor(address)']) {
+    assert.ok(fn.includes(call), `copyForEtherscan must use ${call}`);
+  }
+  assert.ok(!/wallet\(|eth_sendTransaction|personal_sign/.test(fn), 'this path must never ask the wallet to sign');
+  assert.match(fn, /author: address/, 'the entry must be built for the address that will sign');
+});

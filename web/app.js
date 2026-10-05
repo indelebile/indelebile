@@ -93,6 +93,7 @@ async function connect() {
     $('walletInfo').hidden = false;
     $('notConnected').hidden = true;
     $('who').textContent = account.slice(0, 6) + '…' + account.slice(-4);
+    if (!$('esAddr').value) $('esAddr').value = account;
     $('status').hidden = true;
     await refresh();
   } catch (e) {
@@ -170,6 +171,77 @@ async function loadNextSeq() {
   if (!idx) return 0;
   const mine = idx.entries.filter((e) => e.author?.toLowerCase() === account);
   return mine.length ? Math.max(...mine.map((e) => e.seq)) + 1 : 0;
+}
+
+// ---------- signing on Etherscan instead ----------
+
+// Someone who would rather not sign through this page can sign on
+// Etherscan's own Write Contract tab. What they paste there has to be the
+// exact tail the contract expects: the contract takes a malformed one and
+// the fee with it, and the indexer then rejects the entry. So the argument
+// is built here by the same functions the page itself sends with, and only
+// the signing moves.
+//
+// The address matters because the contract writes msg.sender in as the
+// author, and the entry number is per author. Built for one address and
+// signed from another, the entry fails V6 and the fee is gone.
+
+const isAddress = (a) => /^0x[0-9a-f]{40}$/.test(a);
+
+function nextSeqFor(address) {
+  const mine = (archive?.entries ?? []).filter((e) => e.author?.toLowerCase() === address);
+  return mine.length ? Math.max(...mine.map((e) => e.seq)) + 1 : 0;
+}
+
+async function copyForEtherscan() {
+  const msg = $('esMsg');
+  const bad = (text) => { msg.textContent = text; setState(msg, ['bad'], 'bad'); $('esDone').hidden = true; };
+  setState(msg, ['bad'], null);
+
+  const address = $('esAddr').value.trim().toLowerCase();
+  if (!isAddress(address)) return bad(T('That is not an Ethereum address.'));
+  if (!archive) await loadArchive().catch(() => null);
+  if (!archive) return bad(T('The archive could not be read, so the entry number is unknown. Try again.'));
+
+  const tags = $('tags').value.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+  const entry = buildEntry({
+    author: address, seq: nextSeqFor(address), ts: Math.floor(Date.now() / 1000),
+    tags, body: $('body').value, p: C.PROTOCOL,
+  });
+  const failed = checkLocal(entry, { bodyMaxChars: C.BODY_MAX_CHARS, maxTags: C.MAX_TAGS, protocol: C.PROTOCOL });
+  if (failed.length) return bad(T('Fix the draft first:') + ' ' + $('problems').textContent);
+
+  const tail = entryTail(entry);
+  $('esOut').value = tail;
+
+  // Built here rather than in the HTML: each step carries a live value,
+  // and is translated as a whole before the value goes in.
+  const link = `<a href="${C.EXPLORER}/address/${C.JOURNALS.at(-1).address}#writeContract" target="_blank" rel="noreferrer">${T('Write Contract')}</a>`;
+  const who = `<b class="mono">${address.slice(0, 6)}…${address.slice(-4)}</b>`;
+  const fee = `<b>${fmtEth(C.MIN_FEE_WEI)}</b>`;
+  $('esSteps').innerHTML = [
+    T('Open the contract’s {link} tab on Etherscan and connect {who} there.').replace('{link}', link).replace('{who}', who),
+    T('Under {fn}, set {amount} to {fee} and paste the text below into {arg}.')
+      .replace('{fn}', '<code>writeEntry</code>').replace('{amount}', '<code>payableAmount</code>')
+      .replace('{fee}', fee).replace('{arg}', '<code>entryTail</code>'),
+    T('Sign on Etherscan. If you write anything else from this address first, copy again.'),
+  ].map((li) => `<li>${li}</li>`).join('');
+  $('esDone').hidden = false;
+
+  let copied = false;
+  try { await navigator.clipboard.writeText(tail); copied = true; } catch { /* shown below to copy by hand */ }
+  msg.textContent = (copied ? T('Copied.') : T('Copy the text below by hand.')) + ' '
+    + T('This will be entry #{n} from this address.').replace('{n}', entry.seq);
+
+  // A write from an address under the holding gate reverts. That costs
+  // only gas, but it is better said before than discovered after.
+  try {
+    const held = BigInt(await read('eth_call', [{ to: C.JUSTICE, data: encodeBalanceOf(address) }, 'latest']));
+    if (held < C.MIN_BALANCE) {
+      bad(T('This address holds less than the $JUSTICE needed to write. The transaction would revert, costing gas.'));
+      $('esDone').hidden = false;
+    }
+  } catch { /* the balance is a courtesy check; the contract enforces it regardless */ }
 }
 
 // ---------- composing ----------
@@ -479,6 +551,7 @@ function say(msg, bad = false, html = false) {
 }
 
 $('connect').onclick = connect;
+$('esCopy').onclick = copyForEtherscan;
 $('send').onclick = send;
 $('faucet').onclick = faucet;
 $('body').oninput = update;

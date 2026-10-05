@@ -56,3 +56,23 @@ test('a long entry hits the EIP-7623 floor, a short one may not', () => {
   assert.equal(long.gas, long.floor);
   assert.ok(long.floor > long.standard, 'data-heavy entries are floor-priced');
 });
+
+// The Etherscan path pastes the tail into a single-line input. A raw line
+// break would be cut there, the contract would take what was left and the
+// fee with it, and the archive would reject the entry. JSON escapes control
+// characters, so a multi-paragraph body must still come out on one line —
+// and must come back out exactly as written.
+test('an entry tail is always one line, and round-trips exactly', async () => {
+  const { buildEntry, entryTail, headFor, PROTOCOL } = await import('../src/canonical.mjs');
+  const author = '0x' + 'ab'.repeat(20);
+  const body = '第一段，有"引号"和\\反斜杠。\n\n第二段\tafter a tab.\r\nAnd 🕊 an emoji.';
+  const entry = buildEntry({ author, seq: 4, ts: 1791200000, tags: ['assange'], body, p: PROTOCOL });
+  const tail = entryTail(entry);
+
+  assert.ok(!/[\n\r\t]/.test(tail), 'the tail must contain no raw control characters');
+
+  // What the contract will assemble: head, then the signer's address, then the tail.
+  const uri = headFor(PROTOCOL) + author.slice(2) + tail;
+  const json = JSON.parse(uri.slice(uri.indexOf(',') + 1));
+  assert.deepEqual(json, entry, 'the contract-assembled entry must equal the one composed');
+});
