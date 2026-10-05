@@ -27,7 +27,7 @@ mkdirSync(new URL('src/', site), { recursive: true });
 mkdirSync(new URL('out/', site), { recursive: true });
 
 for (const f of ['index.html', 'app.js', 'abi.js', 'config.js', 'i18n.js',
-                 'favicon.svg', 'icon-32.png', 'icon-180.png', 'icon-512.png', 'og.jpg']) {
+                 'favicon.svg', 'mark.svg', 'icon-32.png', 'icon-180.png', 'icon-512.png', 'og.jpg']) {
   cpSync(at('web/' + f), new URL(f, site));
 }
 cpSync(at('src/canonical.mjs'), new URL('src/canonical.mjs', site));

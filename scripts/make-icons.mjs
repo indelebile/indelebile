@@ -14,41 +14,33 @@ const PAPER = [0xf6, 0xf4, 0xef];
 const INK = [0x28, 0x26, 0x24];
 const ACCENT = [0x1d, 0x42, 0x69];
 
-// On a 64-unit grid, scaled to whatever size is asked for. The bar is
-// tilted a few degrees: struck by hand, over a page that is not.
-const LINE = { x: 12, h: 4.6, r: 2.3 };
-const MIDDLE = { ...LINE, y: 29.7, w: 49 };
-const BAR = { x: 5, y: 25.2, w: 43, h: 13.4, r: 1.6, rot: -5, fill: ACCENT };
+// On a 64-unit grid, scaled to whatever size is asked for.
+//
+// Seven lines of verse with one struck by a marker. The marker is
+// translucent, so the struck line darkens and stays legible rather than
+// disappearing: that is the name, and it is the claim. The struck line is
+// the longest one — the thing someone most wanted said.
+const LINES = [28, 17, 36, 42, 21, 31, 14]; // set like a poem, not a column
+const H = 2.4, GAP = 3.1, TOP = 13.5, STRUCK = 3;
+
 const SHAPES = [
-  { x: 0, y: 0, w: 64, h: 64, r: 13, fill: PAPER },   // the sheet
-  { ...LINE, y: 16.5, w: 36, fill: INK },             // a line of text
-  { ...MIDDLE, fill: INK },                           // the one that was struck
-  { ...LINE, y: 42.9, w: 28, fill: INK },             // and a third
-  { ...BAR, id: 'bar' },                              // the bar, struck by hand
-  // The struck line, redrawn in paper only where the bar covers it, so the
-  // sentence is seen to carry on out the other side rather than sitting in
-  // a window cut out of the bar.
-  { ...MIDDLE, fill: PAPER, clip: 'bar' },
+  { x: 0, y: 0, w: 64, h: 64, r: 13, fill: PAPER },
+  ...LINES.map((w, i) => ({ x: 11, y: TOP + i * (H + GAP), w, h: H, r: H / 2, fill: INK })),
+  {
+    x: 5, y: TOP + STRUCK * (H + GAP) + H / 2 - 3.6,
+    w: 54, h: 7.2, r: 1, rot: -3.5, fill: ACCENT, alpha: 0.82,
+  },
 ];
 
-const clipDefs = () => {
-  const clipped = [...new Set(SHAPES.filter((s) => s.clip).map((s) => s.clip))];
-  if (!clipped.length) return '';
-  return `  <defs>\n${clipped.map((id) => {
-    const s = SHAPES.find((o) => o.id === id);
-    const spin = s.rot ? ` transform="rotate(${s.rot} ${s.x + s.w / 2} ${s.y + s.h / 2})"` : '';
-    return `    <clipPath id="${id}"><rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.r}"${spin}/></clipPath>`;
-  }).join('\n')}\n  </defs>`;
-};
-
-const svg = (size = 64) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}" role="img" aria-label="Indelebile">
+const svg = (size = 64, sheet = 1) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="${size}" height="${size}" role="img" aria-label="Indelebile">
   <title>Indelebile — a redaction that failed</title>
-${clipDefs()}
-${SHAPES.map((s) => {
+${SHAPES.map((s, i) => {
+  const alpha = i === 0 && sheet !== 1 ? sheet : s.alpha;
   const hex = '#' + s.fill.map((c) => c.toString(16).padStart(2, '0')).join('');
-  const spin = s.rot ? ` transform="rotate(${s.rot} ${s.x + s.w / 2} ${s.y + s.h / 2})"` : '';
-  const cut = s.clip ? ` clip-path="url(#${s.clip})"` : '';
-  return `  <rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${s.r}" fill="${hex}"${spin}${cut}/>`;
+  const n = (v) => Number(v.toFixed(3));
+  const spin = s.rot ? ` transform="rotate(${s.rot} ${n(s.x + s.w / 2)} ${n(s.y + s.h / 2)})"` : '';
+  const ink = alpha !== undefined ? ` fill-opacity="${alpha}"` : '';
+  return `  <rect x="${n(s.x)}" y="${n(s.y)}" width="${n(s.w)}" height="${n(s.h)}" rx="${n(s.r)}" fill="${hex}"${ink}${spin}/>`;
 }).join('\n')}
 </svg>
 `;
@@ -83,8 +75,9 @@ function raster(size) {
           let hit = null;
           for (const s of SHAPES) {
             if (!inside(s, ux, uy)) continue;
-            if (s.clip && !inside(SHAPES.find((o) => o.id === s.clip), ux, uy)) continue;
-            hit = s.fill; // later shapes paint over
+            const al = s.alpha ?? 1;
+            // Translucent ink mixes with what is under it; opaque ink replaces it.
+            hit = hit ? hit.map((c, i) => c * (1 - al) + s.fill[i] * al) : s.fill;
           }
           if (hit) { r += hit[0]; g += hit[1]; b += hit[2]; a += 255; }
         }
@@ -144,5 +137,9 @@ function crc32(buf) {
 
 const at = (f) => new URL('../web/' + f, import.meta.url);
 writeFileSync(at('favicon.svg'), svg());
+// Beside the title the sheet is softened, so it sits in a dark page rather
+// than on it. Only there: an icon in a browser's chrome or a chat preview
+// has a backdrop this project does not control, and has to stay opaque.
+writeFileSync(at('mark.svg'), svg(64, 0.9));
 for (const size of [32, 180, 512]) writeFileSync(at(`icon-${size}.png`), png(size));
-console.log('wrote web/favicon.svg and icon-32/180/512.png');
+console.log('wrote web/favicon.svg, mark.svg and icon-32/180/512.png');

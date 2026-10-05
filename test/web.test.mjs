@@ -365,8 +365,21 @@ test('the page carries an icon and a shareable card', () => {
 test('build-site publishes the icons and the card', () => {
   const build = readFileSync(new URL('../scripts/build-site.mjs', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
-  const assets = [...html.matchAll(/(?:href|src|content)="(?:https:\/\/indelebile\.xyz\/)?((?:favicon|icon-|og)[\w.-]+)"/g)]
+  const assets = [...html.matchAll(/(?:href|src|content)="(?:https:\/\/indelebile\.xyz\/)?((?:favicon|mark|icon-|og)[\w.-]+)"/g)]
     .map((m) => m[1]);
   assert.ok(assets.length >= 4, `expected the icon set, found ${assets.join(', ')}`);
   for (const a of new Set(assets)) assert.ok(build.includes(`'${a}'`), `build-site does not copy ${a}`);
+});
+
+// The icon in the tab and the mark beside the title are two files drawn by
+// one script. They may differ in exactly one way — the softened sheet —
+// and a hand edit to either would make them two marks.
+test('the title mark and the favicon are the same drawing', () => {
+  const read = (f) => readFileSync(new URL(`../web/${f}`, import.meta.url), 'utf8');
+  const rects = (svg) => [...svg.matchAll(/<rect [^>]+>/g)].map((m) => m[0]);
+  const [fav, mark] = [rects(read('favicon.svg')), rects(read('mark.svg'))];
+  assert.equal(fav.length, mark.length, 'same number of shapes');
+  assert.deepEqual(fav.slice(1), mark.slice(1), 'everything but the sheet must match');
+  assert.ok(!/fill-opacity/.test(fav[0]), 'the favicon sheet must be opaque');
+  assert.match(mark[0], /fill-opacity="0\.9"/, 'the title mark sheet is softened');
 });
