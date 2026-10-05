@@ -217,7 +217,14 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
   border-radius:4px;color:var(--ink-2)}
 
 /* ---------- tabs ---------- */
-.mark{vertical-align:-.16em;margin-right:.55rem;border-radius:7px}
+/* The mark is sized and placed in em, against the capitals rather than the
+   line box: in this face the cap height is about .69em, so a .9em mark
+   lowered by .1em has the same middle as the letters beside it, at any
+   size the heading takes. */
+.mark{width:.9em;height:.9em;vertical-align:-.105em;margin-right:.32em;border-radius:.2em}
+/* The space between the mark and the name is a legal line break; at a
+   large text size it would put the mark on a line of its own. */
+.masthead h1{white-space:nowrap}
 .lang{position:absolute;top:2.6rem;right:0;background:none;border:1px solid var(--rule);
   color:var(--ink-3);padding:.3rem .7rem;font-size:.74rem;border-radius:6px}
 .lang:hover{color:var(--ink);border-color:var(--ink-3);opacity:1}
