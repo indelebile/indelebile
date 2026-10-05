@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Indelebile">
+  <title>Indelebile — a redaction that failed</title>
+  <defs>
+    <clipPath id="bar"><rect x="5" y="25.2" width="43" height="13.4" rx="1.6" transform="rotate(-5 26.5 31.9)"/></clipPath>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="13" fill="#f6f4ef"/>
+  <rect x="12" y="16.5" width="36" height="4.6" rx="2.3" fill="#282624"/>
+  <rect x="12" y="29.7" width="49" height="4.6" rx="2.3" fill="#282624"/>
+  <rect x="12" y="42.9" width="28" height="4.6" rx="2.3" fill="#282624"/>
+  <rect x="5" y="25.2" width="43" height="13.4" rx="1.6" fill="#1d4269" transform="rotate(-5 26.5 31.9)"/>
+  <rect x="12" y="29.7" width="49" height="4.6" rx="2.3" fill="#f6f4ef" clip-path="url(#bar)"/>
+</svg>

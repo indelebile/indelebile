@@ -343,3 +343,30 @@ test('the language choice degrades without localStorage', () => {
   assert.match(i18n, /try\s*\{\s*localStorage\.setItem/, 'writes must be guarded');
   assert.match(i18n, /navigator\.language/, 'a first visit should follow the browser');
 });
+
+// A link pasted into a chat or a forum is a card, not a URL. Without
+// these the project arrives as a bare line of text, and the page's own
+// tab shows a blank icon.
+test('the page carries an icon and a shareable card', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  for (const needle of [
+    'rel="icon" href="favicon.svg"', 'apple-touch-icon',
+    'og:title', 'og:description', 'og:image', 'og:url',
+    'twitter:card',
+  ]) assert.ok(html.includes(needle), `missing ${needle}`);
+
+  // Crawlers do not resolve relative image paths reliably.
+  const img = html.match(/property="og:image" content="([^"]+)"/)[1];
+  assert.match(img, /^https:\/\//, 'og:image must be absolute');
+});
+
+// Every file the page asks for has to be in the published site, or the
+// icon is a 404 that nobody notices until a tab looks wrong.
+test('build-site publishes the icons and the card', () => {
+  const build = readFileSync(new URL('../scripts/build-site.mjs', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const assets = [...html.matchAll(/(?:href|src|content)="(?:https:\/\/indelebile\.xyz\/)?((?:favicon|icon-|og)[\w.-]+)"/g)]
+    .map((m) => m[1]);
+  assert.ok(assets.length >= 4, `expected the icon set, found ${assets.join(', ')}`);
+  for (const a of new Set(assets)) assert.ok(build.includes(`'${a}'`), `build-site does not copy ${a}`);
+});
