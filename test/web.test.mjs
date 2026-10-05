@@ -350,7 +350,7 @@ test('the language choice degrades without localStorage', () => {
 test('the page carries an icon and a shareable card', () => {
   const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
   for (const needle of [
-    'rel="icon" href="favicon.svg"', 'apple-touch-icon',
+    'rel="icon" href="favicon.svg', 'apple-touch-icon',
     'og:title', 'og:description', 'og:image', 'og:url',
     'twitter:card',
   ]) assert.ok(html.includes(needle), `missing ${needle}`);
@@ -365,7 +365,7 @@ test('the page carries an icon and a shareable card', () => {
 test('build-site publishes the icons and the card', () => {
   const build = readFileSync(new URL('../scripts/build-site.mjs', import.meta.url), 'utf8');
   const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
-  const assets = [...html.matchAll(/(?:href|src|content)="(?:https:\/\/indelebile\.xyz\/)?((?:favicon|mark|icon-|og)[\w.-]+)"/g)]
+  const assets = [...html.matchAll(/(?:href|src|content)="(?:https:\/\/indelebile\.xyz\/)?((?:favicon|mark|icon-|og)[\w.-]+?)(?:\?v=[0-9a-f]+)?"/g)]
     .map((m) => m[1]);
   assert.ok(assets.length >= 4, `expected the icon set, found ${assets.join(', ')}`);
   for (const a of new Set(assets)) assert.ok(build.includes(`'${a}'`), `build-site does not copy ${a}`);
@@ -382,4 +382,20 @@ test('the title mark and the favicon are the same drawing', () => {
   assert.deepEqual(fav.slice(1), mark.slice(1), 'everything but the sheet must match');
   assert.ok(!/fill-opacity/.test(fav[0]), 'the favicon sheet must be opaque');
   assert.match(mark[0], /fill-opacity="0\.9"/, 'the title mark sheet is softened');
+});
+
+// Browsers keep favicons in a store that ignores ordinary caching, and chat
+// apps cache a preview image by URL. A redrawn icon behind an unchanged
+// address stays invisible to both — which is exactly what happened when
+// the mark was first redrawn. The address has to change with the file.
+test('every icon and image link carries a stamp of its current contents', async () => {
+  const { STAMPED, stampOf } = await import('../scripts/stamp-assets.mjs');
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const links = [...html.matchAll(/((?:favicon|mark|icon-|og)[\w.-]*\.(?:svg|png|jpg))(\?v=[0-9a-f]+)?(?=")/g)];
+  assert.ok(links.length >= 5, 'expected the icon set and the card');
+  for (const [, file, v] of links) {
+    assert.equal(v, `?v=${stampOf(file)}`,
+      `${file} is linked with a stale or missing stamp — run node scripts/stamp-assets.mjs`);
+  }
+  assert.ok(STAMPED instanceof RegExp);
 });

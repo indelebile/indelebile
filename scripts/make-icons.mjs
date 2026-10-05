@@ -7,7 +7,7 @@
 // it. Rectangles only, which is why this can rasterise itself with no
 // image library — the project does not take a dependency it can avoid.
 
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
 
 const PAPER = [0xf6, 0xf4, 0xef];
@@ -143,3 +143,11 @@ writeFileSync(at('favicon.svg'), svg());
 writeFileSync(at('mark.svg'), svg(64, 0.9));
 for (const size of [32, 180, 512]) writeFileSync(at(`icon-${size}.png`), png(size));
 console.log('wrote web/favicon.svg, mark.svg and icon-32/180/512.png');
+
+// New files under old addresses are invisible to every cache that matters
+// here, so the page's links are restamped as part of drawing.
+const { STAMPED, stampOf } = await import('./stamp-assets.mjs');
+const page = at('index.html');
+const html = readFileSync(page, 'utf8');
+writeFileSync(page, html.replace(STAMPED, (_, f) => `${f}?v=${stampOf(f)}`));
+console.log('restamped the page\u2019s icon links');
