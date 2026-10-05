@@ -413,3 +413,19 @@ test('the Etherscan argument is built the way the page builds its own', () => {
   assert.ok(!/wallet\(|eth_sendTransaction|personal_sign/.test(fn), 'this path must never ask the wallet to sign');
   assert.match(fn, /author: address/, 'the entry must be built for the address that will sign');
 });
+
+// Etherscan's form strips one level of backslash escaping from what is
+// pasted (established by running its own setupInputData and encodeParams).
+// A tail containing a backslash — any line break, straight double quote or
+// backslash in the entry — would reach the contract altered, fee taken, and
+// be rejected by the archive. The page must refuse before it ever shows or
+// copies such an argument.
+test('the Etherscan route refuses any argument that contains a backslash', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const fn = app.slice(app.indexOf('async function copyForEtherscan'), app.indexOf('// ---------- composing'));
+  const guard = fn.indexOf("tail.includes('\\\\')");
+  assert.ok(guard > 0, 'there must be a backslash guard');
+  assert.ok(guard < fn.indexOf("$('esOut').value = tail"), 'the guard must run before the argument is shown');
+  assert.ok(guard < fn.indexOf('clipboard.writeText'), 'and before it is copied');
+  assert.match(fn.slice(guard, guard + 120), /return bad\(/, 'and it must stop there');
+});

@@ -36,6 +36,10 @@
       '在这里起草，然后到 Etherscan 自己的页面上签名——本页的任何代码都不会接触你的钱包。',
     'The argument has to be exact. The contract will accept a malformed one, and the fee with it, but the archive will not — so this page writes it for you rather than leaving it to be typed.':
       '参数必须分毫不差。格式错了，合约照样收下、费用照扣，但档案不会收录——所以由本页替你生成，而不是让你手动输入。',
+    "This route takes a single paragraph with no straight double quotation marks — Etherscan's form rewrites both. Apostrophes and “curly” quotes are fine.":
+      '这条路径只能写一段，且不能含英文直双引号（"）——Etherscan 的表单会改写这两者。撇号和中文引号“”不受影响。',
+    'This route cannot carry line breaks, straight double quotation marks or backslashes: Etherscan’s form rewrites them, and the fee would be spent on an entry the archive rejects. Remove them here, or write from this page instead.':
+      '这条路径无法承载换行、英文直双引号或反斜杠：Etherscan 的表单会改写它们，费用照扣但档案会拒收这条记录。请先在这里删掉它们，或者改为直接在本页写入。',
     'The address you will sign with': '你将用来签名的地址',
     'Your entry number depends on it. Connecting a wallet fills it in; nothing is signed.':
       '你的记录序号取决于这个地址。连接钱包会自动填入，不会要求签名。',

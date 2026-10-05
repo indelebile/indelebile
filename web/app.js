@@ -212,6 +212,19 @@ async function copyForEtherscan() {
   if (failed.length) return bad(T('Fix the draft first:') + ' ' + $('problems').textContent);
 
   const tail = entryTail(entry);
+
+  // Etherscan's form evaluates what is pasted as a JavaScript string, which
+  // strips one level of backslash escaping. JSON writes line breaks, straight
+  // double quotes and backslashes with exactly those escapes, so an entry
+  // holding any of them would reach the contract altered: fee taken, entry
+  // then rejected by the archive. (Found by running Etherscan's own
+  // setupInputData and encodeParams on its own page.) A tail with no
+  // backslash in it gives that nothing to act on, whatever Etherscan does
+  // later — so that is the condition, rather than pre-escaping the argument
+  // to suit how the form happens to behave today.
+  if (tail.includes('\\')) {
+    return bad(T('This route cannot carry line breaks, straight double quotation marks or backslashes: Etherscan’s form rewrites them, and the fee would be spent on an entry the archive rejects. Remove them here, or write from this page instead.'));
+  }
   $('esOut').value = tail;
 
   // Built here rather than in the HTML: each step carries a live value,
