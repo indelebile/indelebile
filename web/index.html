@@ -246,6 +246,16 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
 .tabs button:hover{color:var(--ink-2);opacity:1}
 .tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
 .panel[hidden]{display:none}
+/* Two views. Most visitors come to read, not to write, so the page opens
+   on the newest entries and the writing page, unchanged, is one step
+   away. A link can open either directly with #read or #write. */
+.lede{border-bottom:0}
+.views{border-bottom:1px solid var(--rule)}
+.views .tabs{margin:0;border-bottom:0;gap:.6rem}
+.views .tabs button{font-size:.9rem;letter-spacing:.06em;padding:.85rem 1.1rem}
+.more{margin:0;padding-top:1.6rem;border-top:1px solid var(--rule);text-align:center}
+span.tag{cursor:default}
+span.tag:hover{border-color:var(--rule);color:var(--ink-3)}
 
 /* ---------- cost + verify ---------- */
 .split{display:grid;gap:2.2rem 3.5rem;align-items:start}
@@ -295,195 +305,219 @@ footer .addr{word-break:break-all}
   </div>
 </div>
 
+<nav class="views" aria-label="View">
+  <div class="shell">
+    <div class="tabs" role="tablist" aria-label="View">
+      <button role="tab" id="tab-read" aria-controls="panel-read" aria-selected="true" data-view="read">Read</button>
+      <button role="tab" id="tab-write" aria-controls="panel-write" aria-selected="false" data-view="write">Write</button>
+    </div>
+  </div>
+</nav>
+
 <main>
 
-  <section class="shell">
-    <div class="head">
-      <div>
-        <h2><span class="n">I</span>Write an entry</h2>
-        <p class="sub">Draft freely — nothing leaves this page until you sign.</p>
+  <div class="panel" id="panel-read" role="tabpanel" aria-labelledby="tab-read">
+    <section class="shell">
+      <div class="head">
+        <div>
+          <h2>Latest entries</h2>
+          <p class="sub">The newest entries in the archive, as written on Ethereum by their authors.</p>
+        </div>
       </div>
-    </div>
+      <div id="latest"><p class="sub">Loading…</p></div>
+    </section>
+  </div>
 
-    <div class="composer">
-      <div class="write">
-        <label for="body">Your entry
-          <span class="hint">— up to <span id="max">500</span> characters, any language</span></label>
-        <textarea id="body" placeholder="March 10, 2024 — I joined my first rally.&#10;&#10;Write the thing you would want someone to be able to read in twenty years."></textarea>
+  <div class="panel" id="panel-write" role="tabpanel" aria-labelledby="tab-write" hidden>
 
-        <div class="tagrow">
-          <label for="tags">Tags <span class="hint">— optional, comma separated, lowercase</span></label>
-          <input type="text" id="tags" placeholder="assange, press-freedom">
+    <section class="shell">
+      <div class="head">
+        <div>
+          <h2><span class="n">I</span>Write an entry</h2>
+          <p class="sub">Draft freely — nothing leaves this page until you sign.</p>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="write">
+          <label for="body">Your entry
+            <span class="hint">— up to <span id="max">500</span> characters, any language</span></label>
+          <textarea id="body" placeholder="March 10, 2024 — I joined my first rally.&#10;&#10;Write the thing you would want someone to be able to read in twenty years."></textarea>
+
+          <div class="tagrow">
+            <label for="tags">Tags <span class="hint">— optional, comma separated, lowercase</span></label>
+            <input type="text" id="tags" placeholder="assange, press-freedom">
+          </div>
+
+          <details class="bytes">
+            <summary>The exact bytes that will be recorded</summary>
+            <pre class="preview" id="preview"></pre>
+          </details>
+
+          <details class="bytes" id="esBox">
+            <summary>Sign on Etherscan instead of this page</summary>
+            <div class="es">
+              <p>Draft here, then sign on Etherscan's own page, so nothing from this page touches your wallet.</p>
+              <p>The argument has to be exact. The contract will accept a malformed one, and the fee with it, but the archive will not — so this page writes it for you rather than leaving it to be typed.</p>
+              <p>This route takes a single paragraph with no straight double quotation marks — Etherscan's form rewrites both. Apostrophes and “curly” quotes are fine.</p>
+              <label for="esAddr">The address you will sign with</label>
+              <input id="esAddr" placeholder="0x…" spellcheck="false" autocomplete="off">
+              <p class="esnote">Your entry number depends on it. Connecting a wallet fills it in; nothing is signed.</p>
+              <button class="ghost small" id="esCopy" type="button">Copy the argument</button>
+              <p class="esnote" id="esMsg"></p>
+              <div id="esDone" hidden>
+                <ol id="esSteps"></ol>
+                <textarea id="esOut" readonly rows="3" aria-label="entryTail"></textarea>
+              </div>
+            </div>
+          </details>
         </div>
 
-        <details class="bytes">
-          <summary>The exact bytes that will be recorded</summary>
-          <pre class="preview" id="preview"></pre>
-        </details>
-
-        <details class="bytes" id="esBox">
-          <summary>Sign on Etherscan instead of this page</summary>
-          <div class="es">
-            <p>Draft here, then sign on Etherscan's own page, so nothing from this page touches your wallet.</p>
-            <p>The argument has to be exact. The contract will accept a malformed one, and the fee with it, but the archive will not — so this page writes it for you rather than leaving it to be typed.</p>
-            <p>This route takes a single paragraph with no straight double quotation marks — Etherscan's form rewrites both. Apostrophes and “curly” quotes are fine.</p>
-            <label for="esAddr">The address you will sign with</label>
-            <input id="esAddr" placeholder="0x…" spellcheck="false" autocomplete="off">
-            <p class="esnote">Your entry number depends on it. Connecting a wallet fills it in; nothing is signed.</p>
-            <button class="ghost small" id="esCopy" type="button">Copy the argument</button>
-            <p class="esnote" id="esMsg"></p>
-            <div id="esDone" hidden>
-              <ol id="esSteps"></ol>
-              <textarea id="esOut" readonly rows="3" aria-label="entryTail"></textarea>
+        <aside class="rail">
+          <div class="railgroup">
+            <div class="railkey">Wallet</div>
+            <div id="walletInfo" hidden>
+              <div class="railval" id="who">—</div>
+              <div class="railnote"><span class="holding" id="gate"></span> <span id="gateNote"></span></div>
+            </div>
+            <div class="railnote" id="notConnected">not connected — you can still draft</div>
+            <div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="ghost small" id="faucet" hidden>Get test $JUSTICE</button>
+              <button class="small" id="connect">Connect wallet</button>
             </div>
           </div>
-        </details>
-      </div>
 
-      <aside class="rail">
-        <div class="railgroup">
-          <div class="railkey">Wallet</div>
-          <div id="walletInfo" hidden>
-            <div class="railval" id="who">—</div>
-            <div class="railnote"><span class="holding" id="gate"></span> <span id="gateNote"></span></div>
+          <div class="railgroup">
+            <div class="railkey">Length</div>
+            <div class="railval" id="count">0 / 500</div>
+            <div class="meter"><i id="meterbar"></i></div>
+            <div class="railnote" id="bytes"></div>
           </div>
-          <div class="railnote" id="notConnected">not connected — you can still draft</div>
-          <div style="margin-top:.8rem;display:flex;gap:.5rem;flex-wrap:wrap">
-            <button class="ghost small" id="faucet" hidden>Get test $JUSTICE</button>
-            <button class="small" id="connect">Connect wallet</button>
+
+          <div class="railgroup">
+            <div class="railkey">Entry</div>
+            <div class="railval">#<span id="seq">0</span> <span class="railnote">from this wallet</span></div>
+          </div>
+
+          <div class="railgroup">
+            <button class="block" id="send" disabled>Write to chain</button>
+            <p class="problems" id="problems"></p>
+            <div class="status" id="status" hidden></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="shell">
+      <div class="head">
+        <div>
+          <h2><span class="n">II</span>The archive</h2>
+          <p class="sub">Every accepted entry, as the open indexer derived it from the chain
+            — <span id="asOf">—</span>. <span class="mono" style="font-size:.78em" id="archiveHash"></span></p>
+        </div>
+        <button class="ghost small" id="reload">Reload</button>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Archive">
+        <button role="tab" id="tab-all" aria-controls="feed" aria-selected="true" data-scope="all">All entries</button>
+        <button role="tab" id="tab-mine" aria-controls="feed" aria-selected="false" data-scope="mine">Written by me</button>
+      </div>
+
+      <p id="filterbar" hidden>showing <b id="ftag"></b> — <button id="clearfilter">show all</button></p>
+      <div id="feed"><p class="sub">Loading…</p></div>
+    </section>
+
+    <section class="shell">
+      <div class="head">
+        <div>
+          <h2><span class="n">III</span>Before you write</h2>
+          <p class="sub">Three things worth a minute: how it works, what it costs, and how to
+            check any of it for yourself.</p>
+        </div>
+      </div>
+
+      <div class="tabs" role="tablist" aria-label="Background">
+        <button role="tab" id="tab-how" aria-controls="panel-how" aria-selected="true">How this works</button>
+        <button role="tab" id="tab-cost" aria-controls="panel-cost" aria-selected="false">What it costs</button>
+        <button role="tab" id="tab-verify" aria-controls="panel-verify" aria-selected="false">Verify it yourself</button>
+      </div>
+
+      <div class="panel" id="panel-how" role="tabpanel" aria-labelledby="tab-how">
+        <div class="notes">
+          <div class="note">
+            <h3>Your words live in calldata</h3>
+            <p>Not IPFS. An IPFS archive survives only while someone keeps paying to pin
+            it; when the pin lapses, the chain holds a hash and nothing readable. Here the
+            text itself is inside the Ethereum transaction.</p>
+          </div>
+          <div class="note">
+            <h3>You own the entry, not the DAO</h3>
+            <p>The Ethscriptions protocol makes a transaction's recipient the owner, so a
+            naive design would hand every entry to the treasury. This contract uses ESIP-3
+            to name <em>you</em> as the initial owner instead.</p>
+          </div>
+          <div class="note">
+            <h3>No one can take your content first</h3>
+            <p>Ethscriptions are normally unique, so a bot could copy your text from the
+            mempool and inscribe it before you. Entries carry <code>rule=esip6</code>,
+            which opts out of that rule — a copy can never invalidate yours.</p>
+          </div>
+          <div class="note">
+            <h3>Nothing can be deleted, including by us</h3>
+            <p>Governance can vote to collapse an entry in this view, and the page will say
+            so and link to the raw calldata. The chain is the record; this page is only one
+            way of reading it.</p>
           </div>
         </div>
-
-        <div class="railgroup">
-          <div class="railkey">Length</div>
-          <div class="railval" id="count">0 / 500</div>
-          <div class="meter"><i id="meterbar"></i></div>
-          <div class="railnote" id="bytes"></div>
-        </div>
-
-        <div class="railgroup">
-          <div class="railkey">Entry</div>
-          <div class="railval">#<span id="seq">0</span> <span class="railnote">from this wallet</span></div>
-        </div>
-
-        <div class="railgroup">
-          <button class="block" id="send" disabled>Write to chain</button>
-          <p class="problems" id="problems"></p>
-          <div class="status" id="status" hidden></div>
-        </div>
-      </aside>
-    </div>
-  </section>
-
-  <section class="shell">
-    <div class="head">
-      <div>
-        <h2><span class="n">II</span>The archive</h2>
-        <p class="sub">Every accepted entry, as the open indexer derived it from the chain
-          — <span id="asOf">—</span>. <span class="mono" style="font-size:.78em" id="archiveHash"></span></p>
       </div>
-      <button class="ghost small" id="reload">Reload</button>
-    </div>
 
-    <div class="tabs" role="tablist" aria-label="Archive">
-      <button role="tab" id="tab-all" aria-controls="feed" aria-selected="true" data-scope="all">All entries</button>
-      <button role="tab" id="tab-mine" aria-controls="feed" aria-selected="false" data-scope="mine">Written by me</button>
-    </div>
-
-    <p id="filterbar" hidden>showing <b id="ftag"></b> — <button id="clearfilter">show all</button></p>
-    <div id="feed"><p class="sub">Loading…</p></div>
-  </section>
-
-  <section class="shell">
-    <div class="head">
-      <div>
-        <h2><span class="n">III</span>Before you write</h2>
-        <p class="sub">Three things worth a minute: how it works, what it costs, and how to
-          check any of it for yourself.</p>
-      </div>
-    </div>
-
-    <div class="tabs" role="tablist" aria-label="Background">
-      <button role="tab" id="tab-how" aria-controls="panel-how" aria-selected="true">How this works</button>
-      <button role="tab" id="tab-cost" aria-controls="panel-cost" aria-selected="false">What it costs</button>
-      <button role="tab" id="tab-verify" aria-controls="panel-verify" aria-selected="false">Verify it yourself</button>
-    </div>
-
-    <div class="panel" id="panel-how" role="tabpanel" aria-labelledby="tab-how">
-      <div class="notes">
-        <div class="note">
-          <h3>Your words live in calldata</h3>
-          <p>Not IPFS. An IPFS archive survives only while someone keeps paying to pin
-          it; when the pin lapses, the chain holds a hash and nothing readable. Here the
-          text itself is inside the Ethereum transaction.</p>
-        </div>
-        <div class="note">
-          <h3>You own the entry, not the DAO</h3>
-          <p>The Ethscriptions protocol makes a transaction's recipient the owner, so a
-          naive design would hand every entry to the treasury. This contract uses ESIP-3
-          to name <em>you</em> as the initial owner instead.</p>
-        </div>
-        <div class="note">
-          <h3>No one can take your content first</h3>
-          <p>Ethscriptions are normally unique, so a bot could copy your text from the
-          mempool and inscribe it before you. Entries carry <code>rule=esip6</code>,
-          which opts out of that rule — a copy can never invalidate yours.</p>
-        </div>
-        <div class="note">
-          <h3>Nothing can be deleted, including by us</h3>
-          <p>Governance can vote to collapse an entry in this view, and the page will say
-          so and link to the raw calldata. The chain is the record; this page is only one
-          way of reading it.</p>
+      <div class="panel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost" hidden>
+        <div class="split">
+          <div>
+            <table class="costs">
+              <tr><th>entry</th><th>gas</th><th>@1 gwei</th><th>@5 gwei</th></tr>
+              <tr><td>113 characters, English</td><td>41,233</td><td>0.000041 ETH</td><td>0.000206 ETH</td></tr>
+              <tr><td>500 characters, Chinese</td><td>83,950</td><td>0.000084 ETH</td><td>0.000420 ETH</td></tr>
+            </table>
+          </div>
+          <div class="prose">
+            <p style="margin-top:0">Gas only; the write fee is on top. These are calibrated
+            against a real transaction rather than estimated.</p>
+            <p style="margin-bottom:0">Chinese costs more per character because UTF-8 spends
+            three bytes on each one. The limit counts <em>characters</em>, not bytes, so every
+            language gets the same room.</p>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="panel" id="panel-cost" role="tabpanel" aria-labelledby="tab-cost" hidden>
-      <div class="split">
-        <div>
-          <table class="costs">
-            <tr><th>entry</th><th>gas</th><th>@1 gwei</th><th>@5 gwei</th></tr>
-            <tr><td>113 characters, English</td><td>41,233</td><td>0.000041 ETH</td><td>0.000206 ETH</td></tr>
-            <tr><td>500 characters, Chinese</td><td>83,950</td><td>0.000084 ETH</td><td>0.000420 ETH</td></tr>
-          </table>
-        </div>
-        <div class="prose">
-          <p style="margin-top:0">Gas only; the write fee is on top. These are calibrated
-          against a real transaction rather than estimated.</p>
-          <p style="margin-bottom:0">Chinese costs more per character because UTF-8 spends
-          three bytes on each one. The limit counts <em>characters</em>, not bytes, so every
-          language gets the same room.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify" hidden>
-      <div class="split">
-        <div>
-          <pre class="cmd"><span class="c"># rebuild this archive from the chain alone,</span>
+      <div class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify" hidden>
+        <div class="split">
+          <div>
+            <pre class="cmd"><span class="c"># rebuild this archive from the chain alone,</span>
 <span class="c"># then compare your hash with the one above</span>
 git clone https://github.com/indelebile/indelebile &amp;&amp; cd indelebile
 npm install
 node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
-        </div>
-        <div class="prose">
-          <p style="margin-top:0">Re-run the indexer and you must get a byte-identical
-          file. That property is the whole claim — please check it rather than trust it.</p>
-          <p>This page does not read the chain to show you the
-          archive; it reads the file the indexer produced. Doing otherwise would put a
-          second copy of the rules in the browser, free to drift from the first.</p>
-          <p>The copy you are reading is rebuilt every ten minutes
-          by a public job; each run's log and hash are on
-          <a href="https://github.com/indelebile/indelebile/actions/workflows/publish.yml">GitHub Actions</a>.</p>
-          <p style="margin-bottom:0">Step by step, including which public RPC endpoints
-          will serve these queries and what to check if your hash differs:
-          <a href="https://github.com/indelebile/indelebile/blob/main/VERIFY.md">VERIFY.md</a>.
-          The contract's source is verified against the deployed bytecode on
-          <a href="https://repo.sourcify.dev/1/0x064A64cfBa8CfbBaaa39FEdb543B89dc386FE8ef">Sourcify</a>.</p>
+          </div>
+          <div class="prose">
+            <p style="margin-top:0">Re-run the indexer and you must get a byte-identical
+            file. That property is the whole claim — please check it rather than trust it.</p>
+            <p>This page does not read the chain to show you the
+            archive; it reads the file the indexer produced. Doing otherwise would put a
+            second copy of the rules in the browser, free to drift from the first.</p>
+            <p>The copy you are reading is rebuilt every ten minutes
+            by a public job; each run's log and hash are on
+            <a href="https://github.com/indelebile/indelebile/actions/workflows/publish.yml">GitHub Actions</a>.</p>
+            <p style="margin-bottom:0">Step by step, including which public RPC endpoints
+            will serve these queries and what to check if your hash differs:
+            <a href="https://github.com/indelebile/indelebile/blob/main/VERIFY.md">VERIFY.md</a>.
+            The contract's source is verified against the deployed bytecode on
+            <a href="https://repo.sourcify.dev/1/0x064A64cfBa8CfbBaaa39FEdb543B89dc386FE8ef">Sourcify</a>.</p>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 
 </main>
 

@@ -457,7 +457,8 @@ function renderFeed() {
     ? (account ? all.filter((e) => e.author?.toLowerCase() === account) : [])
     : all;
 
-  $('feed').innerHTML = items.length ? items.map(renderEntry).join('') : emptyFeed();
+  $('feed').innerHTML = items.length ? items.map((e) => renderEntry(e)).join('') : emptyFeed();
+  renderLatest(all);
   $('feedCount').textContent = all.length;
   $('feedNoun').textContent = T(all.length === 1 ? 'entry' : 'entries');
   $('asOf').textContent = idx.synthetic
@@ -478,6 +479,30 @@ function renderFeed() {
   // text were just replaced, so whatever was translated in them is gone.
   // Entries themselves never match a key — they are what someone wrote.
   window.JJ_I18N?.apply(window.JJ_I18N.lang);
+}
+
+// The reading view: the newest few, for people who came to read rather
+// than to write. It shows the same entries as the archive below the
+// composer, from the same file, so the two cannot disagree; it only
+// leaves out the tools. The rest is one click away and never paged —
+// the whole archive is one small file.
+const LATEST = 10;
+let latestAll = false;
+
+function renderLatest(all) {
+  if (!all.length) {
+    $('latest').innerHTML = `<div class="empty"><b>${T('The archive is empty.')}</b>
+      ${T('Nothing has been written here yet. Yours would be entry number one.')}</div>`;
+    return;
+  }
+  const shown = latestAll ? all : all.slice(0, LATEST);
+  const more = shown.length < all.length
+    ? `<p class="more"><button class="ghost small" id="latestAll">${
+      T('Show all {n} entries').replace('{n}', all.length)}</button></p>`
+    : '';
+  // Tags are shown but not live here: filtering belongs to the archive,
+  // which has the bar that says a filter is on and the button to clear it.
+  $('latest').innerHTML = shown.map((e) => renderEntry(e, { tagsLive: false })).join('') + more;
 }
 
 function emptyFeed() {
@@ -513,7 +538,7 @@ function collapseNote(r, esc) {
   return `Collapsed${by}${when}${why}.${pending}${where}`;
 }
 
-function renderEntry(e) {
+function renderEntry(e, { tagsLive = true } = {}) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const link = C.EXPLORER
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
@@ -536,7 +561,9 @@ function renderEntry(e) {
              : 'read it from the calldata'}.</p>`
         : `<p class="entry-body">${esc(e.body)}</p>`}
       ${tags.length ? `<div class="entry-tags">${tags
-        .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+        .map((t) => (tagsLive
+          ? `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`
+          : `<span class="tag">${esc(t)}</span>`)).join('')}</div>` : ''}
     </div>
   </article>`;
 }
@@ -585,6 +612,9 @@ for (const list of document.querySelectorAll('.tabs')) {
       if (!t.dataset.scope) document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
     }
     if (tab.dataset.scope) { scope = tab.dataset.scope; renderFeed(); }
+    // Replaced rather than pushed: switching view is not a page to go
+    // back to, but the address should still say where the reader is.
+    if (tab.dataset.view) history.replaceState(null, '', `#${tab.dataset.view}`);
   };
   for (const [i, t] of tabs.entries()) {
     t.onclick = () => selectTab(t);
@@ -603,7 +633,22 @@ for (const list of document.querySelectorAll('.tabs')) {
 // re-rendered with it, so the click is delegated rather than bound.
 document.addEventListener('click', (ev) => {
   if (ev.target.id === 'feedConnect') connect();
+  if (ev.target.id === 'latestAll') { latestAll = true; renderFeed(); }
 });
+
+// A link can open either view: #write for a post asking people to add
+// to the record, #read (or nothing) for one pointing at what is in it.
+const openView = () => {
+  if (location.hash === '#write') $('tab-write').click();
+  else if (location.hash === '#read') $('tab-read').click();
+};
+openView();
+window.addEventListener('hashchange', openView);
+
+// Labels built here (the count on a tab, the show-all button) are written
+// in whichever language was current at the time, so a language switch has
+// to rebuild them. Deferred, so the switch has happened by then.
+$('lang').addEventListener('click', () => setTimeout(renderFeed));
 
 $('clearfilter').onclick = () => {
   $('filterbar').hidden = true;
@@ -618,7 +663,9 @@ $('contractAddr').innerHTML = C.JOURNALS.map((j) => C.EXPLORER
   ? `<a href="${C.EXPLORER}/address/${j.address}" target="_blank" rel="noreferrer">${j.address}</a>`
   : j.address).join('<br>');
 update();
-loadFeed().catch(() => { $('feed').innerHTML = '<p class="muted">Could not reach the network.</p>'; });
+loadFeed().catch(() => {
+  $('feed').innerHTML = $('latest').innerHTML = '<p class="muted">Could not reach the network.</p>';
+});
 
 if (eth()) {
   eth().on?.('accountsChanged', () => location.reload());

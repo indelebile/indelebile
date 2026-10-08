@@ -79,8 +79,21 @@
     'write something first': '请先写点什么',
     'Get test $JUSTICE': '领取测试用 $JUSTICE',
 
+    // the two views
+    'Read': '阅读',
+    'Write': '写入',
+
+    // the two views
+    'Read': '阅读',
+    'Write': '写入',
+    'Latest entries': '最新记录',
+    'The newest entries in the archive, as written on Ethereum by their authors.':
+      '档案中最新的记录，由作者本人写入以太坊。',
+    'Show all {n} entries': '显示全部 {n} 条记录',
+
     // archive
     'The archive': '档案',
+    'Show all {n} entries': '显示全部 {n} 条记录',
     'The archive is empty.': '档案是空的。',
     'Nothing has been written here yet. Yours would be entry number one.':
       '这里还没有人写下任何东西。你的将是第一条。',
