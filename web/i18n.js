@@ -80,7 +80,9 @@
     'Get test $JUSTICE': '领取测试用 $JUSTICE',
 
     // the opening
-    'What is written here cannot be erased.': '写在这里的，无法被抹去。',
+    // Not a translation but an answer in kind: Du Fu, 偶题. A couplet,
+    // because a single line set alone reads as unfinished in Chinese.
+    'What is written here cannot be erased.': '文章千古事，<br>得失寸心知。',
     'Written once, kept for good.': '一次写下，永久留存。',
     'Read the record': '阅读记录',
     'the record': '记录',
@@ -92,7 +94,9 @@
     'Write': '写入',
 
     // the opening
-    'What is written here cannot be erased.': '写在这里的，无法被抹去。',
+    // Not a translation but an answer in kind: Du Fu, 偶题. A couplet,
+    // because a single line set alone reads as unfinished in Chinese.
+    'What is written here cannot be erased.': '文章千古事，<br>得失寸心知。',
     'Written once, kept for good.': '一次写下，永久留存。',
     'Read the record': '阅读记录',
     'the record': '记录',

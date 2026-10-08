@@ -21,7 +21,7 @@
 <meta property="og:title" content="Indelebile — a permanent record for AssangeDAO">
 <meta property="og:description" content="Write what you want kept. It goes into Ethereum calldata and is minted as an ethscription you own — nothing to renew, nothing to unpin, and no one who can quietly delete it.">
 <meta property="og:url" content="https://indelebile.xyz/">
-<meta property="og:image" content="https://indelebile.xyz/og.jpg?v=628863d3aa">
+<meta property="og:image" content="https://indelebile.xyz/og.jpg?v=dc87dba7c1">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -110,6 +110,9 @@ a{color:inherit}
 .kicker{margin:0 0 1.3rem;font:italic 1.05rem/1.4 var(--serif);color:var(--ink-3)}
 h1{margin:0;font:500 clamp(2.7rem,6.6vw,5.4rem)/.98 var(--sans);letter-spacing:-.048em;
   color:var(--ink);text-wrap:balance}
+/* In Chinese the statement is a couplet from Du Fu, so it is set in the
+   book face a couplet would be printed in, not the interface sans. */
+html[lang|=zh] h1{font-family:var(--serif);font-weight:400;letter-spacing:.04em;line-height:1.12}
 .lede{margin-top:1.8rem;max-width:34rem}
 .lede p{margin:0;font-size:1.08rem;line-height:1.7;color:var(--ink-2);
   /* Justified: the one designed block of copy on the page. Measured with
@@ -128,20 +131,22 @@ h1{margin:0;font:500 clamp(2.7rem,6.6vw,5.4rem)/.98 var(--sans);letter-spacing:-
 .pill.solid{background:var(--accent);border-color:var(--accent);color:var(--paper)}
 .pill.solid:hover{opacity:.88}
 
-/* The seal: a notary's stamp around the mark. The ring of words turns
-   slowly; nothing else on the page moves. */
+/* The seal: a notary's stamp with the name at its centre. Two rings of
+   words turn slowly, in opposite directions; nothing else on the page
+   moves. */
 .seal{width:100%;max-width:27rem;justify-self:center;color:var(--ink)}
 .seal svg{display:block;width:100%;height:auto}
 .seal .ring{transform-origin:200px 200px;animation:turn 140s linear infinite}
 @keyframes turn{to{transform:rotate(360deg)}}
+.seal .ring.in{animation-duration:110s;animation-direction:reverse}
+.seal .quote{font-size:12px;letter-spacing:.16em;fill:var(--ink-3)}
+.seal .name{font:400 40px var(--serif);letter-spacing:-.01em;fill:var(--ink)}
 @media(prefers-reduced-motion:reduce){.seal .ring{animation:none}}
 .seal text{font:400 14.5px var(--serif);letter-spacing:.24em;fill:var(--ink-2)}
 .seal .hair{fill:none;stroke:var(--rule);stroke-width:1}
 .seal .perf{fill:none;stroke:var(--accent);stroke-width:1.2;stroke-dasharray:1.5 5;opacity:.7}
 .seal .disc{fill:var(--sheet);stroke:var(--rule);stroke-width:1}
-.seal .line{fill:var(--ink-2)}
-.seal .bar{fill:var(--accent);fill-opacity:.82}
-.seal .count{font:italic 400 19px var(--serif);letter-spacing:0;fill:var(--ink-3)}
+.seal .count{font:italic 400 15px var(--serif);letter-spacing:0;fill:var(--ink-3)}
 
 /* ---------- figures ---------- */
 .figures{border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
@@ -363,23 +368,20 @@ footer .addr{word-break:break-all}
     </div>
     <div class="seal" aria-hidden="true">
       <svg viewBox="0 0 400 400">
-        <defs><path id="ringPath" d="M200,200 m-166,0 a166,166 0 1,1 332,0 a166,166 0 1,1 -332,0"/></defs>
+        <defs>
+          <path id="ringOut" d="M200,200 m-170,0 a170,170 0 1,1 340,0 a170,170 0 1,1 -340,0"/>
+          <path id="ringIn" d="M200,200 m-134,0 a134,134 0 1,1 268,0 a134,134 0 1,1 -268,0"/>
+        </defs>
         <circle class="hair" cx="200" cy="200" r="197"/>
-        <g class="ring"><text><textPath href="#ringPath" textLength="1040" lengthAdjust="spacing">INDELEBILE · WRITTEN INTO ETHEREUM · OWNED BY ITS AUTHORS · NOT TO BE ERASED · </textPath></text></g>
-        <circle class="hair" cx="200" cy="200" r="148"/>
-        <circle class="perf" cx="200" cy="200" r="140"/>
-        <circle class="disc" cx="200" cy="200" r="126"/>
-        <g transform="translate(104 92) scale(3)">
-          <rect class="line" x="11" y="13.50" width="28" height="2.4" rx="1.2"/>
-          <rect class="line" x="11" y="19.00" width="17" height="2.4" rx="1.2"/>
-          <rect class="line" x="11" y="24.50" width="36" height="2.4" rx="1.2"/>
-          <rect class="line" x="11" y="30.00" width="42" height="2.4" rx="1.2"/>
-          <rect class="line" x="11" y="35.50" width="21" height="2.4" rx="1.2"/>
-          <rect class="line" x="11" y="41.00" width="31" height="2.4" rx="1.2"/>
-          <rect class="line" x="11" y="46.50" width="14" height="2.4" rx="1.2"/>
-          <rect class="bar" x="5" y="27.60" width="54" height="7.2" rx="1.2" transform="rotate(-3.5 32 31.20)"/>
-        </g>
-        <text class="count" x="200" y="276" text-anchor="middle" id="sealCount"></text>
+        <g class="ring"><text><textPath href="#ringOut" textLength="1060" lengthAdjust="spacing">INDELEBILE · WRITTEN INTO ETHEREUM · OWNED BY ITS AUTHORS · NOT TO BE ERASED · </textPath></text></g>
+        <circle class="hair" cx="200" cy="200" r="152"/>
+        <!-- Assange, Trafalgar Square, 8 October 2011, in the form it is
+             usually quoted. It turns the other way from the outer ring. -->
+        <g class="ring in"><text class="quote"><textPath href="#ringIn" textLength="836" lengthAdjust="spacing">IF WARS CAN BE STARTED BY LIES, PEACE CAN BE STARTED BY TRUTH · JULIAN ASSANGE · </textPath></text></g>
+        <circle class="perf" cx="200" cy="200" r="118"/>
+        <circle class="disc" cx="200" cy="200" r="110"/>
+        <text class="name" x="200" y="210" text-anchor="middle">Indelebile</text>
+        <text class="count" x="200" y="244" text-anchor="middle" id="sealCount"></text>
       </svg>
     </div>
   </div>
@@ -629,7 +631,7 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=85c62e8b2c"></script>
+<script src="i18n.js?v=7616a4425d"></script>
 <script src="abi.js?v=1a24c97d10"></script>
 <script type="module" src="app.js?v=732aa7d51e"></script>
 </body>

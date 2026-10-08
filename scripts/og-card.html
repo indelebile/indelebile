@@ -23,8 +23,9 @@
   .hair{fill:none;stroke:#3a342b;stroke-width:1}
   .perf{fill:none;stroke:#a8c3e2;stroke-width:1.2;stroke-dasharray:1.5 5;opacity:.7}
   .disc{fill:#24211c;stroke:#3a342b;stroke-width:1}
-  .line{fill:#c3b9a5} .bar{fill:#a8c3e2;fill-opacity:.82}
   text{font:400 14.5px 'IM Fell English';letter-spacing:.24em;fill:#c3b9a5}
+  .quote{font-size:12px;letter-spacing:.16em;fill:#afa58f}
+  .name{font:400 40px 'IM Fell English';letter-spacing:-.01em;fill:#ebe3d1}
 </style></head><body>
   <div class="text">
     <div class="brand"><img src="../web/mark.svg" alt="">Indelebile</div>
@@ -34,21 +35,16 @@
   </div>
   <p class="foot"><span>indelebile.xyz</span> · written into Ethereum, owned by its authors</p>
   <svg class="seal" viewBox="0 0 400 400">
-    <defs><path id="ringPath" d="M200,200 m-166,0 a166,166 0 1,1 332,0 a166,166 0 1,1 -332,0"/></defs>
+    <defs>
+      <path id="ringOut" d="M200,200 m-170,0 a170,170 0 1,1 340,0 a170,170 0 1,1 -340,0"/>
+      <path id="ringIn" d="M200,200 m-134,0 a134,134 0 1,1 268,0 a134,134 0 1,1 -268,0"/>
+    </defs>
     <circle class="hair" cx="200" cy="200" r="197"/>
-    <g transform="rotate(-18 200 200)"><text><textPath href="#ringPath" textLength="1040" lengthAdjust="spacing">INDELEBILE · WRITTEN INTO ETHEREUM · OWNED BY ITS AUTHORS · NOT TO BE ERASED · </textPath></text></g>
-    <circle class="hair" cx="200" cy="200" r="148"/>
-    <circle class="perf" cx="200" cy="200" r="140"/>
-    <circle class="disc" cx="200" cy="200" r="126"/>
-    <g transform="translate(104 106.4) scale(3)">
-      <rect class="line" x="11" y="13.50" width="28" height="2.4" rx="1.2"/>
-      <rect class="line" x="11" y="19.00" width="17" height="2.4" rx="1.2"/>
-      <rect class="line" x="11" y="24.50" width="36" height="2.4" rx="1.2"/>
-      <rect class="line" x="11" y="30.00" width="42" height="2.4" rx="1.2"/>
-      <rect class="line" x="11" y="35.50" width="21" height="2.4" rx="1.2"/>
-      <rect class="line" x="11" y="41.00" width="31" height="2.4" rx="1.2"/>
-      <rect class="line" x="11" y="46.50" width="14" height="2.4" rx="1.2"/>
-      <rect class="bar" x="5" y="27.60" width="54" height="7.2" rx="1.2" transform="rotate(-3.5 32 31.20)"/>
-    </g>
+    <g transform="rotate(-18 200 200)"><text><textPath href="#ringOut" textLength="1060" lengthAdjust="spacing">INDELEBILE · WRITTEN INTO ETHEREUM · OWNED BY ITS AUTHORS · NOT TO BE ERASED · </textPath></text></g>
+    <circle class="hair" cx="200" cy="200" r="152"/>
+    <g transform="rotate(-100 200 200)"><text class="quote"><textPath href="#ringIn" textLength="836" lengthAdjust="spacing">IF WARS CAN BE STARTED BY LIES, PEACE CAN BE STARTED BY TRUTH · JULIAN ASSANGE · </textPath></text></g>
+    <circle class="perf" cx="200" cy="200" r="118"/>
+    <circle class="disc" cx="200" cy="200" r="110"/>
+    <text class="name" x="200" y="214" text-anchor="middle">Indelebile</text>
   </svg>
 </body></html>
