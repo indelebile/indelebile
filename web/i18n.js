@@ -14,7 +14,8 @@
     'Italian for indelible · a permanent record for AssangeDAO':
       'Indelebile，意大利语「不可磨灭」· 为 AssangeDAO 留存的永久记录',
     "Write what you want kept. It goes into Ethereum calldata and is minted as an ethscription you own — not a link, not a file on someone's server. There is nothing to renew, nothing to unpin, and no one who can quietly delete it.":
-      '写下你想留住的话。它会被写进以太坊的 calldata，并铸成一枚<strong>属于你的</strong> ethscription——不是一个链接，也不是放在谁的服务器上的文件。没有东西需要续费，没有东西会被取消固定，也没有任何人能够悄悄删掉它，包括我们。',
+      // Written for Chinese readers rather than translated from the English.
+      '有些时刻，值得被历史记住；而我们，正是书写历史的人。<br>在这里，每一次思想的碰撞与表达，都会化作一枚刻在以太坊 calldata 上的铭文。它不是一条网页链接，也不存放在任何一台服务器上；无需续费，永不失效。',
     'network': '网络',
     'ETH per entry': 'ETH / 条',
     '$JUSTICE to write': '$JUSTICE 门槛',
