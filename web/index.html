@@ -21,13 +21,13 @@
 <meta property="og:title" content="Indelebile — a permanent record for AssangeDAO">
 <meta property="og:description" content="Write what you want kept. It goes into Ethereum calldata and is minted as an ethscription you own — nothing to renew, nothing to unpin, and no one who can quietly delete it.">
 <meta property="og:url" content="https://indelebile.xyz/">
-<meta property="og:image" content="https://indelebile.xyz/og.jpg?v=dc87dba7c1">
+<meta property="og:image" content="https://indelebile.xyz/og.jpg?v=4459aed056">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <style>
 /* No CDN, no external request of any kind. A page about censorship
-   resistance should not need someone else's server to render — so the two
+   resistance should not need someone else's server to render — so the
    typefaces are served from this site, under their own licences in fonts/. */
 :root{
   /* Ink on paper. Deep blue carries the brand — the language of documents
@@ -73,6 +73,7 @@
 @font-face{font-family:'Inter';font-weight:400;font-style:normal;font-display:swap;src:url(fonts/inter-latin-400-normal.woff2) format('woff2')}
 @font-face{font-family:'Inter';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/inter-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'IM Fell English';font-weight:400;font-style:normal;font-display:swap;src:url(fonts/im-fell-english-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Cinzel';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/cinzel-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'IM Fell English';font-weight:400;font-style:italic;font-display:swap;src:url(fonts/im-fell-english-latin-400-italic.woff2) format('woff2')}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
@@ -140,7 +141,9 @@ html[lang|=zh] h1{font-family:var(--serif);font-weight:400;letter-spacing:.04em;
 @keyframes turn{to{transform:rotate(360deg)}}
 .seal .ring.in{animation-duration:110s;animation-direction:reverse}
 .seal .quote{font-size:12px;letter-spacing:.16em;fill:var(--ink-3)}
-.seal .name{font:400 40px var(--serif);letter-spacing:-.01em;fill:var(--ink)}
+/* The name at the centre is cut, not printed: Roman inscriptional
+   capitals, which stay clean at a size where the press face turns rough. */
+.seal .name{font:500 27px 'Cinzel',var(--serif);letter-spacing:.08em;fill:var(--ink)}
 @media(prefers-reduced-motion:reduce){.seal .ring{animation:none}}
 .seal text{font:400 14.5px var(--serif);letter-spacing:.24em;fill:var(--ink-2)}
 .seal .hair{fill:none;stroke:var(--rule);stroke-width:1}
@@ -380,7 +383,7 @@ footer .addr{word-break:break-all}
         <g class="ring in"><text class="quote"><textPath href="#ringIn" textLength="836" lengthAdjust="spacing">IF WARS CAN BE STARTED BY LIES, PEACE CAN BE STARTED BY TRUTH · JULIAN ASSANGE · </textPath></text></g>
         <circle class="perf" cx="200" cy="200" r="118"/>
         <circle class="disc" cx="200" cy="200" r="110"/>
-        <text class="name" x="200" y="210" text-anchor="middle">Indelebile</text>
+        <text class="name" x="200" y="209" text-anchor="middle">INDELEBILE</text>
         <text class="count" x="200" y="244" text-anchor="middle" id="sealCount"></text>
       </svg>
     </div>
@@ -631,7 +634,7 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=7616a4425d"></script>
+<script src="i18n.js?v=465d7bc032"></script>
 <script src="abi.js?v=1a24c97d10"></script>
 <script type="module" src="app.js?v=732aa7d51e"></script>
 </body>

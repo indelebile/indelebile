@@ -12,7 +12,7 @@
   const ZH = {
     // masthead and opening
     'Italian for indelible · a permanent record for AssangeDAO':
-      'Indelebile，意大利语「擦不掉的」· 为 AssangeDAO 留存的永久记录',
+      'Indelebile，意大利语「不可磨灭」· 为 AssangeDAO 留存的永久记录',
     "Write what you want kept. It goes into Ethereum calldata and is minted as an ethscription you own — not a link, not a file on someone's server. There is nothing to renew, nothing to unpin, and no one who can quietly delete it.":
       '写下你想留住的话。它会被写进以太坊的 calldata，并铸成一枚<strong>属于你的</strong> ethscription——不是一个链接，也不是放在谁的服务器上的文件。没有东西需要续费，没有东西会被取消固定，也没有任何人能够悄悄删掉它，包括我们。',
     'network': '网络',
@@ -83,21 +83,7 @@
     // Not a translation but an answer in kind: Du Fu, 偶题. A couplet,
     // because a single line set alone reads as unfinished in Chinese.
     'What is written here cannot be erased.': '文章千古事，<br>得失寸心知。',
-    'Written once, kept for good.': '一次写下，永久留存。',
-    'Read the record': '阅读记录',
-    'the record': '记录',
-    'entries kept': '条记录在案',
-    'entry kept': '条记录在案',
-
-    // the two views
-    'Read': '阅读',
-    'Write': '写入',
-
-    // the opening
-    // Not a translation but an answer in kind: Du Fu, 偶题. A couplet,
-    // because a single line set alone reads as unfinished in Chinese.
-    'What is written here cannot be erased.': '文章千古事，<br>得失寸心知。',
-    'Written once, kept for good.': '一次写下，永久留存。',
+    'Written once, kept for good.': '一经铭刻，永不磨灭。',
     'Read the record': '阅读记录',
     'the record': '记录',
     'entries kept': '条记录在案',
@@ -113,7 +99,6 @@
 
     // archive
     'The archive': '档案',
-    'Show all {n} entries': '显示全部 {n} 条记录',
     'The archive is empty.': '档案是空的。',
     'Nothing has been written here yet. Yours would be entry number one.':
       '这里还没有人写下任何东西。你的将是第一条。',

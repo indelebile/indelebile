@@ -325,6 +325,15 @@ test('every translation key still matches text in the page', () => {
   assert.deepEqual(missing, [], 'these translations no longer match anything in the page');
 });
 
+// A key written twice is silently resolved to the later one, so an edit to
+// the first does nothing. That happened once, to a whole block of keys.
+test('no translation key is written twice', () => {
+  const i18n = readFileSync(new URL('../web/i18n.js', import.meta.url), 'utf8');
+  const keys = [...i18n.matchAll(/^\s{4}'((?:[^'\\]|\\.)+)':/gm)].map((m) => m[1]);
+  const twice = [...new Set(keys.filter((k, i) => keys.indexOf(k) !== i))];
+  assert.deepEqual(twice, [], 'written twice in the dictionary');
+});
+
 // Entries are what someone wrote. Translating one would be editing it.
 test('the translator never touches an entry body', () => {
   const i18n = readFileSync(new URL('../web/i18n.js', import.meta.url), 'utf8');
