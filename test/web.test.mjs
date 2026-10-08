@@ -390,6 +390,20 @@ test('every font the page loads is here, licensed, and published', () => {
   assert.match(build, /web\/fonts\//, 'build-site must publish the fonts directory');
 });
 
+// The opening's two buttons stand for the two views. One drawn filled for
+// good read as "you are here" even when the other view was open.
+test('the filled opening button follows the open view', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const ctas = [...html.matchAll(/<a class="pill( solid)?" href="#(\w+)" data-view="(\w+)"/g)];
+  assert.deepEqual(ctas.map((m) => m[3]).sort(), ['read', 'write']);
+  for (const m of ctas) assert.equal(m[2], m[3], 'each button must open the view it names');
+  // The page opens on Read, so Read starts filled and Write does not.
+  assert.deepEqual(ctas.filter((m) => m[1]).map((m) => m[3]), ['read']);
+  assert.match(app, /classList\.toggle\('solid', a\.dataset\.view === tab\.dataset\.view\)/,
+    'switching view must move the fill');
+});
+
 // The icon in the tab and the mark beside the title are two files drawn by
 // one script. They may differ in exactly one way — the softened sheet —
 // and a hand edit to either would make them two marks.

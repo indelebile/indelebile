@@ -615,7 +615,14 @@ for (const list of document.querySelectorAll('.tabs')) {
     if (tab.dataset.scope) { scope = tab.dataset.scope; renderFeed(); }
     // Replaced rather than pushed: switching view is not a page to go
     // back to, but the address should still say where the reader is.
-    if (tab.dataset.view) history.replaceState(null, '', `#${tab.dataset.view}`);
+    if (tab.dataset.view) {
+      history.replaceState(null, '', `#${tab.dataset.view}`);
+      // The two buttons in the opening lead to the two views, so the filled
+      // one is whichever view is open, never a fixed favourite.
+      for (const a of document.querySelectorAll('.cta [data-view]')) {
+        a.classList.toggle('solid', a.dataset.view === tab.dataset.view);
+      }
+    }
   };
   for (const [i, t] of tabs.entries()) {
     t.onclick = () => selectTab(t);
