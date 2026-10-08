@@ -1,22 +1,54 @@
-<!doctype html><html><head><meta charset="utf-8"><style>
+<!doctype html><html><head><meta charset="utf-8">
+<!-- The card a link arrives with in a chat or on the forum. Rendered to
+     web/og.jpg at 1200x630 with headless Chrome:
+       chrome --headless=new --hide-scrollbars --window-size=1200,630 \
+         --screenshot=og.png scripts/og-card.html
+     then saved as JPEG. Same palette, faces and seal as the page. -->
+<style>
+  @font-face{font-family:'Inter';font-weight:500;src:url(../web/fonts/inter-latin-500-normal.woff2) format('woff2')}
+  @font-face{font-family:'IM Fell English';font-style:italic;src:url(../web/fonts/im-fell-english-latin-400-italic.woff2) format('woff2')}
+  @font-face{font-family:'IM Fell English';font-style:normal;src:url(../web/fonts/im-fell-english-latin-400-normal.woff2) format('woff2')}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{width:1200px;height:630px;background:#15161a;color:#e4e0d8;
-    font:400 1rem/1.5 Georgia,'Songti SC',serif;display:flex;flex-direction:column;
-    justify-content:center;padding:0 88px;position:relative;overflow:hidden}
-  .rule{position:absolute;left:0;right:0;height:1px;background:#33353d}
-  .top{top:112px} .bot{bottom:112px}
-  .head{display:flex;align-items:center;gap:26px}
-  .mark{width:84px;height:84px;border-radius:18px}
-  h1{font-size:78px;line-height:1;letter-spacing:-.015em;font-weight:400}
-  .sub{font:400 25px/1.55 Georgia,serif;color:#bcb6ac;margin-top:34px;max-width:900px}
-  .foot{position:absolute;bottom:52px;left:88px;right:88px;display:flex;
-    justify-content:space-between;font:400 17px ui-monospace,Menlo,monospace;
-    color:#a09a8e;letter-spacing:.04em}
+  body{width:1200px;height:630px;overflow:hidden;position:relative;color:#ebe3d1;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .92 0 0 0 0 .85 0 0 0 .06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),#1c1a16;font-family:'Inter',sans-serif}
+  .text{position:absolute;left:84px;top:72px;width:590px}
+  .brand{display:flex;align-items:center;gap:14px;font:500 27px/1 'Inter';letter-spacing:-.02em}
+  .brand img{width:38px;height:38px;border-radius:8px}
+  .kicker{margin-top:44px;font:italic 24px/1.3 'IM Fell English';color:#afa58f}
+  h1{margin-top:18px;font:500 82px/.98 'Inter';letter-spacing:-.048em}
+  .motto{margin-top:30px;font:italic 30px/1.3 'IM Fell English';color:#ebe3d1}
+  .foot{position:absolute;left:84px;bottom:58px;font:500 20px/1 'Inter';color:#c3b9a5;letter-spacing:-.01em}
+  .foot span{color:#a8c3e2}
+  .seal{position:absolute;width:540px;height:540px;right:-62px;top:45px}
+  .hair{fill:none;stroke:#3a342b;stroke-width:1}
+  .perf{fill:none;stroke:#a8c3e2;stroke-width:1.2;stroke-dasharray:1.5 5;opacity:.7}
+  .disc{fill:#24211c;stroke:#3a342b;stroke-width:1}
+  .line{fill:#c3b9a5} .bar{fill:#a8c3e2;fill-opacity:.82}
+  text{font:400 14.5px 'IM Fell English';letter-spacing:.24em;fill:#c3b9a5}
 </style></head><body>
-  <div class="rule top"></div><div class="rule bot"></div>
-  <div class="head"><img class="mark" src="../web/favicon.svg"><h1>Indelebile</h1></div>
-  <p class="sub">Write what you want kept. It goes into Ethereum calldata and is minted as an
-    ethscription <b style="color:#e4e0d8">you own</b> — nothing to renew, nothing to unpin,
-    and no one who can quietly delete it.</p>
-  <div class="foot"><span>indelebile.xyz</span><span>AssangeDAO · open source · MIT</span></div>
+  <div class="text">
+    <div class="brand"><img src="../web/mark.svg" alt="">Indelebile</div>
+    <p class="kicker">a permanent record for AssangeDAO</p>
+    <h1>What is written here cannot be erased.</h1>
+    <p class="motto">Written once, kept for good.</p>
+  </div>
+  <p class="foot"><span>indelebile.xyz</span> · written into Ethereum, owned by its authors</p>
+  <svg class="seal" viewBox="0 0 400 400">
+    <defs><path id="ringPath" d="M200,200 m-166,0 a166,166 0 1,1 332,0 a166,166 0 1,1 -332,0"/></defs>
+    <circle class="hair" cx="200" cy="200" r="197"/>
+    <g transform="rotate(-18 200 200)"><text><textPath href="#ringPath" textLength="1040" lengthAdjust="spacing">INDELEBILE · WRITTEN INTO ETHEREUM · OWNED BY ITS AUTHORS · NOT TO BE ERASED · </textPath></text></g>
+    <circle class="hair" cx="200" cy="200" r="148"/>
+    <circle class="perf" cx="200" cy="200" r="140"/>
+    <circle class="disc" cx="200" cy="200" r="126"/>
+    <g transform="translate(104 106.4) scale(3)">
+      <rect class="line" x="11" y="13.50" width="28" height="2.4" rx="1.2"/>
+      <rect class="line" x="11" y="19.00" width="17" height="2.4" rx="1.2"/>
+      <rect class="line" x="11" y="24.50" width="36" height="2.4" rx="1.2"/>
+      <rect class="line" x="11" y="30.00" width="42" height="2.4" rx="1.2"/>
+      <rect class="line" x="11" y="35.50" width="21" height="2.4" rx="1.2"/>
+      <rect class="line" x="11" y="41.00" width="31" height="2.4" rx="1.2"/>
+      <rect class="line" x="11" y="46.50" width="14" height="2.4" rx="1.2"/>
+      <rect class="bar" x="5" y="27.60" width="54" height="7.2" rx="1.2" transform="rotate(-3.5 32 31.20)"/>
+    </g>
+  </svg>
 </body></html>
