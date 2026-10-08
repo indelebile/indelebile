@@ -30,6 +30,8 @@ for (const f of ['index.html', 'app.js', 'abi.js', 'config.js', 'i18n.js',
                  'favicon.svg', 'mark.svg', 'icon-32.png', 'icon-180.png', 'icon-512.png', 'og.jpg']) {
   cpSync(at('web/' + f), new URL(f, site));
 }
+// The typefaces, with their licences, which travel with the files.
+cpSync(at('web/fonts/'), new URL('fonts/', site), { recursive: true });
 cpSync(at('src/canonical.mjs'), new URL('src/canonical.mjs', site));
 cpSync(index, new URL('out/index.json', site));
 cpSync(at('hidden.json'), new URL('hidden.json', site));

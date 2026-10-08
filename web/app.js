@@ -461,6 +461,7 @@ function renderFeed() {
   renderLatest(all);
   $('feedCount').textContent = all.length;
   $('feedNoun').textContent = T(all.length === 1 ? 'entry' : 'entries');
+  $('sealCount').textContent = `${all.length} ${T(all.length === 1 ? 'entry kept' : 'entries kept')}`;
   $('asOf').textContent = idx.synthetic
     ? 'synthetic sample data — run the indexer for the real archive'
     : `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
@@ -639,8 +640,10 @@ document.addEventListener('click', (ev) => {
 // A link can open either view: #write for a post asking people to add
 // to the record, #read (or nothing) for one pointing at what is in it.
 const openView = () => {
-  if (location.hash === '#write') $('tab-write').click();
-  else if (location.hash === '#read') $('tab-read').click();
+  const tab = { '#write': 'tab-write', '#read': 'tab-read' }[location.hash];
+  if (!tab) return;
+  $(tab).click();
+  $('views').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 openView();
 window.addEventListener('hashchange', openView);

@@ -5,7 +5,7 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import vm from 'node:vm';
 import { buildEntry, entryTail } from '../src/canonical.mjs';
 import { encodeFunctionData, parseAbi } from 'viem';
@@ -369,6 +369,25 @@ test('build-site publishes the icons and the card', () => {
     .map((m) => m[1]);
   assert.ok(assets.length >= 4, `expected the icon set, found ${assets.join(', ')}`);
   for (const a of new Set(assets)) assert.ok(build.includes(`'${a}'`), `build-site does not copy ${a}`);
+});
+
+// A missing font fails silently: the page falls back to a system face and
+// looks almost right. Each one the page names must exist, carry its licence
+// alongside, and be published.
+test('every font the page loads is here, licensed, and published', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const build = readFileSync(new URL('../scripts/build-site.mjs', import.meta.url), 'utf8');
+  const fonts = [...html.matchAll(/url\((fonts\/[\w.-]+\.woff2)\)/g)].map((m) => m[1]);
+  assert.ok(fonts.length >= 4, `expected the font set, found ${fonts.join(', ')}`);
+  for (const f of fonts) {
+    assert.ok(existsSync(new URL(`../web/${f}`, import.meta.url)), `missing ${f}`);
+  }
+  const licences = readdirSync(new URL('../web/fonts/', import.meta.url)).filter((f) => f.startsWith('LICENSE'));
+  assert.ok(licences.length >= 2, 'each typeface needs its licence beside it');
+  for (const l of licences) {
+    assert.match(readFileSync(new URL(`../web/fonts/${l}`, import.meta.url), 'utf8'), /SIL Open Font License/);
+  }
+  assert.match(build, /web\/fonts\//, 'build-site must publish the fonts directory');
 });
 
 // The icon in the tab and the mark beside the title are two files drawn by
