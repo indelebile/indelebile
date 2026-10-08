@@ -13,7 +13,7 @@
     // masthead and opening
     'Italian for indelible · a permanent record for AssangeDAO':
       'Indelebile，意大利语「不可磨灭」· 为 AssangeDAO 留存的永久记录',
-    "Write what you want kept. It goes into Ethereum calldata and is minted as an ethscription you own — not a link, not a file on someone's server. There is nothing to renew, nothing to unpin, and no one who can quietly delete it.":
+    "Some moments deserve to be carved into history, beyond the reach of any power. Whatever is set down here becomes an inscription in Ethereum's calldata, owned by the one who wrote it. Not a link, not a file on someone's server. Nothing to renew, nothing to expire.":
       // Written for Chinese readers rather than translated from the English.
       '有些时刻，值得被历史记住；而我们，正是书写历史的人。<br>在这里，每一次思想的碰撞与表达，都会化作一枚刻在以太坊 calldata 上的铭文。它不是一条网页链接，也不存放在任何一台服务器上；无需续费，永不失效。',
     'network': '网络',
