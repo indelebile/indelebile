@@ -1,5 +1,5 @@
-// Stamps every icon and image the page links to with a hash of its
-// contents, as ?v=<hash>.
+// Stamps every icon, image and script the page links to with a hash of
+// its contents, as ?v=<hash>.
 //
 //   node scripts/stamp-assets.mjs
 //
@@ -9,6 +9,11 @@
 // address they cannot miss. The hash, rather than a counter, means the
 // address changes exactly when the file does.
 //
+// Scripts are stamped for a different reason: the page and its scripts
+// are cached for ten minutes each, so for a while after a release a
+// visitor could get the new page with the old script, and see half of
+// each. A stamped script arrives with the page that names it.
+//
 // It edits web/index.html in place, so the published page stays the file
 // in the repository. test/web.test.mjs fails if a stamp is stale.
 
@@ -16,7 +21,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const web = (f) => new URL(`../web/${f}`, import.meta.url);
-export const STAMPED = /((?:favicon|mark|icon-|og)[\w.-]*\.(?:svg|png|jpg))(?:\?v=[0-9a-f]+)?(?=")/g;
+export const STAMPED = /((?:favicon|mark|icon-|og)[\w.-]*\.(?:svg|png|jpg)|(?:app|abi|config|i18n)\.js)(?:\?v=[0-9a-f]+)?(?=")/g;
 export const stampOf = (file) =>
   createHash('sha256').update(readFileSync(web(file))).digest('hex').slice(0, 10);
 

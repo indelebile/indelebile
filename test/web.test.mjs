@@ -412,6 +412,9 @@ test('every icon and image link carries a stamp of its current contents', async 
   const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
   const links = [...html.matchAll(/((?:favicon|mark|icon-|og)[\w.-]*\.(?:svg|png|jpg))(\?v=[0-9a-f]+)?(?=")/g)];
   assert.ok(links.length >= 5, 'expected the icon set and the card');
+  const scripts = [...html.matchAll(/src="((?:app|abi|config|i18n)\.js)(\?v=[0-9a-f]+)?"/g)];
+  assert.equal(scripts.length, 4, 'expected the four scripts');
+  links.push(...scripts);
   for (const [, file, v] of links) {
     assert.equal(v, `?v=${stampOf(file)}`,
       `${file} is linked with a stale or missing stamp — run node scripts/stamp-assets.mjs`);
