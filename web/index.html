@@ -319,12 +319,20 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
 @media(max-width:640px){#latest article.entry{padding:1.25rem}}
 #latest .entry-body{font:1.3rem/1.6 var(--serif);color:var(--ink)}
 #latest .entry-meta .who{font-weight:500}
-.search{margin-top:1.3rem}
-.search input{width:100%;max-width:30rem;padding:.75rem 1.1rem;border:1px solid var(--rule);border-radius:99px;
-  background:var(--sheet);color:var(--ink);font:.92rem/1.2 var(--sans);transition:border-color .12s}
+.views .shell{display:flex;align-items:center;justify-content:space-between;gap:.8rem 1.5rem;flex-wrap:wrap}
+/* Search sits on the same row as the two views, out of the reading
+   column's way; on a phone it takes a row of its own. */
+.search{position:relative;flex:0 1 21rem;margin:0}
+@media(max-width:640px){.search{flex:1 1 100%}}
+.search input{width:100%;padding:.72rem 3rem .72rem 1.15rem;border:1px solid var(--rule);border-radius:99px;
+  background:var(--sheet);color:var(--ink);font:.88rem/1.2 var(--sans);transition:border-color .12s}
 .search input:hover{border-color:var(--ink-3)}
 .search input:focus{border-color:var(--accent);outline:none}
-.search input::placeholder{color:var(--ink-3);opacity:.8}
+.search input::placeholder{color:var(--ink-3);opacity:.85}
+.search input::-webkit-search-cancel-button{-webkit-appearance:none}
+.search .go{position:absolute;right:.3rem;top:50%;transform:translateY(-50%);width:2.2rem;height:2.2rem;
+  padding:0;display:grid;place-items:center;border-radius:99px;background:none;border:0;color:var(--ink-3)}
+.search .go:hover{color:var(--accent);opacity:1}
 /* What the search found, marked in the entry itself. */
 mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:inherit;border-radius:2px;padding:0 .06em}
 .label{margin:.6rem 0 0;font:italic 1.05rem/1.4 var(--serif);color:var(--ink-3)}
@@ -417,6 +425,10 @@ footer .addr{word-break:break-all}
       <button role="tab" id="tab-read" aria-controls="panel-read" aria-selected="true" data-view="read">Read</button>
       <button role="tab" id="tab-write" aria-controls="panel-write" aria-selected="false" data-view="write">Write</button>
     </div>
+    <form class="search" role="search" id="searchForm">
+      <input type="search" id="q" placeholder="Search words, tags or addresses" aria-label="Search the record" autocomplete="off" spellcheck="false">
+      <button type="submit" class="go" aria-label="Search"><svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.5 15.5 20 20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </form>
   </div>
 </nav>
 
@@ -429,9 +441,6 @@ footer .addr{word-break:break-all}
         <div>
           <h2>Latest entries</h2>
           <p class="sub">The newest entries in the archive, as written on Ethereum by their authors.</p>
-          <div class="search">
-            <input type="search" id="q" placeholder="Search the record: words, tags or an address" aria-label="Search the record" autocomplete="off" spellcheck="false">
-          </div>
         </div>
       </div>
       <p class="filterbar" id="searchNote" hidden></p>
@@ -651,8 +660,8 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=4a34ce3f20"></script>
+<script src="i18n.js?v=845805b21a"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=4a17be4d47"></script>
+<script type="module" src="app.js?v=12d5bde092"></script>
 </body>
 </html>

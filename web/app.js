@@ -713,9 +713,21 @@ $('clearfilter').onclick = () => {
   for (const el of document.querySelectorAll('#feed article.entry')) el.hidden = false;
 };
 $('latestClear').onclick = () => { latestTag = null; renderFeed(); };
-$('q').oninput = () => renderLatest(latestEntries);
+// The box sits beside both views, but its results are in the reading
+// one, so a search brings that view forward.
+const search = () => {
+  if ($('panel-read').hidden) $('tab-read').click();
+  renderLatest(latestEntries);
+};
+$('q').oninput = search;
 $('q').onkeydown = (ev) => {
   if (ev.key === 'Escape') { $('q').value = ''; renderLatest(latestEntries); }
+};
+$('searchForm').onsubmit = (ev) => {
+  ev.preventDefault();
+  if (!$('q').value.trim()) { $('q').focus(); return; }
+  search();
+  $('searchNote').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
 $('chain').textContent = C.CHAIN_NAME;
