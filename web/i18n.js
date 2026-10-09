@@ -115,6 +115,7 @@
     'Written by me': '我写的',
     'Reload': '刷新',
     'show all': '显示全部',
+    'showing': '正在显示',
 
     // background tabs
     'Before you write': '写入之前',

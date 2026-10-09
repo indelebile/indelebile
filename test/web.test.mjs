@@ -413,6 +413,20 @@ test('the filled opening button follows the open view', () => {
     'switching view must move the fill');
 });
 
+// Reading is where most people are, so its tags filter too, and each view
+// filters only itself: a tag clicked in one must not hide entries in the
+// other, where no bar would say a filter was on.
+test('tags filter the view they were clicked in, under that view\'s own bar', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  for (const id of ['latestFilter', 'latestTag', 'latestClear', 'filterbar', 'ftag', 'clearfilter']) {
+    assert.ok(html.includes(`id="${id}"`), `missing #${id}`);
+  }
+  assert.match(app, /t\.closest\('#latest'\)/, 'a click in the reading view must be told apart');
+  assert.ok(!/querySelectorAll\('article\.entry'\)/.test(app), 'archive filtering must be scoped to #feed');
+  assert.ok(!/tagsLive/.test(app), 'every rendered tag is a working filter');
+});
+
 // The icon in the tab and the mark beside the title are two files drawn by
 // one script. They may differ in exactly one way — the softened sheet —
 // and a hand edit to either would make them two marks.

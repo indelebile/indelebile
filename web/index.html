@@ -258,8 +258,8 @@ article.entry{display:grid;grid-template-columns:1fr;gap:.65rem;
 .empty{border:1px dashed var(--rule);border-radius:12px;padding:3rem 1.5rem;text-align:center;
   color:var(--ink-3);font-size:.95rem}
 .empty b{display:block;color:var(--ink-2);font-weight:400;font-size:1.1rem;margin-bottom:.5rem}
-#filterbar{margin-bottom:1.2rem;font:.72rem/1 var(--mono);color:var(--ink-3)}
-#filterbar button{background:none;border:0;color:var(--accent);padding:0;font:inherit}
+.filterbar{margin-bottom:1.2rem;font:.72rem/1 var(--mono);color:var(--ink-3)}
+.filterbar button{background:none;border:0;color:var(--accent);padding:0;font:inherit}
 article.entry[hidden]{display:none}
 
 /* ---------- explainers ---------- */
@@ -323,8 +323,6 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
 .rhead{display:grid;gap:.5rem 3rem;margin-bottom:2rem}
 @media(min-width:900px){.rhead{grid-template-columns:11rem minmax(0,1fr)}}
 .more{margin:0;padding-top:1rem;text-align:center}
-span.tag{cursor:default}
-span.tag:hover{border-color:var(--rule);color:var(--ink-3)}
 
 /* ---------- cost + verify ---------- */
 .split{display:grid;gap:2.2rem 3.5rem;align-items:start}
@@ -425,6 +423,7 @@ footer .addr{word-break:break-all}
           <p class="sub">The newest entries in the archive, as written on Ethereum by their authors.</p>
         </div>
       </div>
+      <p class="filterbar" id="latestFilter" hidden><span>showing</span> <b id="latestTag"></b> — <button id="latestClear">show all</button></p>
       <div id="latest"><p class="sub">Loading…</p></div>
     </section>
   </div>
@@ -524,7 +523,7 @@ footer .addr{word-break:break-all}
         <button role="tab" id="tab-mine" aria-controls="feed" aria-selected="false" data-scope="mine">Written by me</button>
       </div>
 
-      <p id="filterbar" hidden>showing <b id="ftag"></b> — <button id="clearfilter">show all</button></p>
+      <p class="filterbar" id="filterbar" hidden><span>showing</span> <b id="ftag"></b> — <button id="clearfilter">show all</button></p>
       <div id="feed"><p class="sub">Loading…</p></div>
     </section>
 
@@ -640,8 +639,8 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=149531d6e9"></script>
+<script src="i18n.js?v=5607e94c26"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=732aa7d51e"></script>
+<script type="module" src="app.js?v=8c62265ea4"></script>
 </body>
 </html>

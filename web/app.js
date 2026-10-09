@@ -489,6 +489,7 @@ function renderFeed() {
 // the whole archive is one small file.
 const LATEST = 10;
 let latestAll = false;
+let latestTag = null;
 
 function renderLatest(all) {
   if (!all.length) {
@@ -496,14 +497,16 @@ function renderLatest(all) {
       ${T('Nothing has been written here yet. Yours would be entry number one.')}</div>`;
     return;
   }
-  const shown = latestAll ? all : all.slice(0, LATEST);
-  const more = shown.length < all.length
+  // A tag means every entry carrying it, not only those among the newest.
+  const items = latestTag ? all.filter((e) => (e.tags ?? []).includes(latestTag)) : all;
+  const shown = latestAll || latestTag ? items : items.slice(0, LATEST);
+  const more = shown.length < items.length
     ? `<p class="more"><button class="ghost small" id="latestAll">${
-      T('Show all {n} entries').replace('{n}', all.length)}</button></p>`
+      T('Show all {n} entries').replace('{n}', items.length)}</button></p>`
     : '';
-  // Tags are shown but not live here: filtering belongs to the archive,
-  // which has the bar that says a filter is on and the button to clear it.
-  $('latest').innerHTML = shown.map((e) => renderEntry(e, { tagsLive: false })).join('') + more;
+  $('latestTag').textContent = latestTag ?? '';
+  $('latestFilter').hidden = !latestTag;
+  $('latest').innerHTML = shown.map((e) => renderEntry(e)).join('') + more;
 }
 
 function emptyFeed() {
@@ -539,7 +542,7 @@ function collapseNote(r, esc) {
   return `Collapsed${by}${when}${why}.${pending}${where}`;
 }
 
-function renderEntry(e, { tagsLive = true } = {}) {
+function renderEntry(e) {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const link = C.EXPLORER
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
@@ -562,21 +565,27 @@ function renderEntry(e, { tagsLive = true } = {}) {
              : 'read it from the calldata'}.</p>`
         : `<p class="entry-body">${esc(e.body)}</p>`}
       ${tags.length ? `<div class="entry-tags">${tags
-        .map((t) => (tagsLive
-          ? `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`
-          : `<span class="tag">${esc(t)}</span>`)).join('')}</div>` : ''}
+        .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
     </div>
   </article>`;
 }
 
 // Tag filtering, delegated so it survives every re-render of the feed.
+// Each view filters only itself, under its own bar: a tag clicked while
+// reading must not quietly hide entries in the archive on the other tab.
 document.addEventListener('click', (ev) => {
   const t = ev.target.closest('.tag');
   if (!t) return;
   const tag = t.dataset.tag;
+  if (t.closest('#latest')) {
+    latestTag = tag;
+    renderFeed();
+    $('latestFilter').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
   $('ftag').textContent = tag;
   $('filterbar').hidden = false;
-  for (const el of document.querySelectorAll('article.entry')) {
+  for (const el of document.querySelectorAll('#feed article.entry')) {
     el.hidden = !el.dataset.tags.split(' ').includes(tag);
   }
 });
@@ -662,8 +671,9 @@ $('lang').addEventListener('click', () => setTimeout(renderFeed));
 
 $('clearfilter').onclick = () => {
   $('filterbar').hidden = true;
-  for (const el of document.querySelectorAll('article.entry')) el.hidden = false;
+  for (const el of document.querySelectorAll('#feed article.entry')) el.hidden = false;
 };
+$('latestClear').onclick = () => { latestTag = null; renderFeed(); };
 
 $('chain').textContent = C.CHAIN_NAME;
 $('fee').textContent = fmtEth(C.MIN_FEE_WEI);
