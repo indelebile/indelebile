@@ -186,6 +186,12 @@ textarea:focus,input:focus{outline:none}
 textarea::placeholder,input::placeholder{color:var(--ink-3);opacity:.55}
 .tagrow{margin-top:1.6rem;padding-top:1.2rem;border-top:1px solid var(--rule-2)}
 .tagrow input{font-family:var(--mono);font-size:.88rem}
+/* The tag field sat bare on the sheet and read as a line of grey text, not
+   a place to type. Drawn as a field, like the address field below it. */
+.tagrow input{padding:.6rem .75rem;border:1px solid var(--rule);border-radius:8px;
+  background:var(--paper);transition:border-color .12s}
+.tagrow input:hover{border-color:var(--ink-3)}
+.tagrow input:focus{border-color:var(--accent)}
 
 /* rail bits */
 .railgroup{padding-bottom:1.1rem;margin-bottom:1.1rem;border-bottom:1px solid var(--rule-2)}
