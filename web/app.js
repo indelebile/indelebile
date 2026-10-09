@@ -490,6 +490,20 @@ function renderFeed() {
 const LATEST = 10;
 let latestAll = false;
 let latestTag = null;
+let latestEntries = [];
+
+// Search runs over the archive file already in the browser: nothing is
+// sent anywhere. It matches the text, a tag, or any part of the author's
+// address. A collapsed entry is matched only on what the view still shows
+// of it, its tags and author, so a search cannot surface what governance
+// chose to fold away.
+function matches(e, q) {
+  const s = q.toLowerCase();
+  const tag = s.replace(/^#/, '');
+  if ((e.tags ?? []).some((t) => t.includes(tag))) return true;
+  if (e.author?.toLowerCase().includes(s)) return true;
+  return !hidden.has(e.tx) && e.body.toLowerCase().includes(s);
+}
 
 function renderLatest(all) {
   if (!all.length) {
@@ -497,16 +511,25 @@ function renderLatest(all) {
       ${T('Nothing has been written here yet. Yours would be entry number one.')}</div>`;
     return;
   }
-  // A tag means every entry carrying it, not only those among the newest.
-  const items = latestTag ? all.filter((e) => (e.tags ?? []).includes(latestTag)) : all;
-  const shown = latestAll || latestTag ? items : items.slice(0, LATEST);
+  latestEntries = all;
+  const q = $('q').value.trim();
+  // A tag or a search means every entry that fits, not only the newest.
+  let items = latestTag ? all.filter((e) => (e.tags ?? []).includes(latestTag)) : all;
+  if (q) items = items.filter((e) => matches(e, q));
+  const shown = latestAll || latestTag || q ? items : items.slice(0, LATEST);
   const more = shown.length < items.length
     ? `<p class="more"><button class="ghost small" id="latestAll">${
       T('Show all {n} entries').replace('{n}', items.length)}</button></p>`
     : '';
   $('latestTag').textContent = latestTag ?? '';
   $('latestFilter').hidden = !latestTag;
-  $('latest').innerHTML = shown.map((e) => renderEntry(e)).join('') + more;
+  const note = $('searchNote');
+  note.hidden = !q;
+  note.textContent = !q ? ''
+    : items.length === 0 ? T('Nothing in the record matches “{q}”.').replace('{q}', q)
+      : T(items.length === 1 ? '1 entry matches “{q}”' : '{n} entries match “{q}”')
+        .replace('{n}', items.length).replace('{q}', q);
+  $('latest').innerHTML = shown.map((e) => renderEntry(e, q)).join('') + more;
 }
 
 function emptyFeed() {
@@ -542,7 +565,7 @@ function collapseNote(r, esc) {
   return `Collapsed${by}${when}${why}.${pending}${where}`;
 }
 
-function renderEntry(e) {
+function renderEntry(e, mark = '') {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const link = C.EXPLORER
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
@@ -563,11 +586,27 @@ function renderEntry(e) {
            and still on chain — ${C.EXPLORER
              ? `<a href="${C.EXPLORER}/tx/${esc(e.tx)}" target="_blank" rel="noreferrer">read it from the calldata</a>`
              : 'read it from the calldata'}.</p>`
-        : `<p class="entry-body">${esc(e.body)}</p>`}
+        : `<p class="entry-body">${highlight(e.body, mark, esc)}</p>`}
       ${tags.length ? `<div class="entry-tags">${tags
         .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
     </div>
   </article>`;
+}
+
+// Marks every occurrence of the search in an entry. It works on the raw
+// text and escapes each piece itself, so a search can never match inside
+// an escape sequence ("amp" in "&amp;") or inject markup of its own.
+function highlight(text, q, esc) {
+  if (!q) return esc(text);
+  const lower = text.toLowerCase();
+  const needle = q.toLowerCase();
+  let out = '';
+  let at = 0;
+  for (let i = lower.indexOf(needle); i !== -1; i = lower.indexOf(needle, at)) {
+    out += esc(text.slice(at, i)) + `<mark>${esc(text.slice(i, i + q.length))}</mark>`;
+    at = i + q.length;
+  }
+  return out + esc(text.slice(at));
 }
 
 // Tag filtering, delegated so it survives every re-render of the feed.
@@ -674,6 +713,10 @@ $('clearfilter').onclick = () => {
   for (const el of document.querySelectorAll('#feed article.entry')) el.hidden = false;
 };
 $('latestClear').onclick = () => { latestTag = null; renderFeed(); };
+$('q').oninput = () => renderLatest(latestEntries);
+$('q').onkeydown = (ev) => {
+  if (ev.key === 'Escape') { $('q').value = ''; renderLatest(latestEntries); }
+};
 
 $('chain').textContent = C.CHAIN_NAME;
 $('fee').textContent = fmtEth(C.MIN_FEE_WEI);

@@ -341,7 +341,8 @@ test('the translator never touches an entry body', () => {
   const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
   // The body is rendered escaped into its own element and never passed
   // through T().
-  assert.match(app, /class="entry-body">\$\{esc\(e\.body\)\}/, 'an entry body must be rendered raw and escaped');
+  assert.match(app, /class="entry-body">\$\{highlight\(e\.body, mark, esc\)\}/, 'an entry body must be rendered escaped');
+  assert.match(i18n, /classList\.contains\('entry-body'\)\) continue/, 'the walker must step over entry bodies');
   assert.ok(!/T\(\s*e\.body/.test(app), 'an entry body must never be translated');
 });
 
@@ -425,6 +426,23 @@ test('tags filter the view they were clicked in, under that view\'s own bar', ()
   assert.match(app, /t\.closest\('#latest'\)/, 'a click in the reading view must be told apart');
   assert.ok(!/querySelectorAll\('article\.entry'\)/.test(app), 'archive filtering must be scoped to #feed');
   assert.ok(!/tagsLive/.test(app), 'every rendered tag is a working filter');
+});
+
+// Search reads the file already in the browser and asks nothing of any
+// server. It must not reach into an entry governance has collapsed, and
+// marking what it found must never let the search itself become markup.
+test('search stays in the browser, respects collapses, and marks safely', async () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  assert.match(html, /<input type="search" id="q"/, 'the reading view needs a search box');
+  assert.ok(!/fetch\([^)]*\bq\b/.test(app), 'a search must not be sent anywhere');
+  assert.match(app, /!hidden\.has\(e\.tx\) && e\.body/, 'a collapsed body must not be searched');
+  const src = app.match(/function highlight\(text, q, esc\) \{[\s\S]*?\n\}/)[0];
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const highlight = new Function('esc', `${src}; return highlight;`)(esc);
+  assert.equal(highlight('a & amp', 'amp', esc), 'a &amp; <mark>amp</mark>', 'must not match inside an escape');
+  assert.equal(highlight('<b>', '<b>', esc), '<mark>&lt;b&gt;</mark>', 'the search must be escaped too');
+  assert.equal(highlight('庄子曰庄子', '庄子', esc), '<mark>庄子</mark>曰<mark>庄子</mark>');
 });
 
 // The icon in the tab and the mark beside the title are two files drawn by

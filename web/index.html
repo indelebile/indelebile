@@ -319,6 +319,14 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
 @media(max-width:640px){#latest article.entry{padding:1.25rem}}
 #latest .entry-body{font:1.3rem/1.6 var(--serif);color:var(--ink)}
 #latest .entry-meta .who{font-weight:500}
+.search{margin-top:1.3rem}
+.search input{width:100%;max-width:30rem;padding:.75rem 1.1rem;border:1px solid var(--rule);border-radius:99px;
+  background:var(--sheet);color:var(--ink);font:.92rem/1.2 var(--sans);transition:border-color .12s}
+.search input:hover{border-color:var(--ink-3)}
+.search input:focus{border-color:var(--accent);outline:none}
+.search input::placeholder{color:var(--ink-3);opacity:.8}
+/* What the search found, marked in the entry itself. */
+mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:inherit;border-radius:2px;padding:0 .06em}
 .label{margin:.6rem 0 0;font:italic 1.05rem/1.4 var(--serif);color:var(--ink-3)}
 .rhead{display:grid;gap:.5rem 3rem;margin-bottom:2rem}
 @media(min-width:900px){.rhead{grid-template-columns:11rem minmax(0,1fr)}}
@@ -421,8 +429,12 @@ footer .addr{word-break:break-all}
         <div>
           <h2>Latest entries</h2>
           <p class="sub">The newest entries in the archive, as written on Ethereum by their authors.</p>
+          <div class="search">
+            <input type="search" id="q" placeholder="Search the record: words, tags or an address" aria-label="Search the record" autocomplete="off" spellcheck="false">
+          </div>
         </div>
       </div>
+      <p class="filterbar" id="searchNote" hidden></p>
       <p class="filterbar" id="latestFilter" hidden><span>showing</span> <b id="latestTag"></b> — <button id="latestClear">show all</button></p>
       <div id="latest"><p class="sub">Loading…</p></div>
     </section>
@@ -639,8 +651,8 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=5607e94c26"></script>
+<script src="i18n.js?v=4a34ce3f20"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=8c62265ea4"></script>
+<script type="module" src="app.js?v=4a17be4d47"></script>
 </body>
 </html>

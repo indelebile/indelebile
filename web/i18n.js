@@ -116,6 +116,11 @@
     'Reload': '刷新',
     'show all': '显示全部',
     'showing': '正在显示',
+    'Search the record: words, tags or an address': '搜索记录：正文、标签或地址',
+    'Search the record': '搜索记录',
+    'Nothing in the record matches “{q}”.': '没有与“{q}”匹配的记录。',
+    '1 entry matches “{q}”': '有 1 条记录与“{q}”匹配',
+    '{n} entries match “{q}”': '有 {n} 条记录与“{q}”匹配',
 
     // background tabs
     'Before you write': '写入之前',
@@ -194,6 +199,9 @@
   function walk(el, lang) {
     for (const c of [...el.children]) {
       if (SKIP.has(c.tagName)) continue;
+      // What someone wrote is never translated, even an entry that happens
+      // to read exactly like a label on this page ("Read", "Write").
+      if (c.classList.contains('entry-body')) continue;
       const { prefix, text } = parts(c);
       const hit = translatable(c) && DICT[text] !== undefined;
       if (hit) {
