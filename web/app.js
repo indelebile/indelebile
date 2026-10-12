@@ -169,8 +169,8 @@ async function callBalance() {
 async function loadNextSeq() {
   const idx = archive ?? await loadArchive().catch(() => null);
   if (!idx) return 0;
-  const mine = idx.entries.filter((e) => e.author?.toLowerCase() === account);
-  return mine.length ? Math.max(...mine.map((e) => e.seq)) + 1 : 0;
+  const used = seqsOf(account);
+  return used.length ? Math.max(...used) + 1 : 0;
 }
 
 // ---------- signing on Etherscan instead ----------
@@ -189,8 +189,8 @@ async function loadNextSeq() {
 const isAddress = (a) => /^0x[0-9a-f]{40}$/.test(a);
 
 function nextSeqFor(address) {
-  const mine = (archive?.entries ?? []).filter((e) => e.author?.toLowerCase() === address);
-  return mine.length ? Math.max(...mine.map((e) => e.seq)) + 1 : 0;
+  const used = seqsOf(address);
+  return used.length ? Math.max(...used) + 1 : 0;
 }
 
 async function copyForEtherscan() {
@@ -312,6 +312,14 @@ async function send() {
   // something we already know is invalid.
   if (failed.length) return say('Entry is not valid yet — fix it before sending.', true);
 
+  // The same words again from the same address is almost always a second
+  // press while the first was still waiting to appear, so ask first.
+  const again = [...(archive?.entries ?? []), ...readPending()]
+    .find((e) => e.author?.toLowerCase() === account && e.body === entry.body);
+  if (again && !window.confirm(T('You have already written exactly this from this address. Write it again, paying the fee again?'))) {
+    return;
+  }
+
   const tx = {
     from: account,
     to: C.JOURNALS.at(-1).address,
@@ -351,14 +359,16 @@ async function send() {
       return;
     }
 
+    rememberPending({ tx: hash, block: Number(receipt.blockNumber), author: account,
+      seq: entry.seq, ts: entry.ts, tags: entry.tags, body: entry.body, at: Date.now() });
     $('body').value = '';
     $('tags').value = '';
-    // The archive below is the indexer's output, so a new entry appears
-    // once the indexer next runs. Saying so beats silently omitting it.
-    say(`Written in block ${Number(receipt.blockNumber)}. ${link}<br>` +
-        'It will appear in the archive when the indexer next runs.', false, true);
-    nextSeq += 1;
+    say(`${T('Written in block {b}.').replace('{b}', Number(receipt.blockNumber))} ${link}<br>` +
+        T('It is shown under Read already, marked as waiting, and joins the archive at its next rebuild. There is no need to send it again.'),
+    false, true);
+    nextSeq = await loadNextSeq();
     $('seq').textContent = nextSeq;
+    renderFeed();
   } catch (e) {
     say(walletError(e), true);
     $('send').disabled = false;
@@ -405,12 +415,16 @@ async function faucet() {
 // anyone can re-run, and `entriesHash` is printed below so a reader can
 // compare their own build against this one instead of trusting it.
 let archive = null;
+let archiveAt = null;
 let hidden = new Map();
 
 async function loadArchive() {
   const res = await fetch('../out/index.json', { cache: 'no-store' });
   if (!res.ok) throw new Error(`no index.json (HTTP ${res.status}) — run the indexer`);
   archive = await res.json();
+  // When this copy was published, so a reader can see how stale it is.
+  const lm = Date.parse(res.headers.get('last-modified') ?? '');
+  archiveAt = Number.isNaN(lm) ? null : lm;
 
   // Governance can collapse an entry here; it can never remove one. A
   // missing or unreadable list simply hides nothing — moderation failing
@@ -437,6 +451,45 @@ function parseHidden(j) {
   return out;
 }
 
+// ---------- written here, not yet in the archive ----------
+// The archive is rebuilt on a schedule that GitHub runs late as often as
+// on time, so an entry can be on chain for an hour before it appears. A
+// writer who sees nothing in that hour writes it again, and the second
+// copy, carrying the same entry number, is refused while its fee is
+// spent. So an entry written from this page is shown at once, marked as
+// waiting, from this browser's own record of it. Nothing about it is
+// decided here: it drops out the moment the archive includes it, and if
+// the archive refuses it instead, it says so with the archive's reasons.
+const PENDING_KEY = 'indelebile-pending';
+const readPending = () => {
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) ?? '[]'); } catch { return []; }
+};
+const writePending = (list) => {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); } catch { /* private mode */ }
+};
+function rememberPending(p) {
+  writePending([...readPending().filter((x) => x.tx !== p.tx), p]);
+}
+function pendingEntries(idx) {
+  const inArchive = new Set(idx.entries.map((e) => e.id.toLowerCase()));
+  const refused = new Map((idx.rejected ?? []).map((r) => [r.txHash.toLowerCase(), r.failed]));
+  const fortnight = 14 * 86_400_000;
+  const keep = readPending().filter((p) => !inArchive.has(p.tx.toLowerCase())
+    && Date.now() - (p.at ?? 0) < fortnight);
+  writePending(keep);
+  return keep.map((p) => ({ ...p, id: p.tx, logIndex: Number.MAX_SAFE_INTEGER, pending: true,
+    refused: refused.get(p.tx.toLowerCase()) ?? null }));
+}
+// The entry numbers an address has used: those in the archive, and those
+// written from here that the archive has not yet refused.
+function seqsOf(address) {
+  const indexed = (archive?.entries ?? []).filter((e) => e.author?.toLowerCase() === address);
+  const waiting = archive
+    ? pendingEntries(archive).filter((p) => p.author === address && !p.refused)
+    : [];
+  return [...indexed, ...waiting].map((e) => e.seq);
+}
+
 // 'all' or 'mine'. An author's own entries are not a separate list: the
 // archive already carries the author of every entry, so this is a filter
 // over the same file, not a second source that could disagree with it.
@@ -450,21 +503,25 @@ async function loadFeed() {
 function renderFeed() {
   const idx = archive;
   if (!idx) return;
-  const all = idx.entries
-    .map((e) => ({ ...e, tx: e.id }))
+  const all = idx.entries.map((e) => ({ ...e, tx: e.id }));
+  // Shown, not counted: the counts below are the archive's own.
+  const shown = [...pendingEntries(idx), ...all]
     .sort((a, b) => b.block - a.block || b.logIndex - a.logIndex);
   const items = scope === 'mine'
-    ? (account ? all.filter((e) => e.author?.toLowerCase() === account) : [])
-    : all;
+    ? (account ? shown.filter((e) => e.author?.toLowerCase() === account) : [])
+    : shown;
 
   $('feed').innerHTML = items.length ? items.map((e) => renderEntry(e)).join('') : emptyFeed();
-  renderLatest(all);
+  renderLatest(shown);
   $('feedCount').textContent = all.length;
   $('feedNoun').textContent = T(all.length === 1 ? 'entry' : 'entries');
   $('sealCount').textContent = `${all.length} ${T(all.length === 1 ? 'entry kept' : 'entries kept')}`;
   $('asOf').textContent = idx.synthetic
     ? 'synthetic sample data — run the indexer for the real archive'
     : `as of block ${idx.builtAtBlock?.toLocaleString() ?? '—'}`;
+  $('readAsOf').textContent = archiveAt === null ? ''
+    : T('The archive was last rebuilt {m} minutes ago. A new entry appears after the next rebuild.')
+      .replace('{m}', Math.max(0, Math.round((Date.now() - archiveAt) / 60_000)));
   $('archiveHash').textContent = idx.entriesHash ?? '';
 
   // The count belongs on the tab rather than in the feed: it answers
@@ -571,9 +628,13 @@ function renderEntry(e, mark = '') {
     ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
     : `block ${e.block}`;
   const tags = (e.tags ?? []);
-  const record = hidden.get(e.tx);
+  const record = e.pending ? undefined : hidden.get(e.tx);
   const collapsed = record !== undefined;
-  return `<article class="entry${collapsed ? ' collapsed' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
+  const state = !e.pending ? ''
+    : e.refused
+      ? `<p class="pending-note refused">${esc(T('The archive did not accept this entry: {why}.').replace('{why}', e.refused.join(', ')))}</p>`
+      : `<p class="pending-note">${esc(T('On chain in block {b}, shown from this browser until the archive next rebuilds.').replace('{b}', e.block))}</p>`;
+  return `<article class="entry${collapsed ? ' collapsed' : ''}${e.pending ? ' pending' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
       <span class="seq">entry #${esc(e.seq)}</span>
@@ -587,6 +648,7 @@ function renderEntry(e, mark = '') {
              ? `<a href="${C.EXPLORER}/tx/${esc(e.tx)}" target="_blank" rel="noreferrer">read it from the calldata</a>`
              : 'read it from the calldata'}.</p>`
         : `<p class="entry-body">${highlight(e.body, mark, esc)}</p>`}
+      ${state}
       ${tags.length ? `<div class="entry-tags">${tags
         .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
     </div>

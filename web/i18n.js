@@ -116,6 +116,16 @@
     'Reload': '刷新',
     'show all': '显示全部',
     'showing': '正在显示',
+    'The archive was last rebuilt {m} minutes ago. A new entry appears after the next rebuild.':
+      '档案于 {m} 分钟前更新。新写入的记录会在下次更新后出现。',
+    'You have already written exactly this from this address. Write it again, paying the fee again?':
+      '这个地址已经写过完全相同的内容。确定要再写一次、再付一次费用吗？',
+    'Written in block {b}.': '已写入区块 {b}。',
+    'It is shown under Read already, marked as waiting, and joins the archive at its next rebuild. There is no need to send it again.':
+      '它已经显示在"阅读"中，标注为等待收录，会在档案下次更新时正式加入。不需要再提交一次。',
+    'The archive did not accept this entry: {why}.': '档案没有收录这条记录：{why}。',
+    'On chain in block {b}, shown from this browser until the archive next rebuilds.':
+      '已上链（区块 {b}），在档案下次更新前，由本浏览器显示。',
     'Search words, tags or addresses': '搜索正文、标签或地址',
     'Nothing in the record matches “{q}”.': '没有与“{q}”匹配的记录。',
     '1 entry matches “{q}”': '有 1 条记录与“{q}”匹配',

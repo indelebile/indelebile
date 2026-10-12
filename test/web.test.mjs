@@ -445,6 +445,35 @@ test('search stays in the browser, respects collapses, and marks safely', async 
   assert.equal(highlight('庄子曰庄子', '庄子', esc), '<mark>庄子</mark>曰<mark>庄子</mark>');
 });
 
+// The archive can lag the chain by an hour. An entry written in that hour
+// must show at once, must leave as soon as the archive has it, must say so
+// if the archive refuses it, and must count toward the next entry number,
+// or a second write reuses the number and is refused with its fee spent.
+test('an entry written here shows at once, counts toward the next number, and gives way to the archive', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const start = app.indexOf('const PENDING_KEY');
+  const src = app.slice(start, app.indexOf("// 'all' or 'mine'", start));
+  assert.match(src, /try \{ return JSON\.parse\(localStorage/, 'reads must survive a refused localStorage');
+  assert.match(src, /try \{ localStorage\.setItem/, 'writes must survive a refused localStorage');
+  const store = {};
+  const localStorage = { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; } };
+  let archive = { entries: [{ id: '0xAA', author: '0xme', seq: 0 }], rejected: [] };
+  const api = new Function('localStorage', 'getArchive', `let archive; ${src.replace(/archive/g, 'getArchive()')}
+    return { rememberPending, pendingEntries, seqsOf };`)(localStorage, () => archive);
+  api.rememberPending({ tx: '0xBB', block: 9, author: '0xme', seq: 1, body: 'x', at: Date.now() });
+  assert.deepEqual(api.seqsOf('0xme').sort(), [0, 1], 'a waiting entry holds its number');
+  assert.equal(api.pendingEntries(archive).length, 1, 'shown until the archive has it');
+  archive = { entries: [...archive.entries, { id: '0xbb', author: '0xme', seq: 1 }], rejected: [] };
+  assert.equal(api.pendingEntries(archive).length, 0, 'gone once the archive includes it, whatever the case');
+  api.rememberPending({ tx: '0xCC', block: 10, author: '0xme', seq: 2, body: 'y', at: Date.now() });
+  archive = { ...archive, rejected: [{ txHash: '0xcc', failed: ['V8'] }] };
+  const [refused] = api.pendingEntries(archive);
+  assert.deepEqual(refused.refused, ['V8'], 'a refusal is shown with the archive\'s reasons');
+  assert.deepEqual(api.seqsOf('0xme').sort(), [0, 1], 'a refused entry does not use up a number');
+  assert.match(app, /window\.confirm\(T\('You have already written exactly this/, 'the same words twice must be confirmed');
+  assert.match(app, /feedCount'\)\.textContent = all\.length/, 'counts stay the archive\'s own');
+});
+
 // The icon in the tab and the mark beside the title are two files drawn by
 // one script. They may differ in exactly one way — the softened sheet —
 // and a hand edit to either would make them two marks.
