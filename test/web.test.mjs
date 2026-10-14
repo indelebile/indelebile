@@ -549,3 +549,24 @@ test('the keepalive re-enables the publish job and itself, with least privilege'
   assert.ok(!/contents: write|pages: write|id-token/.test(perms), 'no permission beyond actions:write');
   assert.ok(!/uses: (?!actions\/)/.test(y), 'no third-party actions');
 });
+
+// An entry's link has to open that entry for anyone, so it is built from
+// what the protocol holds unique, the author and their number, and has to
+// survive the case a link is pasted in. Only an entry the archive holds
+// gets a link: one still waiting would open on nothing for anyone else.
+test('every archived entry has a link of its own that opens the reading view on it', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const src = ['entryKey', 'keyFromHash'].map((n) => app.match(new RegExp(`const ${n} = [\\s\\S]*?;\\n(?=const|//|let)`))[0]).join('');
+  const { entryKey, keyFromHash } = new Function(`${src}; return { entryKey, keyFromHash };`)();
+  const author = '0xEB47aa00000000000000000000000000000c3800';
+  const key = entryKey({ author, seq: 2 });
+  assert.equal(key, `${author.toLowerCase()}/2`);
+  assert.equal(keyFromHash(`#e/${author}/2`), key, 'a pasted link in any case opens the same entry');
+  assert.equal(keyFromHash(`#e/${author}/02`), key, 'a leading zero is the same number');
+  for (const junk of ['#read', '#e/0x12/2', `#e/${author}`, `#e/${author}/x`, `#e/${author}/2/extra`, `#e/${author}/2"><b>`]) {
+    assert.equal(keyFromHash(junk), null, `${junk} is not an entry link`);
+  }
+  assert.match(app, /const permalink = e\.pending \? ''/, 'a waiting entry must not offer a link');
+  assert.match(app, /latestAll = true;\s*latestTag = null;\s*\$\('q'\)\.value = '';/, 'a tag, a search or the cut must not hide the linked entry');
+  assert.match(app, /history\.replaceState\(null, '', `#e\/\$\{key\}`\)/, 'opening the reading view must not rewrite the link away');
+});

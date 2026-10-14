@@ -537,6 +537,35 @@ function renderFeed() {
   // text were just replaced, so whatever was translated in them is gone.
   // Entries themselves never match a key — they are what someone wrote.
   window.JJ_I18N?.apply(window.JJ_I18N.lang);
+  reveal();
+}
+
+// Brings the entry a link asked for into view. A tag or a search could be
+// hiding it, and so could the cut to the newest few, so all three give way.
+function reveal() {
+  if (!wanted || !archive) return;
+  const key = wanted;
+  wanted = null;
+  if (!latestEntries.some((e) => entryKey(e) === key)) {
+    const [author, n] = key.split('/');
+    const note = $('searchNote');
+    note.textContent = T('There is no entry {id} in the archive. If it was written in the last hour, it appears after the next rebuild.')
+      .replace('{id}', `${author.slice(0, 6)}…${author.slice(-4)} #${n}`);
+    note.hidden = false;
+    note.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  marked = key;
+  latestAll = true;
+  latestTag = null;
+  $('q').value = '';
+  renderLatest(latestEntries);
+  window.JJ_I18N?.apply(window.JJ_I18N.lang);
+  // Straight there, once the faces have loaded: a link opened from a chat
+  // arrives while the page is still settling, and a smooth scroll begun
+  // then is cut short by the layout moving under it.
+  const el = document.querySelector(`#latest article[data-key="${key}"]`);
+  document.fonts.ready.then(() => requestAnimationFrame(() => el?.scrollIntoView({ block: 'start' })));
 }
 
 // The reading view: the newest few, for people who came to read rather
@@ -548,6 +577,20 @@ const LATEST = 10;
 let latestAll = false;
 let latestTag = null;
 let latestEntries = [];
+
+// An entry's own address on the page: its author and its number from that
+// author, the pair the protocol already holds unique. #e/<author>/<n> opens
+// the reading view on that entry, however far down the archive it is.
+const entryKey = (e) => `${e.author.toLowerCase()}/${e.seq}`;
+const keyFromHash = (hash) => {
+  const m = /^#e\/(0x[0-9a-fA-F]{40})\/(\d+)$/.exec(hash);
+  return m ? `${m[1].toLowerCase()}/${Number(m[2])}` : null;
+};
+const entryUrl = (key) => `${location.href.split('#')[0]}#e/${key}`;
+// The entry a link asked for: `wanted` until it has been found and shown,
+// `marked` for as long as it stays outlined.
+let wanted = null;
+let marked = null;
 
 // Search runs over the archive file already in the browser: nothing is
 // sent anywhere. It matches the text, a tag, or any part of the author's
@@ -634,12 +677,17 @@ function renderEntry(e, mark = '') {
     : e.refused
       ? `<p class="pending-note refused">${esc(T('The archive did not accept this entry: {why}.').replace('{why}', e.refused.join(', ')))}</p>`
       : `<p class="pending-note">${esc(T('On chain in block {b}, shown from this browser until the archive next rebuilds.').replace('{b}', e.block))}</p>`;
-  return `<article class="entry${collapsed ? ' collapsed' : ''}${e.pending ? ' pending' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
+  const key = entryKey(e);
+  // Only an entry the archive holds has an address anyone else can open.
+  const permalink = e.pending ? ''
+    : `<a class="permalink" href="#e/${esc(key)}" data-key="${esc(key)}">${T('Copy link')}</a>`;
+  return `<article class="entry${collapsed ? ' collapsed' : ''}${e.pending ? ' pending' : ''}${key === marked ? ' marked' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}" data-key="${esc(key)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
       <span class="seq">${esc(T('entry #{n}').replace('{n}', e.seq))}</span>
       <span>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</span>
       ${link}
+      ${permalink}
     </div>
     <div>
       ${collapsed
@@ -689,6 +737,37 @@ document.addEventListener('click', (ev) => {
   for (const el of document.querySelectorAll('#feed article.entry')) {
     el.hidden = !el.dataset.tags.split(' ').includes(tag);
   }
+});
+
+// The older way to copy, for in-app browsers (WeChat's among them) that
+// refuse the clipboard API but still honour a copy from a selection.
+function copyByHand(text) {
+  const t = document.createElement('textarea');
+  t.value = text;
+  t.setAttribute('readonly', '');
+  t.style.position = 'fixed';
+  t.style.opacity = '0';
+  document.body.append(t);
+  t.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch { /* not supported */ }
+  t.remove();
+  return ok;
+}
+
+// Copying an entry's link. The link is a real one, so it can also be
+// opened or copied from the browser's own menu; a plain click copies it and
+// puts it in the address bar rather than switching views.
+document.addEventListener('click', async (ev) => {
+  const a = ev.target.closest('a.permalink');
+  if (!a) return;
+  ev.preventDefault();
+  const url = entryUrl(a.dataset.key);
+  history.replaceState(null, '', `#e/${a.dataset.key}`);
+  let copied = false;
+  try { await navigator.clipboard.writeText(url); copied = true; } catch { copied = copyByHand(url); }
+  a.textContent = copied ? T('Link copied') : T('Link in the address bar');
+  setTimeout(() => { a.textContent = T('Copy link'); }, 2000);
 });
 
 // ---------- misc ----------
@@ -757,6 +836,15 @@ document.addEventListener('click', (ev) => {
 // A link can open either view: #write for a post asking people to add
 // to the record, #read (or nothing) for one pointing at what is in it.
 const openView = () => {
+  const key = keyFromHash(location.hash);
+  if (key) {
+    $('tab-read').click();
+    // Opening the tab rewrote the address to #read; the link stays the link.
+    history.replaceState(null, '', `#e/${key}`);
+    wanted = key;
+    reveal();
+    return;
+  }
   const tab = { '#write': 'tab-write', '#read': 'tab-read' }[location.hash];
   if (!tab) return;
   $(tab).click();

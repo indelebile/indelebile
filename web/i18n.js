@@ -26,6 +26,11 @@
     'block {b}': '区块 {b}',
     '{n} bytes on-chain': '链上 {n} 字节',
     'from this wallet': '本钱包',
+    'Copy link': '复制链接',
+    'Link copied': '已复制链接',
+    'Link in the address bar': '链接已在地址栏',
+    'There is no entry {id} in the archive. If it was written in the last hour, it appears after the next rebuild.':
+      '档案中没有 {id} 这条记录。如果它是最近一小时内写入的，会在下次更新后出现。',
     // footer
     'Contract': '合约',
     'Content is stored in L1 calldata and minted under ESIP-3, with ESIP-6 non-uniqueness.':
