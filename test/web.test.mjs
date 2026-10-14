@@ -570,3 +570,14 @@ test('every archived entry has a link of its own that opens the reading view on 
   assert.match(app, /latestAll = true;\s*latestTag = null;\s*\$\('q'\)\.value = '';/, 'a tag, a search or the cut must not hide the linked entry');
   assert.match(app, /history\.replaceState\(null, '', `#e\/\$\{key\}`\)/, 'opening the reading view must not rewrite the link away');
 });
+
+// A phone tints its browser bar with theme-color. Unless that is the
+// page's own paper, a band of a different colour sits above the page.
+test('the browser bar is tinted with the page\'s own paper, in both schemes', () => {
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  const bar = (scheme) => html.match(new RegExp(`<meta name="theme-color" content="(#[0-9a-f]{6})" media="\\(prefers-color-scheme: ${scheme}\\)">`))[1];
+  const light = html.match(/:root\{[\s\S]*?--paper:(#[0-9a-f]{6})/)[1];
+  const dark = html.match(/prefers-color-scheme:dark\)\{:root\{[\s\S]*?--paper:(#[0-9a-f]{6})/)[1];
+  assert.equal(bar('light'), light);
+  assert.equal(bar('dark'), dark);
+});
