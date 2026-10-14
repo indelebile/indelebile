@@ -12,7 +12,8 @@
   const ZH = {
     // masthead and opening
     'Italian for indelible · a permanent record for AssangeDAO':
-      'Indelebile，意大利语「不可磨灭」· 为 AssangeDAO 留存的永久记录',
+      // Two phrases that each stay whole; a narrow screen breaks between them.
+      '<span class="nb">Indelebile，意大利语「不可磨灭」·</span> <span class="nb">为 AssangeDAO 留存的永久记录</span>',
     "Some moments deserve to be carved into history, beyond the reach of any power. Whatever is set down here becomes an inscription in Ethereum's calldata, owned by the one who wrote it. Not a link, not a file on someone's server. Nothing to renew, nothing to expire.":
       // Written for Chinese readers rather than translated from the English.
       '有些时刻，值得被历史记住；而我们，正是书写历史的人。<br>在这里，每一次思想的碰撞与表达，都会化作一枚刻在以太坊 calldata 上的铭文。它不是一条网页链接，也不存放在任何一台服务器上；无需续费，永不失效。',
@@ -21,6 +22,16 @@
     '$JUSTICE to write': '$JUSTICE 门槛',
     'entries': '条记录',
     'entry': '条记录',
+    'entry #{n}': '第 {n} 条',
+    'block {b}': '区块 {b}',
+    '{n} bytes on-chain': '链上 {n} 字节',
+    'from this wallet': '本钱包',
+    // footer
+    'Contract': '合约',
+    'Content is stored in L1 calldata and minted under ESIP-3, with ESIP-6 non-uniqueness.':
+      '内容存储在以太坊 L1 的 calldata 中，按 <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-3-smart-contract-ethscription-creations" target="_blank" rel="noreferrer">ESIP-3</a> 铸造，并采用 <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-6-opt-in-ethscription-non-uniqueness" target="_blank" rel="noreferrer">ESIP-6</a> 的非唯一性规则。',
+    "This page loads no third-party libraries, fonts or trackers. Apart from its own server, it talks only to an Ethereum RPC endpoint: your wallet's, or one of the public ones listed in config.js.":
+      '本页不加载任何第三方的库、字体或追踪器。除了自己的服务器，它只连接以太坊 RPC 节点：你钱包的节点，或 config.js 中列出的公共节点。',
 
     // composer
     'Write an entry': '写下一条记录',

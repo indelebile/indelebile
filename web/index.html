@@ -55,6 +55,11 @@
      as printed rather than displayed; mono for the machine's numbers. */
   --sans:'Inter',system-ui,-apple-system,'Segoe UI','PingFang SC','Hiragino Sans GB','Noto Sans CJK SC',sans-serif;
   --serif:'IM Fell English',Georgia,'Songti SC','Noto Serif CJK SC','Source Han Serif SC',serif;
+  /* The same press face where a line is set in italic. Chinese has no
+     italic, so there it falls to Kaiti, the brush face Chinese books use
+     where Latin ones use italic, and to an upright serif where no Kaiti
+     is installed. */
+  --serif-it:'IM Fell English',Georgia,'Kaiti SC','STKaiti','KaiTi','BiauKai','Songti SC','Noto Serif CJK SC',serif;
   --mono:ui-monospace,SFMono-Regular,'SF Mono',Menlo,Consolas,monospace;
   --shell:74rem;      /* the page */
   --measure:38rem;    /* the longest a line of prose may get */
@@ -109,6 +114,7 @@ a{color:inherit}
 @media(min-width:900px){.hero .shell{grid-template-columns:minmax(0,1fr) 27rem;gap:3.5rem;
   padding-top:5rem;padding-bottom:5rem}}
 .kicker{margin:0 0 1.3rem;font:italic 1.05rem/1.4 var(--serif);color:var(--ink-3)}
+.nb{white-space:nowrap}
 h1{margin:0;font:500 clamp(2.7rem,6.6vw,5.4rem)/.98 var(--sans);letter-spacing:-.048em;
   color:var(--ink);text-wrap:balance}
 /* In Chinese the statement is a couplet from Du Fu, so it is set in the
@@ -136,6 +142,9 @@ html[lang|=zh] h1{font-family:var(--serif);font-weight:400;letter-spacing:.04em;
    words turn slowly, in opposite directions; nothing else on the page
    moves. */
 .seal{width:100%;max-width:27rem;justify-self:center;color:var(--ink)}
+/* Stacked under the opening on a phone, at full width it was a screenful of
+   ornament between the buttons and the record they point to. */
+@media(max-width:899px){.seal{max-width:18rem}}
 .seal svg{display:block;width:100%;height:auto}
 .seal .ring{transform-origin:200px 200px;animation:turn 140s linear infinite}
 @keyframes turn{to{transform:rotate(360deg)}}
@@ -242,7 +251,7 @@ article.entry{display:grid;grid-template-columns:1fr;gap:.65rem;
 /* No bottom border on the last entry — the section rule below already
    closes the list, and the two landed a pixel apart. */
 .entry-meta{font:.71rem/1.85 var(--mono);color:var(--ink-3)}
-.entry-meta span,.entry-meta a{display:inline;margin-right:.7rem}
+.entry-meta span,.entry-meta a{display:inline;margin-right:.7rem;white-space:nowrap}
 @media(min-width:860px){.entry-meta span,.entry-meta a{display:block;margin-right:0}}
 .entry-meta .who{color:var(--ink)}
 .entry-meta .seq{color:var(--accent)}
@@ -336,6 +345,11 @@ code{font:.86em/1 var(--mono);background:var(--code);padding:.15em .4em;
 /* What the search found, marked in the entry itself. */
 mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:inherit;border-radius:2px;padding:0 .06em}
 .label{margin:.6rem 0 0;font:italic 1.05rem/1.4 var(--serif);color:var(--ink-3)}
+/* Asked to italicise Chinese, a browser shears the upright glyphs. These
+   lines take the italic stack instead, and nothing is slanted that was not
+   drawn slanted. */
+.kicker,.motto,.seal .count,.facts,h2 .n,.label{font-family:var(--serif-it);font-synthesis-style:none}
+html[lang|=zh] .veil{font-style:normal}
 .rhead{display:grid;gap:.5rem 3rem;margin-bottom:2rem}
 @media(min-width:900px){.rhead{grid-template-columns:11rem minmax(0,1fr)}}
 .sub.asof{margin-top:.25rem;font:.74rem/1.5 var(--mono);color:var(--ink-3)}
@@ -365,6 +379,7 @@ footer .cols{display:grid;gap:1.4rem 3rem}
 @media(min-width:760px){footer .cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 footer a{color:var(--ink-2)}
 footer .addr{word-break:break-all}
+footer p{margin:0}
 </style>
 </head>
 <body>
@@ -653,22 +668,21 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
   <div class="shell">
     <div class="cols">
       <div>
-        Contract<br><span class="addr" id="contractAddr">—</span>
+        <span>Contract</span><br><span class="addr" id="contractAddr">—</span>
       </div>
       <div>
-        Content is stored in L1 calldata and minted under
+        <p>Content is stored in L1 calldata and minted under
         <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-3-smart-contract-ethscription-creations" target="_blank" rel="noreferrer">ESIP-3</a>,
-        with <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-6-opt-in-ethscription-non-uniqueness" target="_blank" rel="noreferrer">ESIP-6</a> non-uniqueness.<br>
-        This page loads no libraries, fonts, or trackers, and makes no request to any
-        host but the RPC endpoint you configure.
+        with <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-6-opt-in-ethscription-non-uniqueness" target="_blank" rel="noreferrer">ESIP-6</a> non-uniqueness.</p>
+        <p>This page loads no third-party libraries, fonts or trackers. Apart from its own server, it talks only to an Ethereum RPC endpoint: your wallet's, or one of the public ones listed in config.js.</p>
       </div>
     </div>
   </div>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=568fedc454"></script>
+<script src="i18n.js?v=5b5808de47"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=9aab4be76c"></script>
+<script type="module" src="app.js?v=d14f6126a0"></script>
 </body>
 </html>

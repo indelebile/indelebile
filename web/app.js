@@ -278,7 +278,7 @@ function update() {
 
   $('count').textContent = `${chars} / ${C.BODY_MAX_CHARS}`;
   setState($('count'), ['over'], chars > C.BODY_MAX_CHARS ? 'over' : null);
-  $('bytes').textContent = `${byteLength(uri)} bytes on-chain`;
+  $('bytes').textContent = T('{n} bytes on-chain').replace('{n}', byteLength(uri));
   $('preview').textContent = uri;
 
   const pct = Math.min(100, (chars / C.BODY_MAX_CHARS) * 100);
@@ -625,8 +625,8 @@ function collapseNote(r, esc) {
 function renderEntry(e, mark = '') {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const link = C.EXPLORER
-    ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">block ${e.block}</a>`
-    : `block ${e.block}`;
+    ? `<a href="${C.EXPLORER}/tx/${e.tx}" target="_blank" rel="noreferrer">${T('block {b}').replace('{b}', e.block)}</a>`
+    : T('block {b}').replace('{b}', e.block);
   const tags = (e.tags ?? []);
   const record = e.pending ? undefined : hidden.get(e.tx);
   const collapsed = record !== undefined;
@@ -637,7 +637,7 @@ function renderEntry(e, mark = '') {
   return `<article class="entry${collapsed ? ' collapsed' : ''}${e.pending ? ' pending' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
-      <span class="seq">entry #${esc(e.seq)}</span>
+      <span class="seq">${esc(T('entry #{n}').replace('{n}', e.seq))}</span>
       <span>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</span>
       ${link}
     </div>
@@ -768,7 +768,7 @@ window.addEventListener('hashchange', openView);
 // Labels built here (the count on a tab, the show-all button) are written
 // in whichever language was current at the time, so a language switch has
 // to rebuild them. Deferred, so the switch has happened by then.
-$('lang').addEventListener('click', () => setTimeout(renderFeed));
+$('lang').addEventListener('click', () => setTimeout(() => { renderFeed(); update(); }));
 
 $('clearfilter').onclick = () => {
   $('filterbar').hidden = true;
@@ -800,6 +800,9 @@ $('contractAddr').innerHTML = C.JOURNALS.map((j) => C.EXPLORER
   ? `<a href="${C.EXPLORER}/address/${j.address}" target="_blank" rel="noreferrer">${j.address}</a>`
   : j.address).join('<br>');
 update();
+// The page's language is applied on DOMContentLoaded, after this module has
+// run, so the composer's figures are written once more in that language.
+document.addEventListener('DOMContentLoaded', update);
 loadFeed().catch(() => {
   $('feed').innerHTML = $('latest').innerHTML = '<p class="muted">Could not reach the network.</p>';
 });
