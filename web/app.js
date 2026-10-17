@@ -782,11 +782,12 @@ document.addEventListener('click', async (ev) => {
 });
 
 // ---------- an entry as a picture ----------
-// For the places a link does not travel well, WeChat first among them. The
-// entry is drawn here, in this browser, in the page's own faces and
-// colours; nothing is sent anywhere. A phone gets an image to press and
-// save, since in-app browsers rarely allow a download, and elsewhere it can
-// be downloaded too.
+// For posting on X, where most of the DAO's conversation happens, and where
+// a picture is read in the timeline but a link is not opened. The entry is
+// drawn here, in this browser, in the page's own faces and colours; nothing
+// is sent anywhere. It is drawn to the shapes X shows uncropped, landscape
+// when the entry is short and portrait when it is long, with the type made
+// smaller rather than any of the entry cut off.
 const WIDE = '\u2e80-\u9fff\uf900-\ufaff\u3000-\u303f\uff00-\uffef';
 const RUNS = new RegExp(`[${WIDE}]|\\s+|[^\\s${WIDE}]+`, 'g');
 const CLOSERS = /^[，。、；：？！」』）》】〕…,.;:?!)\]]$/;
@@ -832,68 +833,95 @@ function wrapText(measure, text, width) {
   return lines;
 }
 
+// The two shapes, and the room each leaves around the entry.
+const SHAPES = [
+  { W: 1200, H: 675, pad: 64, head: 28, top: 136, foot: 150, sizes: [40, 38, 36, 34, 32] },
+  { W: 1080, H: 1350, pad: 88, head: 32, top: 180, foot: 180, sizes: [42, 40, 38, 36, 34, 32, 30, 28, 26] },
+];
+
+// Picks the first shape and size at which the whole entry fits: landscape
+// if it can, portrait otherwise, and, past the smallest portrait size, a
+// portrait card made taller rather than an entry cut short.
+// The height left for the entry between the heading and the footer rule.
+const GAP = 24;
+const room = (shape, H) => H - shape.top - shape.foot - GAP;
+
+function planCard(measure, text, hasTags) {
+  const tagRoom = hasTags ? 52 : 0;
+  for (const shape of SHAPES) {
+    for (const size of shape.sizes) {
+      const lines = wrapText((t) => measure(size, t), text, shape.W - shape.pad * 2);
+      const line = Math.round(size * 1.5);
+      if (lines.length * line + tagRoom <= room(shape, shape.H)) return { ...shape, size, line, lines };
+    }
+  }
+  const shape = SHAPES[1];
+  const size = shape.sizes.at(-1);
+  const line = Math.round(size * 1.5);
+  const lines = wrapText((t) => measure(size, t), text, shape.W - shape.pad * 2);
+  return { ...shape, size, line, lines, H: shape.top + lines.length * line + tagRoom + GAP + shape.foot };
+}
+
 async function drawCard(e) {
   const css = getComputedStyle(document.documentElement);
   const v = (name) => css.getPropertyValue(name).trim();
   const serif = v('--serif');
-  const body = `400 44px ${serif}`;
-  const head = `500 34px Cinzel, ${serif}`;
-  const note = `italic 30px ${v('--serif-it')}`;
-  await Promise.all([body, head, note].map((f) => document.fonts.load(f).catch(() => {})));
+  const face = (size) => `400 ${size}px ${serif}`;
+  await Promise.all([face(40), `500 32px Cinzel, ${serif}`, `italic 24px ${v('--serif-it')}`]
+    .map((f) => document.fonts.load(f).catch(() => {})));
 
-  const W = 1080, pad = 96, LINE = 68;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
-  ctx.font = body;
-  const lines = wrapText((t) => ctx.measureText(t).width, e.body, W - pad * 2);
   const tags = (e.tags ?? []).map((t) => `#${t}`).join('   ');
-  const bodyTop = pad + 116;
-  const rule = bodyTop + lines.length * LINE + (tags ? 70 : 0) + 40;
+  const plan = planCard((size, t) => { ctx.font = face(size); return ctx.measureText(t).width; }, e.body, !!tags);
+  const { W, H, pad } = plan;
   canvas.width = W;
-  canvas.height = rule + 200;
+  canvas.height = H;
 
   ctx.fillStyle = v('--paper');
-  ctx.fillRect(0, 0, W, canvas.height);
+  ctx.fillRect(0, 0, W, H);
   ctx.strokeStyle = v('--rule');
   ctx.lineWidth = 2;
-  ctx.strokeRect(36, 36, W - 72, canvas.height - 72);
+  ctx.strokeRect(28, 28, W - 56, H - 56);
 
   ctx.fillStyle = v('--ink');
-  ctx.font = head;
+  ctx.font = `500 ${plan.head}px Cinzel, ${serif}`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
-  ctx.fillText('INDELEBILE', pad, pad + 40);
+  ctx.fillText('INDELEBILE', pad, pad + plan.head * 0.9);
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
   ctx.fillStyle = v('--ink-3');
-  ctx.font = `400 26px ${v('--sans')}`;
+  ctx.font = `400 ${Math.round(plan.head * 0.78)}px ${v('--sans')}`;
   ctx.textAlign = 'right';
-  ctx.fillText('indelebile.xyz', W - pad, pad + 38);
+  ctx.fillText('indelebile.xyz', W - pad, pad + plan.head * 0.85);
   ctx.textAlign = 'left';
 
   ctx.fillStyle = v('--ink');
-  ctx.font = body;
-  lines.forEach((l, i) => ctx.fillText(l, pad, bodyTop + i * LINE + 44));
+  ctx.font = face(plan.size);
+  plan.lines.forEach((l, i) => ctx.fillText(l, pad, plan.top + i * plan.line + plan.size));
   if (tags) {
     ctx.fillStyle = v('--accent');
-    ctx.font = `400 26px ${v('--mono')}`;
-    ctx.fillText(tags, pad, bodyTop + lines.length * LINE + 44);
+    ctx.font = `400 22px ${v('--mono')}`;
+    ctx.fillText(tags, pad, plan.top + plan.lines.length * plan.line + plan.size + 30);
   }
 
+  // The footer sits at the foot of the card, whatever the length above it.
+  const rule = H - plan.foot;
   ctx.strokeStyle = v('--rule');
   ctx.beginPath();
   ctx.moveTo(pad, rule);
   ctx.lineTo(W - pad, rule);
   ctx.stroke();
   ctx.fillStyle = v('--ink-3');
-  ctx.font = `400 26px ${v('--mono')}`;
+  ctx.font = `400 22px ${v('--mono')}`;
   ctx.fillText([
     `${e.author.slice(0, 6)}…${e.author.slice(-4)}`,
     T('entry #{n}').replace('{n}', e.seq),
     new Date(e.ts * 1000).toISOString().slice(0, 10),
     T('block {b}').replace('{b}', e.block),
-  ].join('  ·  '), pad, rule + 56);
+  ].join('  ·  '), pad, rule + 42);
   ctx.fillStyle = v('--ink-2');
-  ctx.font = note;
-  ctx.fillText(T('Written into Ethereum calldata, owned by its author.'), pad, rule + 116);
+  ctx.font = `italic 24px ${v('--serif-it')}`;
+  ctx.fillText(T('Written into Ethereum calldata, owned by its author.'), pad, rule + 82);
   return canvas;
 }
 
@@ -907,6 +935,13 @@ document.addEventListener('click', async (ev) => {
   $('cardImg').src = url;
   $('cardSave').href = url;
   $('cardSave').download = `indelebile-${e.author.slice(0, 6)}-${e.seq}.png`;
+  // X's own compose page, filled with the entry's first line and its link;
+  // the picture is attached there. Only a link: nothing of X's is loaded here.
+  const first = e.body.split('\n').find((l) => l.trim())?.trim() ?? '';
+  $('cardPost').href = 'https://x.com/intent/post?' + new URLSearchParams({
+    text: first.length > 120 ? `${first.slice(0, 119)}…` : first,
+    url: `${location.href.split('#')[0]}#e/${entryKey(e)}`,
+  });
   $('cardDialog').showModal();
 });
 $('cardClose').onclick = () => $('cardDialog').close();

@@ -620,3 +620,29 @@ test('the RSS feed is published, links to entries, and leaves out collapsed ones
   assert.match(build, /https:\/\/indelebile\.xyz\/#e\/\$\{e\.author\.toLowerCase\(\)\}\/\$\{e\.seq\}/);
   assert.match(html, /<link rel="alternate" type="application\/rss\+xml"[^>]*href="feed\.xml">/);
 });
+
+// X shows a picture uncropped only within certain shapes, so a card is
+// landscape when the entry is short and portrait when it is long, with the
+// type made smaller rather than the entry cut. Nothing may run off the card.
+test('an entry picture takes a shape X shows whole, and the whole entry fits it', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const src = app.slice(app.indexOf('const WIDE = '), app.indexOf('async function drawCard'));
+  const planCard = new Function(`${src}; return planCard;`)();
+  const measure = (size, t) => [...t].length * size * 0.5; // a rough serif
+  const fits = (p) => p.lines.length * p.line <= p.H - p.top - p.foot - 24;
+
+  const short = planCard(measure, 'A historic moment for the DAO, and a new start.', true);
+  assert.deepEqual([short.W, short.H], [1200, 675], 'a short entry is landscape');
+  assert.ok(fits(short));
+
+  const long = planCard(measure, 'word '.repeat(100).trim(), true);
+  assert.deepEqual([long.W, long.H], [1080, 1350], 'a long entry is portrait');
+  assert.ok(fits(long));
+
+  const longest = planCard(measure, 'word '.repeat(400).trim(), false);
+  assert.equal(longest.W, 1080);
+  assert.ok(longest.H >= 1350 && fits(longest),
+    'past the smallest type the card grows rather than cutting the entry');
+  assert.equal(longest.lines.join(' ').split(' ').length, 400, 'every word is on the card');
+  assert.match(app, /https:\/\/x\.com\/intent\/post\?/, 'sharing opens X\'s own page; nothing of X is loaded here');
+});

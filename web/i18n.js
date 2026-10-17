@@ -28,7 +28,9 @@
     'from this wallet': '本钱包',
     'Copy link': '复制链接',
     'Save as image': '生成图片',
-    'On a phone, press and hold the image to save it.': '在手机上，长按图片即可保存。',
+    'Save the image, then attach it to your post on X. On a phone, press and hold the image to save it.':
+      '保存图片后，在 X 上发帖时附上。手机上长按图片即可保存。',
+    'Share on X': '分享到 X',
     'Download': '下载图片',
     'Close': '关闭',
     'Written into Ethereum calldata, owned by its author.': '刻在以太坊 calldata 上，归作者所有。',
