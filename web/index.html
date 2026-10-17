@@ -267,6 +267,15 @@ article.entry{scroll-margin-top:1.5rem}
 .veil{margin:0;color:var(--ink-3);font-style:italic;font-size:.96rem;line-height:1.7}
 .veil a{color:var(--ink-2)}
 .entry-tags{margin-top:1rem;display:flex;gap:.4rem;flex-wrap:wrap}
+/* Tags on the left, what can be done with the entry on the right; on a
+   phone the actions drop below the tags. */
+.entry-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem 1rem;margin-top:1rem}
+.entry-foot .entry-tags{margin-top:0}
+.entry-actions{display:flex;flex-wrap:wrap;gap:.45rem}
+.entry-actions .act{display:inline-flex;align-items:center;gap:.35rem;padding:.42rem .75rem;border:1px solid var(--rule);
+  border-radius:99px;font:500 .74rem/1 var(--sans);color:var(--ink);text-decoration:none;white-space:nowrap}
+.entry-actions .act:hover{color:var(--accent);border-color:var(--accent)}
+.entry-actions .act svg{width:.95rem;height:.95rem;flex:none;color:var(--accent)}
 .tag{font:.68rem/1 var(--mono);color:var(--ink-3);border:1px solid var(--rule);
   border-radius:99px;padding:.3rem .7rem;background:none;letter-spacing:.02em;cursor:pointer}
 .tag:hover{border-color:var(--accent);color:var(--accent)}
@@ -707,6 +716,6 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 <script src="config.js?v=a2596d73d2"></script>
 <script src="i18n.js?v=f137c68457"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=0a512ce61e"></script>
+<script type="module" src="app.js?v=20ef12f7a8"></script>
 </body>
 </html>

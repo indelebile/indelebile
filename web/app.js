@@ -671,6 +671,11 @@ function collapseNote(r, esc) {
   return `Collapsed${by}${when}${why}.${pending}${where}`;
 }
 
+// The two things a reader can do with an entry, marked so they read as
+// things to press rather than more of the entry's small print. Drawn inline.
+const ICON_LINK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5l3-3M7 4.5l1-1a2.5 2.5 0 013.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 014.5 9l1-1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
+const ICON_IMAGE = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="3" width="11" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 11l2.6-3 2 2.2 1.4-1.4 1.5 2.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="10.5" cy="6" r="1" fill="currentColor"/></svg>';
+
 function renderEntry(e, mark = '') {
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const link = C.EXPLORER
@@ -686,18 +691,18 @@ function renderEntry(e, mark = '') {
   const key = entryKey(e);
   // Only an entry the archive holds has an address anyone else can open.
   const permalink = e.pending ? ''
-    : `<a class="permalink" href="#e/${esc(key)}" data-hash="e/${esc(key)}">${T('Copy link')}</a>`;
+    : `<a class="permalink act" href="#e/${esc(key)}" data-hash="e/${esc(key)}">${ICON_LINK}<span>${T('Copy link')}</span></a>`;
   // A collapsed entry is not drawn: the picture would carry what the view folds away.
   const picture = e.pending || collapsed ? ''
-    : `<a class="cardlink" href="#" data-key="${esc(key)}">${T('Save as image')}</a>`;
+    : `<a class="cardlink act" href="#" data-key="${esc(key)}">${ICON_IMAGE}<span>${T('Save as image')}</span></a>`;
+  const tagRow = tags.length ? `<div class="entry-tags">${tags
+    .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : '<div></div>';
   return `<article class="entry${collapsed ? ' collapsed' : ''}${e.pending ? ' pending' : ''}${key === marked ? ' marked' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}" data-key="${esc(key)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
       <span class="seq">${esc(T('entry #{n}').replace('{n}', e.seq))}</span>
       <span>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</span>
       ${link}
-      ${permalink}
-      ${picture}
     </div>
     <div>
       ${collapsed
@@ -707,8 +712,7 @@ function renderEntry(e, mark = '') {
              : 'read it from the calldata'}.</p>`
         : `<p class="entry-body">${highlight(e.body, mark, esc)}</p>`}
       ${state}
-      ${tags.length ? `<div class="entry-tags">${tags
-        .map((t) => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : ''}
+      ${tags.length || permalink ? `<div class="entry-foot">${tagRow}<div class="entry-actions">${permalink}${picture}</div></div>` : ''}
     </div>
   </article>`;
 }
@@ -777,8 +781,9 @@ document.addEventListener('click', async (ev) => {
   history.replaceState(null, '', `#${a.dataset.hash}`);
   let copied = false;
   try { await navigator.clipboard.writeText(url); copied = true; } catch { copied = copyByHand(url); }
-  a.textContent = copied ? T('Link copied') : T('Link in the address bar');
-  setTimeout(() => { a.textContent = T('Copy link'); }, 2000);
+  const label = a.querySelector('span') ?? a;
+  label.textContent = copied ? T('Link copied') : T('Link in the address bar');
+  setTimeout(() => { label.textContent = T('Copy link'); }, 2000);
 });
 
 // ---------- an entry as a picture ----------
