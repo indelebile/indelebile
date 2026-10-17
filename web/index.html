@@ -13,6 +13,7 @@
 <link rel="icon" href="icon-32.png?v=7ab2db9ff0" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="icon-180.png?v=1078c17f50">
 <meta name="theme-color" content="#1c1a16" media="(prefers-color-scheme: dark)">
+<link rel="alternate" type="application/rss+xml" title="Indelebile" href="feed.xml">
 <meta name="theme-color" content="#f3eee3" media="(prefers-color-scheme: light)">
 
 <!-- Pasted into a chat or a forum, a bare link says nothing. -->
@@ -385,6 +386,17 @@ footer .cols{display:grid;gap:1.4rem 3rem}
 footer a{color:var(--ink-2)}
 footer .addr{word-break:break-all}
 footer p{margin:0}
+/* An entry drawn as a picture, shown to be pressed and saved on a phone. */
+.card-dialog{width:min(92vw,34rem);max-height:94vh;padding:1rem;border:1px solid var(--rule);border-radius:14px;
+  background:var(--sheet);color:var(--ink);
+  /* Sized to fit rather than scroll: a dialog that scrolls draws a light
+     scrollbar across the dark sheet. */
+  overflow:hidden}
+.card-dialog::backdrop{background:rgb(0 0 0 / .6)}
+.card-dialog img{display:block;width:100%;height:auto;max-height:calc(94vh - 9rem);object-fit:contain;border-radius:8px}
+.card-hint{margin:.8rem 0 0;font:.8rem/1.5 var(--sans);color:var(--ink-3)}
+.card-actions{display:flex;gap:.6rem;align-items:center;margin:.8rem 0 0}
+.filterbar a.permalink{color:var(--accent);text-decoration:none}
 </style>
 </head>
 <body>
@@ -471,7 +483,7 @@ footer p{margin:0}
         </div>
       </div>
       <p class="filterbar" id="searchNote" hidden></p>
-      <p class="filterbar" id="latestFilter" hidden><span>showing</span> <b id="latestTag"></b> — <button id="latestClear">show all</button></p>
+      <p class="filterbar" id="latestFilter" hidden><span>showing</span> <b id="latestTag"></b> — <button id="latestClear">show all</button> · <a class="permalink" id="latestLink" href="#read">Copy link</a></p>
       <div id="latest"><p class="sub">Loading…</p></div>
     </section>
   </div>
@@ -669,6 +681,12 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 
 </main>
 
+<dialog id="cardDialog" class="card-dialog">
+  <img id="cardImg" alt="">
+  <p class="card-hint" id="cardHint">On a phone, press and hold the image to save it.</p>
+  <p class="card-actions"><a class="pill solid" id="cardSave" href="#" download>Download</a> <button class="ghost" id="cardClose">Close</button></p>
+</dialog>
+
 <footer>
   <div class="shell">
     <div class="cols">
@@ -679,6 +697,7 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
         <p>Content is stored in L1 calldata and minted under
         <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-3-smart-contract-ethscription-creations" target="_blank" rel="noreferrer">ESIP-3</a>,
         with <a href="https://docs.ethscriptions.com/esips/accepted-esips/esip-6-opt-in-ethscription-non-uniqueness" target="_blank" rel="noreferrer">ESIP-6</a> non-uniqueness.</p>
+        <p>Follow the record by <a href="feed.xml">RSS</a>.</p>
         <p>This page loads no third-party libraries, fonts or trackers. Apart from its own server, it talks only to an Ethereum RPC endpoint: your wallet's, or one of the public ones listed in config.js.</p>
       </div>
     </div>
@@ -686,8 +705,8 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=3239918377"></script>
+<script src="i18n.js?v=0a88fd69f5"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=4e728d62e0"></script>
+<script type="module" src="app.js?v=00b1d871a9"></script>
 </body>
 </html>

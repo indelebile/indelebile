@@ -41,4 +41,29 @@ writeFileSync(new URL('CNAME', site), 'indelebile.xyz\n');
 writeFileSync(new URL('.nojekyll', site), '');
 
 const { entriesHash, entries } = JSON.parse(readFileSync(index, 'utf8'));
-console.log(`site built: ${entries?.length ?? 0} entries, entriesHash ${entriesHash}`);
+
+// A feed of the record, for anyone who would rather follow it than visit.
+// Each item links to the entry's own address on the page. An entry
+// governance has collapsed is left out: a feed reader would show it whole.
+const collapsed = new Set((JSON.parse(readFileSync(at('hidden.json'), 'utf8')).hidden ?? [])
+  .map((h) => (typeof h === 'string' ? h : h?.id)).filter(Boolean).map((id) => id.toLowerCase()));
+const xml = (t) => String(t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+const items = [...(entries ?? [])]
+  .filter((e) => !collapsed.has(e.id.toLowerCase()))
+  .sort((a, b) => b.block - a.block || b.logIndex - a.logIndex)
+  .slice(0, 50)
+  .map((e) => {
+    const link = `https://indelebile.xyz/#e/${e.author.toLowerCase()}/${e.seq}`;
+    const title = e.body.split('\n').find((l) => l.trim())?.slice(0, 80) ?? `#${e.seq}`;
+    return `<item><title>${xml(title)}</title><link>${link}</link>`
+      + `<guid isPermaLink="false">${e.id}</guid><pubDate>${new Date(e.ts * 1000).toUTCString()}</pubDate>`
+      + `<description>${xml(e.body)}</description>`
+      + (e.tags ?? []).map((t) => `<category>${xml(t)}</category>`).join('')
+      + '</item>';
+  });
+writeFileSync(new URL('feed.xml', site), '<?xml version="1.0" encoding="UTF-8"?>\n'
+  + '<rss version="2.0"><channel><title>Indelebile</title><link>https://indelebile.xyz/</link>'
+  + '<description>A permanent record for AssangeDAO, written into Ethereum calldata.</description>\n'
+  + items.join('\n') + '\n</channel></rss>\n');
+
+console.log(`site built: ${entries?.length ?? 0} entries (${items.length} in feed.xml), entriesHash ${entriesHash}`);

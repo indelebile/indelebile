@@ -586,7 +586,8 @@ const keyFromHash = (hash) => {
   const m = /^#e\/(0x[0-9a-fA-F]{40})\/(\d+)$/.exec(hash);
   return m ? `${m[1].toLowerCase()}/${Number(m[2])}` : null;
 };
-const entryUrl = (key) => `${location.href.split('#')[0]}#e/${key}`;
+// A tag has an address too: #tag/<tag> opens the reading view filtered to it.
+const tagFromHash = (hash) => /^#tag\/([a-z0-9-]{1,32})$/.exec(hash)?.[1] ?? null;
 // The entry a link asked for: `wanted` until it has been found and shown,
 // `marked` for as long as it stays outlined.
 let wanted = null;
@@ -623,6 +624,11 @@ function renderLatest(all) {
     : '';
   $('latestTag').textContent = latestTag ?? '';
   $('latestFilter').hidden = !latestTag;
+  if (latestTag) {
+    $('latestLink').dataset.hash = `tag/${latestTag}`;
+    $('latestLink').href = `#tag/${latestTag}`;
+    $('latestLink').textContent = T('Copy link');
+  }
   const note = $('searchNote');
   note.hidden = !q;
   note.textContent = !q ? ''
@@ -680,7 +686,10 @@ function renderEntry(e, mark = '') {
   const key = entryKey(e);
   // Only an entry the archive holds has an address anyone else can open.
   const permalink = e.pending ? ''
-    : `<a class="permalink" href="#e/${esc(key)}" data-key="${esc(key)}">${T('Copy link')}</a>`;
+    : `<a class="permalink" href="#e/${esc(key)}" data-hash="e/${esc(key)}">${T('Copy link')}</a>`;
+  // A collapsed entry is not drawn: the picture would carry what the view folds away.
+  const picture = e.pending || collapsed ? ''
+    : `<a class="cardlink" href="#" data-key="${esc(key)}">${T('Save as image')}</a>`;
   return `<article class="entry${collapsed ? ' collapsed' : ''}${e.pending ? ' pending' : ''}${key === marked ? ' marked' : ''}" data-tags="${esc(tags.join(' '))}" data-tx="${esc(e.tx)}" data-key="${esc(key)}">
     <div class="entry-meta">
       <span class="who">${esc(e.author.slice(0, 6))}…${esc(e.author.slice(-4))}</span>
@@ -688,6 +697,7 @@ function renderEntry(e, mark = '') {
       <span>${new Date(e.ts * 1000).toISOString().slice(0, 10)}</span>
       ${link}
       ${permalink}
+      ${picture}
     </div>
     <div>
       ${collapsed
@@ -728,6 +738,7 @@ document.addEventListener('click', (ev) => {
   const tag = t.dataset.tag;
   if (t.closest('#latest')) {
     latestTag = tag;
+    history.replaceState(null, '', `#tag/${tag}`);
     renderFeed();
     $('latestFilter').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     return;
@@ -755,20 +766,150 @@ function copyByHand(text) {
   return ok;
 }
 
-// Copying an entry's link. The link is a real one, so it can also be
-// opened or copied from the browser's own menu; a plain click copies it and
-// puts it in the address bar rather than switching views.
+// Copying a link to an entry or a tag. The link is a real one, so it can
+// also be opened or copied from the browser's own menu; a plain click copies
+// it and puts it in the address bar rather than switching views.
 document.addEventListener('click', async (ev) => {
   const a = ev.target.closest('a.permalink');
   if (!a) return;
   ev.preventDefault();
-  const url = entryUrl(a.dataset.key);
-  history.replaceState(null, '', `#e/${a.dataset.key}`);
+  const url = `${location.href.split('#')[0]}#${a.dataset.hash}`;
+  history.replaceState(null, '', `#${a.dataset.hash}`);
   let copied = false;
   try { await navigator.clipboard.writeText(url); copied = true; } catch { copied = copyByHand(url); }
   a.textContent = copied ? T('Link copied') : T('Link in the address bar');
   setTimeout(() => { a.textContent = T('Copy link'); }, 2000);
 });
+
+// ---------- an entry as a picture ----------
+// For the places a link does not travel well, WeChat first among them. The
+// entry is drawn here, in this browser, in the page's own faces and
+// colours; nothing is sent anywhere. A phone gets an image to press and
+// save, since in-app browsers rarely allow a download, and elsewhere it can
+// be downloaded too.
+const WIDE = '\u2e80-\u9fff\uf900-\ufaff\u3000-\u303f\uff00-\uffef';
+const RUNS = new RegExp(`[${WIDE}]|\\s+|[^\\s${WIDE}]+`, 'g');
+const CLOSERS = /^[，。、；：？！」』）》】〕…,.;:?!)\]]$/;
+
+// Breaks text to a width the way a page would: Latin between words, Chinese
+// between characters, closing punctuation never at the start of a line (the
+// character before it goes down with it, as Chinese typesetting does, rather
+// than the mark hanging past the margin), and a run too long for any line
+// (an address, a hash) cut where it must be.
+function wrapText(measure, text, width) {
+  const lines = [];
+  for (const para of text.split('\n')) {
+    let line = '';
+    for (let tok of para.match(RUNS) ?? []) {
+      if (!line && /^\s+$/.test(tok)) continue;
+      if (measure(line + tok) <= width) { line += tok; continue; }
+      if (line && CLOSERS.test(tok)) {
+        // Back past any closing marks already at the end, to the character
+        // they close; that character and its marks start the next line.
+        const chars = [...line];
+        let k = chars.length - 1;
+        while (k > 0 && CLOSERS.test(chars[k])) k--;
+        if (k > 0 && new RegExp(`[${WIDE}]`).test(chars[k])) {
+          lines.push(chars.slice(0, k).join(''));
+          line = chars.slice(k).join('') + tok;
+        } else {
+          line += tok;
+        }
+        continue;
+      }
+      if (/^\s+$/.test(tok)) { lines.push(line.trimEnd()); line = ''; continue; }
+      if (line) lines.push(line.trimEnd());
+      while (measure(tok) > width && tok.length > 1) {
+        let i = tok.length - 1;
+        while (i > 1 && measure(tok.slice(0, i)) > width) i--;
+        lines.push(tok.slice(0, i));
+        tok = tok.slice(i);
+      }
+      line = tok;
+    }
+    lines.push(line.trimEnd());
+  }
+  return lines;
+}
+
+async function drawCard(e) {
+  const css = getComputedStyle(document.documentElement);
+  const v = (name) => css.getPropertyValue(name).trim();
+  const serif = v('--serif');
+  const body = `400 44px ${serif}`;
+  const head = `500 34px Cinzel, ${serif}`;
+  const note = `italic 30px ${v('--serif-it')}`;
+  await Promise.all([body, head, note].map((f) => document.fonts.load(f).catch(() => {})));
+
+  const W = 1080, pad = 96, LINE = 68;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.font = body;
+  const lines = wrapText((t) => ctx.measureText(t).width, e.body, W - pad * 2);
+  const tags = (e.tags ?? []).map((t) => `#${t}`).join('   ');
+  const bodyTop = pad + 116;
+  const rule = bodyTop + lines.length * LINE + (tags ? 70 : 0) + 40;
+  canvas.width = W;
+  canvas.height = rule + 200;
+
+  ctx.fillStyle = v('--paper');
+  ctx.fillRect(0, 0, W, canvas.height);
+  ctx.strokeStyle = v('--rule');
+  ctx.lineWidth = 2;
+  ctx.strokeRect(36, 36, W - 72, canvas.height - 72);
+
+  ctx.fillStyle = v('--ink');
+  ctx.font = head;
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
+  ctx.fillText('INDELEBILE', pad, pad + 40);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+  ctx.fillStyle = v('--ink-3');
+  ctx.font = `400 26px ${v('--sans')}`;
+  ctx.textAlign = 'right';
+  ctx.fillText('indelebile.xyz', W - pad, pad + 38);
+  ctx.textAlign = 'left';
+
+  ctx.fillStyle = v('--ink');
+  ctx.font = body;
+  lines.forEach((l, i) => ctx.fillText(l, pad, bodyTop + i * LINE + 44));
+  if (tags) {
+    ctx.fillStyle = v('--accent');
+    ctx.font = `400 26px ${v('--mono')}`;
+    ctx.fillText(tags, pad, bodyTop + lines.length * LINE + 44);
+  }
+
+  ctx.strokeStyle = v('--rule');
+  ctx.beginPath();
+  ctx.moveTo(pad, rule);
+  ctx.lineTo(W - pad, rule);
+  ctx.stroke();
+  ctx.fillStyle = v('--ink-3');
+  ctx.font = `400 26px ${v('--mono')}`;
+  ctx.fillText([
+    `${e.author.slice(0, 6)}…${e.author.slice(-4)}`,
+    T('entry #{n}').replace('{n}', e.seq),
+    new Date(e.ts * 1000).toISOString().slice(0, 10),
+    T('block {b}').replace('{b}', e.block),
+  ].join('  ·  '), pad, rule + 56);
+  ctx.fillStyle = v('--ink-2');
+  ctx.font = note;
+  ctx.fillText(T('Written into Ethereum calldata, owned by its author.'), pad, rule + 116);
+  return canvas;
+}
+
+document.addEventListener('click', async (ev) => {
+  const a = ev.target.closest('a.cardlink');
+  if (!a) return;
+  ev.preventDefault();
+  const e = latestEntries.find((x) => entryKey(x) === a.dataset.key);
+  if (!e || e.pending || hidden.has(e.tx)) return;
+  const url = (await drawCard(e)).toDataURL('image/png');
+  $('cardImg').src = url;
+  $('cardSave').href = url;
+  $('cardSave').download = `indelebile-${e.author.slice(0, 6)}-${e.seq}.png`;
+  $('cardDialog').showModal();
+});
+$('cardClose').onclick = () => $('cardDialog').close();
 
 // ---------- misc ----------
 
@@ -845,6 +986,15 @@ const openView = () => {
     reveal();
     return;
   }
+  const tag = tagFromHash(location.hash);
+  if (tag) {
+    $('tab-read').click();
+    history.replaceState(null, '', `#tag/${tag}`);
+    latestTag = tag;
+    renderFeed();
+    $('views').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
   const tab = { '#write': 'tab-write', '#read': 'tab-read' }[location.hash];
   if (!tab) return;
   $(tab).click();
@@ -862,7 +1012,7 @@ $('clearfilter').onclick = () => {
   $('filterbar').hidden = true;
   for (const el of document.querySelectorAll('#feed article.entry')) el.hidden = false;
 };
-$('latestClear').onclick = () => { latestTag = null; renderFeed(); };
+$('latestClear').onclick = () => { latestTag = null; history.replaceState(null, '', '#read'); renderFeed(); };
 // The box sits beside both views, but its results are in the reading
 // one, so a search brings that view forward.
 const search = () => {

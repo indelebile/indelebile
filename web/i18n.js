@@ -27,6 +27,12 @@
     '{n} bytes on-chain': '链上 {n} 字节',
     'from this wallet': '本钱包',
     'Copy link': '复制链接',
+    'Save as image': '生成图片',
+    'On a phone, press and hold the image to save it.': '在手机上，长按图片即可保存。',
+    'Download': '下载图片',
+    'Close': '关闭',
+    'Written into Ethereum calldata, owned by its author.': '刻在以太坊 calldata 上，归作者所有。',
+    'Follow the record by RSS.': '可通过 <a href="feed.xml">RSS</a> 订阅这份记录。',
     'Link copied': '已复制链接',
     'Link in the address bar': '链接已在地址栏',
     'There is no entry {id} in the archive. If it was written in the last hour, it appears after the next rebuild.':

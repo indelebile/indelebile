@@ -581,3 +581,42 @@ test('the browser bar is tinted with the page\'s own paper, in both schemes', ()
   assert.equal(bar('light'), light);
   assert.equal(bar('dark'), dark);
 });
+
+// The picture of an entry breaks lines the way the page would: Latin
+// between words, Chinese between characters, a closing mark never starting
+// a line, and a run too long for any line cut rather than run off the card.
+test('an entry drawn as a picture wraps Latin, Chinese and long runs the way a page would', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const src = app.slice(app.indexOf('const WIDE = '), app.indexOf('async function drawCard'));
+  const wrapText = new Function(`${src}; return wrapText;`)();
+  const w = (t) => [...t].length; // one unit a character
+  assert.deepEqual(wrapText(w, 'peace can be started by truth', 12), ['peace can be', 'started by', 'truth']);
+  assert.deepEqual(wrapText(w, '庄子行于山中，见大木', 6), ['庄子行于山', '中，见大木'], 'a comma never starts a line, and never hangs past the margin');
+  assert.deepEqual(wrapText(w, '请奚杀？」主人', 4), ['请奚', '杀？」主', '人'], 'two closing marks go down together with the character before them');
+  assert.deepEqual(wrapText(w, 'a\n\nb', 10), ['a', '', 'b'], 'blank lines between paragraphs are kept');
+  const long = wrapText(w, '0xeb4745c55d77b70e701ef8c5af6ff55bdd9f3800', 16);
+  assert.ok(long.every((l) => l.length <= 16) && long.join('') === '0xeb4745c55d77b70e701ef8c5af6ff55bdd9f3800', 'an address is cut, not lost');
+  assert.match(app, /const picture = e\.pending \|\| collapsed \? ''/, 'a collapsed or waiting entry is not drawn');
+  assert.match(app, /if \(!e \|\| e\.pending \|\| hidden\.has\(e\.tx\)\) return;/, 'nor drawn by a crafted click');
+  assert.ok(!/fetch\(/.test(app.slice(app.indexOf('async function drawCard'), app.indexOf('// ---------- misc'))), 'the picture is made here, not fetched');
+});
+
+test('a tag has an address that opens the reading view on it', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const src = app.match(/const tagFromHash = [\s\S]*?;\n/)[0];
+  const tagFromHash = new Function(`${src}; return tagFromHash;`)();
+  assert.equal(tagFromHash('#tag/aip-20'), 'aip-20');
+  for (const junk of ['#tag/', '#tag/AIP', '#tag/a b', '#tag/x"><b>', '#tags/x']) assert.equal(tagFromHash(junk), null, junk);
+  assert.match(app, /history\.replaceState\(null, '', `#tag\/\$\{tag\}`\)/, 'filtering puts the tag in the address');
+});
+
+// The feed is built with the site, links each item to its entry, and
+// leaves out what governance collapsed, which a reader would show whole.
+test('the RSS feed is published, links to entries, and leaves out collapsed ones', () => {
+  const build = readFileSync(new URL('../scripts/build-site.mjs', import.meta.url), 'utf8');
+  const html = readFileSync(new URL('../web/index.html', import.meta.url), 'utf8');
+  assert.match(build, /writeFileSync\(new URL\('feed\.xml', site\)/);
+  assert.match(build, /\.filter\(\(e\) => !collapsed\.has\(e\.id\.toLowerCase\(\)\)\)/);
+  assert.match(build, /https:\/\/indelebile\.xyz\/#e\/\$\{e\.author\.toLowerCase\(\)\}\/\$\{e\.seq\}/);
+  assert.match(html, /<link rel="alternate" type="application\/rss\+xml"[^>]*href="feed\.xml">/);
+});
