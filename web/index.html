@@ -373,6 +373,11 @@ article.entry.pending{border-top-style:dashed;border-top-color:var(--accent)}
 #latest article.entry.pending{border:1px dashed var(--accent)}
 .pending-note{margin:1rem 0 0;font:.74rem/1.6 var(--mono);color:var(--accent)}
 .pending-note.refused{color:var(--bad)}
+.pending-verification{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.25rem .75rem;
+  margin:.6rem 0 0;font:.74rem/1.6 var(--mono);color:var(--ink-2)}
+.pending-verification dt{color:var(--ink-3)}
+.pending-verification dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.pending-verification code{font:inherit}
 .more{margin:0;padding-top:1rem;text-align:center}
 
 /* ---------- cost + verify ---------- */
@@ -714,8 +719,8 @@ node src/indexer.mjs --rpc &lt;an rpc that serves getLogs&gt;</pre>
 </footer>
 
 <script src="config.js?v=a2596d73d2"></script>
-<script src="i18n.js?v=f137c68457"></script>
+<script src="i18n.js?v=9bf71e914c"></script>
 <script src="abi.js?v=1a24c97d10"></script>
-<script type="module" src="app.js?v=20ef12f7a8"></script>
+<script type="module" src="app.js?v=36de1151ba"></script>
 </body>
 </html>

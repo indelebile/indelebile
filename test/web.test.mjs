@@ -474,6 +474,54 @@ test('an entry written here shows at once, counts toward the next number, and gi
   assert.match(app, /feedCount'\)\.textContent = all\.length/, 'counts stay the archive\'s own');
 });
 
+test('waiting entries expose the full transaction hash and block for independent verification', () => {
+  const app = readFileSync(new URL('../web/app.js', import.meta.url), 'utf8');
+  const src = app.slice(app.indexOf('function renderEntry('), app.indexOf('// Marks every occurrence'));
+  const sandbox = {
+    window: {}, document: { addEventListener() {} },
+    C: { EXPLORER: 'https://etherscan.io' }, hidden: new Map(), marked: '',
+    entryKey: (e) => e.tx, highlight: (body, mark, esc) => esc(body),
+    ICON_LINK: '', ICON_IMAGE: '',
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(readFileSync(new URL('../web/i18n.js', import.meta.url), 'utf8'), sandbox);
+  vm.runInContext('const T = s => window.JJ_I18N.t(s);' + src, sandbox);
+  const entry = { tx: '0x' + 'ab'.repeat(32), block: 26110699,
+    author: '0x' + '12'.repeat(20), seq: 1, ts: 1795305600, body: '<words>', pending: true };
+  const render = () => sandbox.renderEntry(entry);
+  let html = render();
+  assert.ok(html.includes(`href="https://etherscan.io/tx/${entry.tx}" target="_blank" rel="noreferrer">${entry.tx}</a>`),
+    'the entire hash must be readable and linked');
+  assert.match(html, /href="https:\/\/etherscan.io\/block\/26110699"[^>]*>26110699<\/a>/);
+  assert.match(html, /Confirmed on chain; waiting for the archive to update/);
+  assert.match(html, /<dt>Transaction hash<\/dt>/);
+  assert.match(html, /<dt>Block number<\/dt>/);
+  assert.match(html, /&lt;words&gt;/, 'entry content stays escaped');
+
+  // Use the actual dictionary so dynamic labels work in both languages.
+  sandbox.document = { documentElement: {}, body: { children: [] },
+    querySelectorAll: () => [], getElementById: () => null };
+  sandbox.window.JJ_I18N.apply('zh');
+  html = render();
+  assert.match(html, /链上已确认，等待收录/);
+  assert.match(html, /<dt>交易哈希<\/dt>/);
+  assert.match(html, /<dt>区块号<\/dt>/);
+  assert.ok(html.includes(entry.tx));
+
+  sandbox.C.EXPLORER = '';
+  html = render();
+  assert.ok(html.includes(`<code>${entry.tx}</code>`), 'verification data stays available without an explorer');
+  assert.match(html, /<dd>26110699<\/dd>/);
+  entry.refused = ['V8'];
+  html = render();
+  assert.match(html, /pending-note refused/);
+  assert.ok(!html.includes('等待收录'), 'an archive refusal must not look like an indexing delay');
+  assert.ok(html.includes(entry.tx), 'refused entries are still verifiable on chain');
+  entry.pending = false;
+  html = render();
+  assert.ok(!html.includes('pending-verification'), 'indexed entries no longer need a waiting panel');
+});
+
 // The icon in the tab and the mark beside the title are two files drawn by
 // one script. They may differ in exactly one way — the softened sheet —
 // and a hand edit to either would make them two marks.

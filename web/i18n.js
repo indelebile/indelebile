@@ -148,8 +148,10 @@
     'It is shown under Read already, marked as waiting, and joins the archive at its next rebuild. There is no need to send it again.':
       '它已经显示在"阅读"中，标注为等待收录，会在档案下次更新时正式加入。不需要再提交一次。',
     'The archive did not accept this entry: {why}.': '档案没有收录这条记录：{why}。',
-    'On chain in block {b}, shown from this browser until the archive next rebuilds.':
-      '已上链（区块 {b}），在档案下次更新前，由本浏览器显示。',
+    'Confirmed on chain; waiting for the archive to update. Shown from this browser in the meantime.':
+      '链上已确认，等待收录。在档案更新前，由本浏览器显示。',
+    'Transaction hash': '交易哈希',
+    'Block number': '区块号',
     'Search words, tags or addresses': '搜索正文、标签或地址',
     'Nothing in the record matches “{q}”.': '没有与“{q}”匹配的记录。',
     '1 entry matches “{q}”': '有 1 条记录与“{q}”匹配',
