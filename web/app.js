@@ -687,7 +687,17 @@ function renderEntry(e, mark = '') {
   const state = !e.pending ? ''
     : e.refused
       ? `<p class="pending-note refused">${esc(T('The archive did not accept this entry: {why}.').replace('{why}', e.refused.join(', ')))}</p>`
-      : `<p class="pending-note">${esc(T('On chain in block {b}, shown from this browser until the archive next rebuilds.').replace('{b}', e.block))}</p>`;
+      : `<p class="pending-note">${esc(T('Confirmed on chain; waiting for the archive to update. Shown from this browser in the meantime.'))}</p>`;
+  const verification = !e.pending ? '' : `<dl class="pending-verification">
+    <dt>${T('Transaction hash')}</dt>
+    <dd><code>${C.EXPLORER
+      ? `<a href="${C.EXPLORER}/tx/${esc(e.tx)}" target="_blank" rel="noreferrer">${esc(e.tx)}</a>`
+      : esc(e.tx)}</code></dd>
+    <dt>${T('Block number')}</dt>
+    <dd>${C.EXPLORER
+      ? `<a href="${C.EXPLORER}/block/${esc(e.block)}" target="_blank" rel="noreferrer">${esc(e.block)}</a>`
+      : esc(e.block)}</dd>
+  </dl>`;
   const key = entryKey(e);
   // Only an entry the archive holds has an address anyone else can open.
   const permalink = e.pending ? ''
@@ -712,6 +722,7 @@ function renderEntry(e, mark = '') {
              : 'read it from the calldata'}.</p>`
         : `<p class="entry-body">${highlight(e.body, mark, esc)}</p>`}
       ${state}
+      ${verification}
       ${tags.length || permalink ? `<div class="entry-foot">${tagRow}<div class="entry-actions">${permalink}${picture}</div></div>` : ''}
     </div>
   </article>`;
